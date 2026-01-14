@@ -1,0 +1,8 @@
+# Build
+/dist
+
+# DB
+database.sqlite
+
+# Env
+.env

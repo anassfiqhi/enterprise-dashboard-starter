@@ -1,0 +1,13 @@
+{
+    "name": "enterprise-dashboard-starter",
+    "private": true,
+    "scripts": {
+        "build": "pnpm --filter \"./apps/*\" --filter \"./packages/*\" run build",
+        "dev": "pnpm --filter \"./apps/*\" run dev",
+        "lint": "pnpm --filter \"./apps/*\" run lint",
+        "test": "pnpm --filter \"./apps/*\" run test"
+    },
+    "devDependencies": {
+        "typescript": "^5.0.0"
+    }
+}
