@@ -14,7 +14,13 @@ const orders: z.infer<typeof OrderSchema>[] = Array.from({ length: 50 }).map((_,
     createdAt: new Date().toISOString()
 }));
 
-app.get('/', (c) => {
+import { auth } from './auth';
+
+app.get('/', async (c) => {
+    const session = await auth.api.getSession({ headers: c.req.raw.headers });
+    if (!session) {
+        return c.json({ error: 'Unauthorized' }, 401);
+    }
     const page = Number(c.req.query('page') || '1');
     const pageSize = Number(c.req.query('pageSize') || '10');
     const start = (page - 1) * pageSize;

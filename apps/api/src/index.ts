@@ -1,9 +1,10 @@
+import 'dotenv/config';
 import { serve } from '@hono/node-server';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
-import { auth } from './auth.js';
-import sse from './sse.js';
-import orders from './orders.js';
+import { auth } from './auth';
+import sse from './sse';
+import orders from './orders';
 
 const app = new Hono().basePath('/api');
 
@@ -25,7 +26,7 @@ app.route('/orders', orders);
 
 
 
-const port = 3001;
+const port = Number(process.env.PORT!) || 3001;
 console.log(`Server is running on port ${port}`);
 
 serve({

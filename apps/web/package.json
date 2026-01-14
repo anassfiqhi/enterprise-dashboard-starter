@@ -9,14 +9,15 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@better-fetch/fetch": "^1.1.21",
     "@radix-ui/react-slot": "^1.2.4",
     "@reduxjs/toolkit": "^2.11.2",
     "@repo/shared": "workspace:*",
-    "better-auth": "^1.1.0",
     "@tanstack/react-query": "^5.90.16",
     "@tanstack/react-table": "^8.21.3",
     "@tanstack/react-virtual": "^3.13.18",
     "axios": "^1.13.2",
+    "better-auth": "^1.1.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.562.0",
