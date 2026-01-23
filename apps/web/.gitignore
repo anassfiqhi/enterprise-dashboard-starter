@@ -8,3 +8,6 @@
 
 # Local
 .env*.local
+
+
+.mcp.json
