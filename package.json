@@ -5,9 +5,18 @@
         "build": "pnpm --filter \"./apps/*\" --filter \"./packages/*\" run build",
         "dev": "pnpm --filter \"./apps/*\" run dev",
         "lint": "pnpm --filter \"./apps/*\" run lint",
-        "test": "pnpm --filter \"./apps/*\" run test"
+        "test": "pnpm -r run test",
+        "test:watch": "vitest --workspace vitest.workspace.ts",
+        "test:coverage": "pnpm -r run test:coverage",
+        "test:ui": "vitest --ui",
+        "test:e2e": "playwright test",
+        "test:e2e:ui": "playwright test --ui"
     },
     "devDependencies": {
-        "typescript": "^5.0.0"
+        "@playwright/test": "^1.57.0",
+        "@vitest/coverage-v8": "^4.0.17",
+        "@vitest/ui": "^4.0.17",
+        "typescript": "^5.0.0",
+        "vitest": "^4.0.17"
     }
 }
