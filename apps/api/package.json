@@ -4,20 +4,40 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsup src/index.ts --format esm --clean",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "seed": "tsx scripts/seed-db.ts",
+    "seed:interactive": "tsx src/seed.tsx",
+    "db:reset": "tsx scripts/reset-db.ts",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@hono/node-server": "^1.19.8",
     "@hono/zod-validator": "^0.7.6",
-    "better-auth": "^1.4.11",
+    "better-auth": "^1.4.14",
+    "drizzle-orm": "^0.45.1",
     "hono": "^4.11.3",
+    "pg": "^8.17.1",
     "zod": "^4.3.5"
   },
   "devDependencies": {
+    "@better-auth/cli": "^1.4.13",
+    "@inkjs/ui": "^2.0.0",
     "@types/node": "^20.11.17",
     "@types/pg": "^8.16.0",
+    "@types/react": "^19",
+    "@vitest/coverage-v8": "^4.0.17",
+    "drizzle-kit": "^0.31.8",
+    "ink": "^6.6.0",
+    "react": "19.2.3",
     "tsup": "^8.5.1",
     "tsx": "^4.7.1",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vitest": "^4.0.17"
   }
 }
