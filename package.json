@@ -18,5 +18,8 @@
         "@vitest/ui": "^4.0.17",
         "typescript": "^5.0.0",
         "vitest": "^4.0.17"
+    },
+    "dependencies": {
+        "@radix-ui/react-progress": "^1.1.8"
     }
 }

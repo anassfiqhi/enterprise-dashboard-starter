@@ -62,27 +62,27 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     items.push(
       {
         title: "Lifecycle",
-        url: "#",
+        url: "/lifecycle",
         icon: ListIcon,
-        isActive: false,
+        isActive: pathname === "/lifecycle",
       },
       {
         title: "Analytics",
-        url: "#",
+        url: "/analytics",
         icon: BarChartIcon,
-        isActive: false,
+        isActive: pathname === "/analytics",
       },
       {
         title: "Projects",
-        url: "#",
+        url: "/projects",
         icon: FolderIcon,
-        isActive: false,
+        isActive: pathname === "/projects",
       },
       {
         title: "Team",
-        url: "#",
+        url: "/team",
         icon: UsersIcon,
-        isActive: false,
+        isActive: pathname === "/team",
       }
     )
 
