@@ -225,7 +225,8 @@ const Sidebar = React.forwardRef<
           "group-data-[fixed=false]:group-data-[collapsible=icon]:w-[--sidebar-width-icon]",
           variant === "floating" || variant === "inset"
             ? "group-data-[fixed=false]:p-2 group-data-[fixed=false]:group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)_+_theme(spacing.4)_+2px)]"
-            : "group-data-[fixed=false]:border-r"
+            : "group-data-[fixed=false]:border-r",
+          "sticky top-0 h-dvh",
         )}
         data-state={state}
         data-collapsible={state === "collapsed" ? collapsible : ""}
