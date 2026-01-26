@@ -1,6 +1,7 @@
 'use client';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ThemeProvider } from 'next-themes';
 import { Provider } from 'react-redux';
 import { store } from '@/lib/store';
 import { useState } from 'react';
@@ -19,12 +20,14 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
     return (
         <ErrorBoundary>
-            <Provider store={store}>
-                <QueryClientProvider client={queryClient}>
-                    <SessionInitializer />
-                    {children}
-                </QueryClientProvider>
-            </Provider>
+            <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+                <Provider store={store}>
+                    <QueryClientProvider client={queryClient}>
+                        <SessionInitializer />
+                        {children}
+                    </QueryClientProvider>
+                </Provider>
+            </ThemeProvider>
         </ErrorBoundary>
     );
 }
