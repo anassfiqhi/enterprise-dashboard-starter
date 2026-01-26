@@ -36,7 +36,7 @@ export function NavMain({
             </SidebarMenuButton>
             <Button
               size="icon"
-              className="h-9 w-9 shrink-0 group-data-[collapsible=icon]:opacity-0"
+              className="h-9 w-9 shrink-0 group-data-[collapsible=icon]:hidden"
               variant="outline"
             >
               <MailIcon />
