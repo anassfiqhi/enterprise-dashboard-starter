@@ -23,6 +23,7 @@ import { NavDocuments } from "@/components/nav-documents"
 import { NavMain } from "@/components/nav-main"
 import { NavSecondary } from "@/components/nav-secondary"
 import { NavUser } from "@/components/nav-user"
+import { useCollapsibleMode } from "@/hooks/use-collapsible-mode"
 import {
   Sidebar,
   SidebarContent,
@@ -36,6 +37,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname()
   const { hasPermission } = usePermissions()
   const session = useSelector((state: RootState) => state.session)
+  const collapsibleMode = useCollapsibleMode()
 
   // Build navigation items based on permissions
   const navMain = React.useMemo(() => {
@@ -136,7 +138,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   }
 
   return (
-    <Sidebar collapsible="offcanvas" {...props}>
+    <Sidebar collapsible={collapsibleMode} {...props}>
       <SidebarHeader>
         <SidebarOrgSwitcher />
       </SidebarHeader>
