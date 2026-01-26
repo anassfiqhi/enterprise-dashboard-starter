@@ -162,7 +162,6 @@ const Sidebar = React.forwardRef<
     side?: "left" | "right"
     variant?: "sidebar" | "floating" | "inset"
     collapsible?: "offcanvas" | "icon" | "none"
-    fixed?: boolean
   }
 >(
   (
@@ -170,7 +169,6 @@ const Sidebar = React.forwardRef<
       side = "left",
       variant = "sidebar",
       collapsible = "offcanvas",
-      fixed = true,
       className,
       children,
       ...props
@@ -178,6 +176,8 @@ const Sidebar = React.forwardRef<
     ref
   ) => {
     const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
+    // Only "sidebar" variant uses fixed positioning, "floating" and "inset" are side-by-side
+    const fixed = variant === "sidebar"
 
     if (collapsible === "none") {
       return (
@@ -233,16 +233,14 @@ const Sidebar = React.forwardRef<
         data-side={side}
         data-fixed={fixed}
       >
-        {/* Spacer div for fixed sidebar - hidden when not fixed */}
+        {/* Spacer div for fixed sidebar (only used with "sidebar" variant) */}
         {fixed && (
           <div
             className={cn(
               "relative h-svh w-[--sidebar-width] bg-transparent transition-[width] duration-200 ease-linear",
               "group-data-[collapsible=offcanvas]:w-0",
               "group-data-[side=right]:rotate-180",
-              variant === "floating" || variant === "inset"
-                ? "group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)_+_theme(spacing.4))]"
-                : "group-data-[collapsible=icon]:w-[--sidebar-width-icon]"
+              "group-data-[collapsible=icon]:w-[--sidebar-width-icon]"
             )}
           />
         )}
@@ -255,12 +253,9 @@ const Sidebar = React.forwardRef<
               : fixed && side === "right"
                 ? "right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]"
                 : "",
-            // Adjust the padding for floating and inset variants (fixed mode)
-            fixed && (variant === "floating" || variant === "inset")
-              ? "p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)_+_theme(spacing.4)_+2px)]"
-              : fixed
-                ? "group-data-[collapsible=icon]:w-[--sidebar-width-icon] group-data-[side=left]:border-r group-data-[side=right]:border-l"
-                : "",
+            // Border for fixed sidebar (only "sidebar" variant uses fixed)
+            fixed &&
+            "group-data-[collapsible=icon]:w-[--sidebar-width-icon] group-data-[side=left]:border-r group-data-[side=right]:border-l",
             // Static sidebar inner styles
             "group-data-[fixed=false]:flex group-data-[fixed=false]:h-full group-data-[fixed=false]:w-full group-data-[fixed=false]:flex-col",
             className
@@ -635,7 +630,7 @@ const SidebarMenuAction = React.forwardRef<
         "peer-data-[size=lg]/menu-button:top-2.5",
         "group-data-[collapsible=icon]:hidden",
         showOnHover &&
-          "group-focus-within/menu-item:opacity-100 group-hover/menu-item:opacity-100 data-[state=open]:opacity-100 peer-data-[active=true]/menu-button:text-sidebar-accent-foreground md:opacity-0",
+        "group-focus-within/menu-item:opacity-100 group-hover/menu-item:opacity-100 data-[state=open]:opacity-100 peer-data-[active=true]/menu-button:text-sidebar-accent-foreground md:opacity-0",
         className
       )}
       {...props}
