@@ -21,7 +21,7 @@ export function LayoutWrapper({ children }: LayoutWrapperProps) {
 
     return (
         <>
-            <AppSidebar variant="inset" />
+            <AppSidebar variant="floating" />
             <SidebarInset>
                 <SiteHeader />
                 {children}
