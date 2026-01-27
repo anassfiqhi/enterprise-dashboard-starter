@@ -17,6 +17,8 @@ function toMutablePermissions(permissions: SessionData['permissions']): MutableO
     invitation: permissions.invitation ? [...permissions.invitation] : undefined,
     orders: permissions.orders ? [...permissions.orders] : undefined,
     metrics: permissions.metrics ? [...permissions.metrics] : undefined,
+    reservations: permissions.reservations ? [...permissions.reservations] : undefined,
+    hotels: permissions.hotels ? [...permissions.hotels] : undefined,
   };
 }
 

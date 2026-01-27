@@ -7,6 +7,7 @@ import { store } from '@/lib/store';
 import { useState } from 'react';
 import { SessionInitializer } from '@/components/SessionInitializer';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { MSWProvider } from '@/components/providers/MSWProvider';
 
 export function Providers({ children }: { children: React.ReactNode }) {
     const [queryClient] = useState(() => new QueryClient({
@@ -20,14 +21,16 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
     return (
         <ErrorBoundary>
-            <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-                <Provider store={store}>
-                    <QueryClientProvider client={queryClient}>
-                        <SessionInitializer />
-                        {children}
-                    </QueryClientProvider>
-                </Provider>
-            </ThemeProvider>
+            <MSWProvider>
+                <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+                    <Provider store={store}>
+                        <QueryClientProvider client={queryClient}>
+                            <SessionInitializer />
+                            {children}
+                        </QueryClientProvider>
+                    </Provider>
+                </ThemeProvider>
+            </MSWProvider>
         </ErrorBoundary>
     );
 }

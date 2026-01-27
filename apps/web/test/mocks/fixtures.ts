@@ -29,6 +29,8 @@ export const mockAdminSession: SessionData = {
     invitation: ['create', 'cancel'],
     orders: ['read', 'create', 'update', 'delete'],
     metrics: ['read'],
+    reservations: ['read', 'update'],
+    hotels: ['read'],
   },
 };
 
@@ -39,6 +41,8 @@ export const mockAdminPermissions: MutableOrganizationPermissions = {
   invitation: ['create', 'cancel'],
   orders: ['read', 'create', 'update', 'delete'],
   metrics: ['read'],
+  reservations: ['read', 'update'],
+  hotels: ['read'],
 };
 
 // Member session with limited permissions
@@ -57,12 +61,16 @@ export const mockMemberSession: SessionData = {
   permissions: {
     orders: ['read'],
     metrics: ['read'],
+    reservations: ['read'],
+    hotels: ['read'],
   },
 };
 
 export const mockMemberPermissions: MutableOrganizationPermissions = {
   orders: ['read'],
   metrics: ['read'],
+  reservations: ['read'],
+  hotels: ['read'],
 };
 
 // Owner session with all permissions
@@ -84,6 +92,8 @@ export const mockOwnerSession: SessionData = {
     invitation: ['create', 'cancel'],
     orders: ['read', 'create', 'update', 'delete'],
     metrics: ['read'],
+    reservations: ['read', 'update', 'delete'],
+    hotels: ['read'],
   },
 };
 

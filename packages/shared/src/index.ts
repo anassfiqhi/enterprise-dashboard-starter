@@ -110,6 +110,8 @@ export interface OrganizationPermissions {
     invitation?: readonly string[];
     orders?: readonly string[];
     metrics?: readonly string[];
+    reservations?: readonly string[];
+    hotels?: readonly string[];
 }
 
 export interface SessionData {
@@ -176,3 +178,9 @@ export type Metrics = z.infer<typeof MetricsSchema>;
 // ============================================================================
 
 export { ac, owner, admin, member } from './permissions';
+
+// ============================================================================
+// Booking Types (from booking-engine integration)
+// ============================================================================
+
+export * from './booking';

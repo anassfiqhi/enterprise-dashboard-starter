@@ -3,6 +3,8 @@ import { configureStore } from '@reduxjs/toolkit';
 import ordersFiltersReducer from './features/ui/ordersFiltersSlice';
 import tablePreferencesReducer from './features/ui/tablePreferencesSlice';
 import sessionReducer from './features/ui/sessionSlice';
+import reservationsFiltersReducer from './features/ui/reservationsFiltersSlice';
+import availabilityFiltersReducer from './features/ui/availabilityFiltersSlice';
 
 /**
  * Redux store configured per SPEC Section 8
@@ -13,6 +15,8 @@ export const store = configureStore({
         ordersFilters: ordersFiltersReducer,
         tablePreferences: tablePreferencesReducer,
         session: sessionReducer,
+        reservationsFilters: reservationsFiltersReducer,
+        availabilityFilters: availabilityFiltersReducer,
     },
 });
 

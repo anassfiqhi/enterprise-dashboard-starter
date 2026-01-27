@@ -13,6 +13,8 @@ const statement = {
   ...defaultStatements,
   orders: ["read", "create", "update", "delete"],
   metrics: ["read"],
+  reservations: ["read", "update", "cancel", "refund"],
+  hotels: ["read"],
 } as const;
 
 /**
@@ -27,16 +29,22 @@ export const owner = ac.newRole({
   ...ownerAc.statements,
   orders: ["read", "create", "update", "delete"],
   metrics: ["read"],
+  reservations: ["read", "update", "cancel", "refund"],
+  hotels: ["read"],
 });
 
 export const admin = ac.newRole({
   ...adminAc.statements,
   orders: ["read", "create", "update", "delete"],
   metrics: ["read"],
+  reservations: ["read", "update", "cancel", "refund"],
+  hotels: ["read"],
 });
 
 export const member = ac.newRole({
   ...memberAc.statements,
   orders: ["read"],
   metrics: ["read"],
+  reservations: ["read"],
+  hotels: ["read"],
 });

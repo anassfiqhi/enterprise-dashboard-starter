@@ -8,6 +8,8 @@ export interface MutableOrganizationPermissions {
     invitation?: string[];
     orders?: string[];
     metrics?: string[];
+    reservations?: string[];
+    hotels?: string[];
 }
 
 export interface SessionState {

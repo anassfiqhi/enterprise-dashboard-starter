@@ -4,6 +4,7 @@ import * as React from "react"
 import { usePathname } from "next/navigation"
 import {
   BarChartIcon,
+  CalendarCheck2,
   ClipboardListIcon,
   DatabaseIcon,
   FileIcon,
@@ -41,7 +42,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   // Build navigation items based on permissions
   const navMain = React.useMemo(() => {
-    const items = [
+    const items: {
+      title: string
+      url: string
+      icon: typeof LayoutDashboardIcon
+      isActive: boolean
+      items?: { title: string; url: string; isActive: boolean }[]
+    }[] = [
       {
         title: "Dashboard",
         url: "/",
@@ -57,6 +64,33 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         url: "/orders",
         icon: PackageIcon,
         isActive: pathname === "/orders",
+      })
+    }
+
+    // Bookings section - reservations, availability, analytics
+    if (hasPermission("reservations", "read")) {
+      items.push({
+        title: "Bookings",
+        url: "/bookings",
+        icon: CalendarCheck2,
+        isActive: pathname?.startsWith("/bookings") ?? false,
+        items: [
+          {
+            title: "Reservations",
+            url: "/bookings",
+            isActive: pathname === "/bookings",
+          },
+          {
+            title: "Availability",
+            url: "/bookings/availability",
+            isActive: pathname === "/bookings/availability",
+          },
+          {
+            title: "Analytics",
+            url: "/bookings/analytics",
+            isActive: pathname === "/bookings/analytics",
+          },
+        ],
       })
     }
 
