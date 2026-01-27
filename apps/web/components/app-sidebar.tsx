@@ -3,24 +3,15 @@
 import * as React from "react"
 import { usePathname } from "next/navigation"
 import {
-  BarChartIcon,
   CalendarCheck2,
-  ClipboardListIcon,
-  DatabaseIcon,
-  FileIcon,
-  FolderIcon,
   HelpCircleIcon,
   LayoutDashboardIcon,
-  ListIcon,
-  PackageIcon,
   SearchIcon,
   SettingsIcon,
-  UsersIcon,
 } from "lucide-react"
 import { useSelector } from "react-redux"
 import type { RootState } from "@/lib/store"
 
-import { NavDocuments } from "@/components/nav-documents"
 import { NavMain } from "@/components/nav-main"
 import { NavSecondary } from "@/components/nav-secondary"
 import { NavUser } from "@/components/nav-user"
@@ -57,16 +48,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       },
     ]
 
-    // Only show Orders if user has read permission
-    if (hasPermission("orders", "read")) {
-      items.push({
-        title: "Orders",
-        url: "/orders",
-        icon: PackageIcon,
-        isActive: pathname === "/orders",
-      })
-    }
-
     // Bookings section - reservations, availability, analytics
     if (hasPermission("reservations", "read")) {
       items.push({
@@ -94,54 +75,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       })
     }
 
-    // Additional navigation items to match dashboard-01
-    items.push(
-      {
-        title: "Lifecycle",
-        url: "/lifecycle",
-        icon: ListIcon,
-        isActive: pathname === "/lifecycle",
-      },
-      {
-        title: "Analytics",
-        url: "/analytics",
-        icon: BarChartIcon,
-        isActive: pathname === "/analytics",
-      },
-      {
-        title: "Projects",
-        url: "/projects",
-        icon: FolderIcon,
-        isActive: pathname === "/projects",
-      },
-      {
-        title: "Team",
-        url: "/team",
-        icon: UsersIcon,
-        isActive: pathname === "/team",
-      }
-    )
-
     return items
   }, [pathname, hasPermission])
-
-  const navDocuments = [
-    {
-      name: "Data Library",
-      url: "#",
-      icon: DatabaseIcon,
-    },
-    {
-      name: "Reports",
-      url: "#",
-      icon: ClipboardListIcon,
-    },
-    {
-      name: "Word Assistant",
-      url: "#",
-      icon: FileIcon,
-    },
-  ]
 
   const navSecondary = [
     {
@@ -178,7 +113,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={navMain} />
-        <NavDocuments items={navDocuments} />
         <NavSecondary items={navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
