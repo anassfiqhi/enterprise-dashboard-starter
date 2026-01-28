@@ -168,6 +168,182 @@ export const handlers = [
     });
   }),
 
+  // Single hotel endpoint with room types and activities
+  http.get(`${API_URL}/api/v1/hotels/:id`, async ({ params }) => {
+    await delay(50);
+    const hotel = mockHotels.find((h) => h.id === params.id);
+    if (!hotel) {
+      return HttpResponse.json(
+        { data: null, meta: { requestId: 'test' }, error: { code: 'NOT_FOUND', message: 'Hotel not found' } },
+        { status: 404 }
+      );
+    }
+    const roomTypes = mockRoomTypes.filter((rt) => rt.hotelId === hotel.id);
+    const activityTypes = mockActivityTypes.filter((at) => at.hotelId === hotel.id);
+    return HttpResponse.json({
+      data: {
+        ...hotel,
+        roomTypes,
+        activityTypes,
+        totalRooms: roomTypes.length,
+        totalActivities: activityTypes.length,
+      },
+      meta: { requestId: 'test' },
+      error: null,
+    });
+  }),
+
+  // Create hotel endpoint
+  http.post(`${API_URL}/api/v1/hotels`, async ({ request }) => {
+    await delay(100);
+    const body = await request.json() as {
+      name: string;
+      timezone: string;
+      address?: {
+        street?: string;
+        city: string;
+        state?: string;
+        country: string;
+        postalCode?: string;
+      };
+    };
+    const newHotel = {
+      id: `hotel_${Date.now()}`,
+      name: body.name,
+      timezone: body.timezone,
+      address: body.address,
+    };
+    mockHotels.push(newHotel);
+    return HttpResponse.json({ data: newHotel, meta: { requestId: 'test' }, error: null }, { status: 201 });
+  }),
+
+  // Update hotel endpoint
+  http.patch(`${API_URL}/api/v1/hotels/:id`, async ({ params, request }) => {
+    await delay(50);
+    const updates = await request.json() as Partial<typeof mockHotels[0]>;
+    const hotelIndex = mockHotels.findIndex((h) => h.id === params.id);
+    if (hotelIndex === -1) {
+      return HttpResponse.json(
+        { data: null, meta: { requestId: 'test' }, error: { code: 'NOT_FOUND', message: 'Hotel not found' } },
+        { status: 404 }
+      );
+    }
+    mockHotels[hotelIndex] = { ...mockHotels[hotelIndex], ...updates };
+    return HttpResponse.json({ data: mockHotels[hotelIndex], meta: { requestId: 'test' }, error: null });
+  }),
+
+  // Delete hotel endpoint
+  http.delete(`${API_URL}/api/v1/hotels/:id`, async ({ params }) => {
+    await delay(50);
+    const hotelIndex = mockHotels.findIndex((h) => h.id === params.id);
+    if (hotelIndex === -1) {
+      return HttpResponse.json(
+        { data: null, meta: { requestId: 'test' }, error: { code: 'NOT_FOUND', message: 'Hotel not found' } },
+        { status: 404 }
+      );
+    }
+    mockHotels.splice(hotelIndex, 1);
+    // Also remove associated room types and activities
+    const roomTypeIndexes = mockRoomTypes.map((rt, i) => rt.hotelId === params.id ? i : -1).filter(i => i >= 0).reverse();
+    roomTypeIndexes.forEach(i => mockRoomTypes.splice(i, 1));
+    const activityIndexes = mockActivityTypes.map((at, i) => at.hotelId === params.id ? i : -1).filter(i => i >= 0).reverse();
+    activityIndexes.forEach(i => mockActivityTypes.splice(i, 1));
+    return HttpResponse.json({ data: null, meta: { requestId: 'test' }, error: null });
+  }),
+
+  // Create room type endpoint
+  http.post(`${API_URL}/api/v1/hotels/:hotelId/room-types`, async ({ params, request }) => {
+    await delay(100);
+    const body = await request.json() as { name: string; capacity: number; description?: string; basePrice: number; currency?: string };
+    const newRoomType = {
+      id: `rt_${Date.now()}`,
+      hotelId: params.hotelId as string,
+      name: body.name,
+      capacity: body.capacity,
+      description: body.description,
+      basePrice: body.basePrice,
+      currency: body.currency || 'USD',
+    };
+    mockRoomTypes.push(newRoomType);
+    return HttpResponse.json({ data: newRoomType, meta: { requestId: 'test' }, error: null }, { status: 201 });
+  }),
+
+  // Update room type endpoint
+  http.patch(`${API_URL}/api/v1/hotels/:hotelId/room-types/:id`, async ({ params, request }) => {
+    await delay(50);
+    const updates = await request.json() as Partial<typeof mockRoomTypes[0]>;
+    const roomTypeIndex = mockRoomTypes.findIndex((rt) => rt.id === params.id && rt.hotelId === params.hotelId);
+    if (roomTypeIndex === -1) {
+      return HttpResponse.json(
+        { data: null, meta: { requestId: 'test' }, error: { code: 'NOT_FOUND', message: 'Room type not found' } },
+        { status: 404 }
+      );
+    }
+    mockRoomTypes[roomTypeIndex] = { ...mockRoomTypes[roomTypeIndex], ...updates };
+    return HttpResponse.json({ data: mockRoomTypes[roomTypeIndex], meta: { requestId: 'test' }, error: null });
+  }),
+
+  // Delete room type endpoint
+  http.delete(`${API_URL}/api/v1/hotels/:hotelId/room-types/:id`, async ({ params }) => {
+    await delay(50);
+    const roomTypeIndex = mockRoomTypes.findIndex((rt) => rt.id === params.id && rt.hotelId === params.hotelId);
+    if (roomTypeIndex === -1) {
+      return HttpResponse.json(
+        { data: null, meta: { requestId: 'test' }, error: { code: 'NOT_FOUND', message: 'Room type not found' } },
+        { status: 404 }
+      );
+    }
+    mockRoomTypes.splice(roomTypeIndex, 1);
+    return HttpResponse.json({ data: null, meta: { requestId: 'test' }, error: null });
+  }),
+
+  // Create activity type endpoint
+  http.post(`${API_URL}/api/v1/hotels/:hotelId/activity-types`, async ({ params, request }) => {
+    await delay(100);
+    const body = await request.json() as { name: string; capacityPerSlot: number; description?: string; duration: number; basePrice: number; currency?: string };
+    const newActivityType = {
+      id: `at_${Date.now()}`,
+      hotelId: params.hotelId as string,
+      name: body.name,
+      capacityPerSlot: body.capacityPerSlot,
+      description: body.description,
+      duration: body.duration,
+      basePrice: body.basePrice,
+      currency: body.currency || 'USD',
+    };
+    mockActivityTypes.push(newActivityType);
+    return HttpResponse.json({ data: newActivityType, meta: { requestId: 'test' }, error: null }, { status: 201 });
+  }),
+
+  // Update activity type endpoint
+  http.patch(`${API_URL}/api/v1/hotels/:hotelId/activity-types/:id`, async ({ params, request }) => {
+    await delay(50);
+    const updates = await request.json() as Partial<typeof mockActivityTypes[0]>;
+    const activityIndex = mockActivityTypes.findIndex((at) => at.id === params.id && at.hotelId === params.hotelId);
+    if (activityIndex === -1) {
+      return HttpResponse.json(
+        { data: null, meta: { requestId: 'test' }, error: { code: 'NOT_FOUND', message: 'Activity type not found' } },
+        { status: 404 }
+      );
+    }
+    mockActivityTypes[activityIndex] = { ...mockActivityTypes[activityIndex], ...updates };
+    return HttpResponse.json({ data: mockActivityTypes[activityIndex], meta: { requestId: 'test' }, error: null });
+  }),
+
+  // Delete activity type endpoint
+  http.delete(`${API_URL}/api/v1/hotels/:hotelId/activity-types/:id`, async ({ params }) => {
+    await delay(50);
+    const activityIndex = mockActivityTypes.findIndex((at) => at.id === params.id && at.hotelId === params.hotelId);
+    if (activityIndex === -1) {
+      return HttpResponse.json(
+        { data: null, meta: { requestId: 'test' }, error: { code: 'NOT_FOUND', message: 'Activity type not found' } },
+        { status: 404 }
+      );
+    }
+    mockActivityTypes.splice(activityIndex, 1);
+    return HttpResponse.json({ data: null, meta: { requestId: 'test' }, error: null });
+  }),
+
   // Reservations list endpoint
   http.get(`${API_URL}/api/v1/reservations`, async ({ request }) => {
     await delay(50);

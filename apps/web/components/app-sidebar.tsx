@@ -3,6 +3,7 @@
 import * as React from "react"
 import { usePathname } from "next/navigation"
 import {
+  Building2,
   CalendarCheck2,
   HelpCircleIcon,
   LayoutDashboardIcon,
@@ -72,6 +73,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             isActive: pathname === "/bookings/analytics",
           },
         ],
+      })
+    }
+
+    // Hotels section - property management
+    if (hasPermission("hotels", "read")) {
+      items.push({
+        title: "Hotels",
+        url: "/hotels",
+        icon: Building2,
+        isActive: pathname?.startsWith("/hotels") ?? false,
       })
     }
 

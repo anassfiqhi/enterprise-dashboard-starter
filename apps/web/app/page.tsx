@@ -86,13 +86,13 @@ export default function Home() {
                         <BookingMetricsCards metrics={metrics} isLoading={metricsLoading} />
                     </div>
 
-                    {/* Revenue Chart */}
-                    <div className="px-4 lg:px-6">
+                    {/* Revenue & Occupancy Charts - 2 Column */}
+                    <div className="grid gap-4 px-4 lg:px-6 md:grid-cols-2">
                         <Card>
                             <CardHeader>
                                 <CardTitle>Revenue Trend</CardTitle>
                                 <CardDescription>
-                                    Daily revenue from confirmed bookings over the past 30 days
+                                    Daily revenue over the past 30 days
                                 </CardDescription>
                             </CardHeader>
                             <CardContent>
@@ -103,6 +103,48 @@ export default function Home() {
                                 ) : (
                                     <div className="h-[300px] flex items-center justify-center text-muted-foreground">
                                         No revenue data available
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Occupancy Rate</CardTitle>
+                                <CardDescription>
+                                    Room occupancy percentage over the past 30 days
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                {metricsLoading ? (
+                                    <Skeleton className="h-[300px] w-full" />
+                                ) : metrics?.occupancyByDay ? (
+                                    <OccupancyChart data={metrics.occupancyByDay} />
+                                ) : (
+                                    <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                                        No occupancy data available
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+                    </div>
+
+                    {/* Booking Trends */}
+                    <div className="px-4 lg:px-6">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Bookings by Status</CardTitle>
+                                <CardDescription>
+                                    Distribution of bookings across different statuses
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                {metricsLoading ? (
+                                    <Skeleton className="h-[200px] w-full" />
+                                ) : metrics?.bookingsByStatus ? (
+                                    <BookingTrendsChart data={metrics.bookingsByStatus} />
+                                ) : (
+                                    <div className="h-[200px] flex items-center justify-center text-muted-foreground">
+                                        No booking status data available
                                     </div>
                                 )}
                             </CardContent>
@@ -156,7 +198,11 @@ export default function Home() {
                                             </TableRow>
                                         ) : (
                                             recentReservations.map((reservation) => (
-                                                <TableRow key={reservation.id}>
+                                                <TableRow
+                                                    key={reservation.id}
+                                                    className="cursor-pointer hover:bg-muted/50"
+                                                    onClick={() => setSelectedReservation(reservation)}
+                                                >
                                                     <TableCell>
                                                         <span className="font-medium">
                                                             {reservation.guest?.firstName} {reservation.guest?.lastName}
@@ -190,6 +236,13 @@ export default function Home() {
                     </div>
                 </div>
             </div>
+
+            {/* Reservation Detail Sheet */}
+            <ReservationDetailSheet
+                reservation={selectedReservation}
+                open={!!selectedReservation}
+                onOpenChange={(open) => !open && setSelectedReservation(null)}
+            />
         </div>
     );
 }

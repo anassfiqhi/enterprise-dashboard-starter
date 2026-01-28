@@ -2,7 +2,7 @@
 
 import type { ReservationStatus } from '@repo/shared';
 import { Badge } from '@/components/ui/badge';
-import { Clock, CheckCircle2, XCircle } from 'lucide-react';
+import { Clock, CheckCircle2, XCircle, LoaderIcon } from 'lucide-react';
 
 interface ReservationStatusBadgeProps {
     status: ReservationStatus;
@@ -11,24 +11,24 @@ interface ReservationStatusBadgeProps {
 function getStatusIcon(status: ReservationStatus) {
     switch (status) {
         case 'CONFIRMED':
-            return <CheckCircle2 className="text-green-500 dark:text-green-400" />;
+            return <CheckCircle2 className="fill-green-800 dark:fill-green-400 stroke-accent" />;
         case 'CANCELLED':
-            return <XCircle className="text-red-500 dark:text-red-400" />;
+            return <XCircle className="fill-red-800 dark:fill-red-400 stroke-accent" />;
         case 'PENDING':
         default:
-            return <Clock className="text-yellow-500 dark:text-yellow-400" />;
+            return <LoaderIcon className="fill-yellow-800 dark:fill-yellow-400" />;
     }
 }
 
 function getStatusBadgeClass(status: ReservationStatus) {
     switch (status) {
         case 'CONFIRMED':
-            return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
+            return 'fill-green-800 dark:fill-green-300';
         case 'CANCELLED':
-            return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
+            return 'fill-red-800 dark:fill-red-300';
         case 'PENDING':
         default:
-            return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
+            return 'fill-yellow-800 dark:fill-yellow-300';
     }
 }
 
@@ -36,7 +36,7 @@ export function ReservationStatusBadge({ status }: ReservationStatusBadgeProps) 
     return (
         <Badge
             variant="outline"
-            className={`flex w-fit gap-1 px-1.5 [&_svg]:size-3 ${getStatusBadgeClass(status)}`}
+            className={`flex w-fit gap-1 px-1.5 [&_svg]:size-3 ${getStatusBadgeClass(status)} text-muted-foreground px-1.5`}
         >
             {getStatusIcon(status)}
             <span className="capitalize">{status.toLowerCase()}</span>
