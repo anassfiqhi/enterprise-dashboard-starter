@@ -360,3 +360,113 @@ export const ReservationEventSchema = z.object({
     patch: z.record(z.string(), z.any()),
     ts: z.number(),
 });
+
+// ============================================================================
+// Physical Room Schema
+// ============================================================================
+
+export const PhysicalRoomStatusSchema = z.enum(['AVAILABLE', 'MAINTENANCE', 'OUT_OF_SERVICE']);
+export type PhysicalRoomStatus = z.infer<typeof PhysicalRoomStatusSchema>;
+
+export const PhysicalRoomSchema = z.object({
+    id: z.string(),
+    roomTypeId: z.string(),
+    hotelId: z.string(),
+    code: z.string(), // "101", "202", "Penthouse A"
+    floor: z.number().int().optional(),
+    status: PhysicalRoomStatusSchema,
+    notes: z.string().optional(),
+});
+
+export type PhysicalRoom = z.infer<typeof PhysicalRoomSchema>;
+
+// ============================================================================
+// Room Inventory Schema
+// ============================================================================
+
+export const RoomInventorySchema = z.object({
+    id: z.string(),
+    roomTypeId: z.string(),
+    hotelId: z.string(),
+    date: z.string(), // YYYY-MM-DD
+    totalRooms: z.number().int(),
+    availableRooms: z.number().int(),
+    blockedRooms: z.number().int(),
+    bookedRooms: z.number().int(),
+});
+
+export type RoomInventory = z.infer<typeof RoomInventorySchema>;
+
+export const InventoryUpdateSchema = z.object({
+    roomTypeId: z.string(),
+    startDate: z.string(),
+    endDate: z.string(),
+    availableRooms: z.number().int().optional(),
+    blockedRooms: z.number().int().optional(),
+});
+
+export type InventoryUpdate = z.infer<typeof InventoryUpdateSchema>;
+
+// ============================================================================
+// Pricing Rules Schema
+// ============================================================================
+
+export const PricingChannelSchema = z.enum(['DIRECT', 'OTA', 'CORPORATE']);
+export type PricingChannel = z.infer<typeof PricingChannelSchema>;
+
+export const PriceAmountTypeSchema = z.enum(['OVERRIDE', 'DELTA_FIXED', 'DELTA_PERCENT']);
+export type PriceAmountType = z.infer<typeof PriceAmountTypeSchema>;
+
+export const PricingRuleSchema = z.object({
+    id: z.string(),
+    hotelId: z.string(),
+    name: z.string(),
+    roomTypeId: z.string().optional(), // null = all room types
+    activityTypeId: z.string().optional(), // null = all activities
+    amountType: PriceAmountTypeSchema,
+    amount: z.number(), // Price or adjustment value
+    currency: z.string(),
+    validFrom: z.string().optional(), // Seasonality start (YYYY-MM-DD)
+    validTo: z.string().optional(), // Seasonality end
+    minNights: z.number().int().optional(),
+    maxNights: z.number().int().optional(),
+    daysOfWeek: z.array(z.number().int().min(0).max(6)).optional(), // 0-6 (Sun-Sat)
+    channel: PricingChannelSchema.optional(),
+    promoCode: z.string().optional(),
+    priority: z.number().int(), // Higher = applied later
+    isActive: z.boolean(),
+});
+
+export type PricingRule = z.infer<typeof PricingRuleSchema>;
+
+// ============================================================================
+// Promo Code Schema
+// ============================================================================
+
+export const DiscountTypeSchema = z.enum(['PERCENTAGE', 'FIXED']);
+export type DiscountType = z.infer<typeof DiscountTypeSchema>;
+
+export const PromoCodeStatusSchema = z.enum(['ACTIVE', 'EXPIRED', 'EXHAUSTED', 'INACTIVE']);
+export type PromoCodeStatus = z.infer<typeof PromoCodeStatusSchema>;
+
+export const PromoCodeSchema = z.object({
+    id: z.string(),
+    code: z.string(), // "SUMMER20", "WELCOME10"
+    hotelId: z.string().optional(), // null = all hotels
+    discountType: DiscountTypeSchema,
+    discountValue: z.number(), // 20 for 20% or $20
+    currency: z.string().optional(), // Required for FIXED
+    minBookingAmount: z.number().optional(), // Minimum spend to apply
+    maxDiscountAmount: z.number().optional(), // Cap for PERCENTAGE
+    validFrom: z.string().optional(),
+    validTo: z.string().optional(),
+    maxUses: z.number().int().optional(), // Total redemptions allowed
+    usedCount: z.number().int(),
+    maxUsesPerGuest: z.number().int().optional(),
+    applicableRoomTypeIds: z.array(z.string()).optional(),
+    applicableActivityTypeIds: z.array(z.string()).optional(),
+    isActive: z.boolean(),
+    createdAt: z.string(),
+});
+
+export type PromoCode = z.infer<typeof PromoCodeSchema>;

@@ -5,3 +5,6 @@ export { RoomTypeFormDialog } from './RoomTypeFormDialog';
 export { ActivityTypeCard } from './ActivityTypeCard';
 export { ActivityTypeFormDialog } from './ActivityTypeFormDialog';
 export { DeleteConfirmDialog } from './DeleteConfirmDialog';
+export { PhysicalRoomCard } from './PhysicalRoomCard';
+export { PhysicalRoomFormDialog } from './PhysicalRoomFormDialog';
+export { PhysicalRoomStatusBadge } from './PhysicalRoomStatusBadge';

@@ -12,6 +12,11 @@ import type {
     ReservationStatus,
     PaymentMethodCategory,
     PaymentStatus,
+    PhysicalRoom,
+    PhysicalRoomStatus,
+    RoomInventory,
+    PricingRule,
+    PromoCode,
 } from '@repo/shared';
 
 // ============================================================================
@@ -468,3 +473,292 @@ export function generateActivityAvailability(hotelId: string, startDate: string,
 
     return availability;
 }
+
+// ============================================================================
+// Physical Rooms (2-4 per room type)
+// ============================================================================
+
+function generatePhysicalRooms(): PhysicalRoom[] {
+    const rooms: PhysicalRoom[] = [];
+    const statuses: PhysicalRoomStatus[] = ['AVAILABLE', 'AVAILABLE', 'AVAILABLE', 'MAINTENANCE', 'OUT_OF_SERVICE'];
+
+    mockRoomTypes.forEach((roomType, rtIndex) => {
+        // Generate 2-4 physical rooms per room type
+        const roomCount = 2 + (rtIndex % 3);
+        const baseFloor = 1 + Math.floor(rtIndex / 4);
+
+        for (let i = 0; i < roomCount; i++) {
+            const floor = baseFloor + Math.floor(i / 2);
+            const roomNumber = floor * 100 + (i % 10) + 1;
+
+            rooms.push({
+                id: `room_${roomType.id}_${i + 1}`,
+                roomTypeId: roomType.id,
+                hotelId: roomType.hotelId,
+                code: String(roomNumber),
+                floor,
+                status: statuses[(rtIndex + i) % statuses.length],
+                notes: (rtIndex + i) % 7 === 0 ? 'Recently renovated' : undefined,
+            });
+        }
+    });
+
+    return rooms;
+}
+
+export const mockPhysicalRooms = generatePhysicalRooms();
+
+// ============================================================================
+// Room Inventory (next 60 days per room type)
+// ============================================================================
+
+function generateRoomInventory(): RoomInventory[] {
+    const inventory: RoomInventory[] = [];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    mockRoomTypes.forEach(roomType => {
+        const roomsOfType = mockPhysicalRooms.filter(r => r.roomTypeId === roomType.id);
+        const totalRooms = roomsOfType.length;
+        const maintenanceRooms = roomsOfType.filter(r => r.status !== 'AVAILABLE').length;
+
+        for (let day = 0; day < 60; day++) {
+            const date = addDays(today, day);
+            const dateStr = formatDate(date);
+
+            // Count booked rooms from reservations
+            const bookedRooms = mockReservations.filter(
+                r => r.status === 'CONFIRMED' &&
+                    r.roomTypeId === roomType.id &&
+                    r.checkInDate && r.checkInDate <= dateStr &&
+                    r.checkOutDate && r.checkOutDate > dateStr
+            ).length;
+
+            // Random blocked rooms (0-1 per type per day)
+            const blockedRooms = maintenanceRooms + (day % 10 === 0 ? 1 : 0);
+
+            inventory.push({
+                id: `inv_${roomType.id}_${dateStr}`,
+                roomTypeId: roomType.id,
+                hotelId: roomType.hotelId,
+                date: dateStr,
+                totalRooms,
+                availableRooms: Math.max(0, totalRooms - bookedRooms - blockedRooms),
+                blockedRooms,
+                bookedRooms: Math.min(bookedRooms, totalRooms),
+            });
+        }
+    });
+
+    return inventory;
+}
+
+export const mockRoomInventory = generateRoomInventory();
+
+// ============================================================================
+// Pricing Rules (sample rules per hotel)
+// ============================================================================
+
+function generatePricingRules(): PricingRule[] {
+    const rules: PricingRule[] = [];
+    const today = new Date();
+    const summerStart = new Date(today.getFullYear(), 5, 1); // June 1
+    const summerEnd = new Date(today.getFullYear(), 7, 31); // August 31
+    const winterStart = new Date(today.getFullYear(), 11, 15); // December 15
+    const winterEnd = new Date(today.getFullYear() + 1, 0, 5); // January 5
+
+    mockHotels.forEach((hotel, hIndex) => {
+        // Weekend surcharge (+20%)
+        rules.push({
+            id: `rule_${hotel.id}_weekend`,
+            hotelId: hotel.id,
+            name: 'Weekend Surcharge',
+            amountType: 'DELTA_PERCENT',
+            amount: 20,
+            currency: 'USD',
+            daysOfWeek: [5, 6], // Friday, Saturday
+            priority: 10,
+            isActive: true,
+        });
+
+        // Summer season (+15%)
+        rules.push({
+            id: `rule_${hotel.id}_summer`,
+            hotelId: hotel.id,
+            name: 'Summer Peak Season',
+            amountType: 'DELTA_PERCENT',
+            amount: 15,
+            currency: 'USD',
+            validFrom: formatDate(summerStart),
+            validTo: formatDate(summerEnd),
+            priority: 20,
+            isActive: true,
+        });
+
+        // Long stay discount (7+ nights, -10%)
+        rules.push({
+            id: `rule_${hotel.id}_longstay`,
+            hotelId: hotel.id,
+            name: 'Long Stay Discount',
+            amountType: 'DELTA_PERCENT',
+            amount: -10,
+            currency: 'USD',
+            minNights: 7,
+            priority: 30,
+            isActive: true,
+        });
+
+        // Corporate rate (-15%)
+        rules.push({
+            id: `rule_${hotel.id}_corporate`,
+            hotelId: hotel.id,
+            name: 'Corporate Rate',
+            amountType: 'DELTA_PERCENT',
+            amount: -15,
+            currency: 'USD',
+            channel: 'CORPORATE',
+            priority: 40,
+            isActive: true,
+        });
+
+        // Winter holiday override (specific hotels)
+        if (hIndex < 3) {
+            rules.push({
+                id: `rule_${hotel.id}_winter`,
+                hotelId: hotel.id,
+                name: 'Winter Holiday Premium',
+                amountType: 'DELTA_PERCENT',
+                amount: 25,
+                currency: 'USD',
+                validFrom: formatDate(winterStart),
+                validTo: formatDate(winterEnd),
+                priority: 50,
+                isActive: true,
+            });
+        }
+    });
+
+    return rules;
+}
+
+export const mockPricingRules = generatePricingRules();
+
+// ============================================================================
+// Promo Codes
+// ============================================================================
+
+function generatePromoCodes(): PromoCode[] {
+    const today = new Date();
+    const thirtyDaysFromNow = addDays(today, 30);
+    const sixtyDaysFromNow = addDays(today, 60);
+    const thirtyDaysAgo = addDays(today, -30);
+
+    return [
+        {
+            id: 'promo_1',
+            code: 'WELCOME10',
+            discountType: 'PERCENTAGE',
+            discountValue: 10,
+            maxDiscountAmount: 100,
+            validFrom: formatDate(thirtyDaysAgo),
+            validTo: formatDate(sixtyDaysFromNow),
+            maxUses: 1000,
+            usedCount: 342,
+            maxUsesPerGuest: 1,
+            isActive: true,
+            createdAt: thirtyDaysAgo.toISOString(),
+        },
+        {
+            id: 'promo_2',
+            code: 'SUMMER25',
+            discountType: 'PERCENTAGE',
+            discountValue: 25,
+            maxDiscountAmount: 250,
+            validFrom: formatDate(new Date(today.getFullYear(), 5, 1)),
+            validTo: formatDate(new Date(today.getFullYear(), 7, 31)),
+            maxUses: 500,
+            usedCount: 127,
+            isActive: true,
+            createdAt: addDays(today, -60).toISOString(),
+        },
+        {
+            id: 'promo_3',
+            code: 'FLAT50',
+            discountType: 'FIXED',
+            discountValue: 50,
+            currency: 'USD',
+            minBookingAmount: 200,
+            validFrom: formatDate(today),
+            validTo: formatDate(thirtyDaysFromNow),
+            maxUses: 200,
+            usedCount: 45,
+            isActive: true,
+            createdAt: today.toISOString(),
+        },
+        {
+            id: 'promo_4',
+            code: 'LOYALTY15',
+            discountType: 'PERCENTAGE',
+            discountValue: 15,
+            maxDiscountAmount: 150,
+            maxUsesPerGuest: 5,
+            usedCount: 89,
+            isActive: true,
+            createdAt: addDays(today, -90).toISOString(),
+        },
+        {
+            id: 'promo_5',
+            code: 'EXPIRED20',
+            discountType: 'PERCENTAGE',
+            discountValue: 20,
+            validFrom: formatDate(addDays(today, -60)),
+            validTo: formatDate(addDays(today, -30)),
+            maxUses: 100,
+            usedCount: 78,
+            isActive: false,
+            createdAt: addDays(today, -90).toISOString(),
+        },
+        {
+            id: 'promo_6',
+            code: 'SEASIDE100',
+            hotelId: 'hotel_1', // Grand Seaside Resort only
+            discountType: 'FIXED',
+            discountValue: 100,
+            currency: 'USD',
+            minBookingAmount: 500,
+            validFrom: formatDate(today),
+            validTo: formatDate(sixtyDaysFromNow),
+            maxUses: 50,
+            usedCount: 12,
+            isActive: true,
+            createdAt: addDays(today, -7).toISOString(),
+        },
+        {
+            id: 'promo_7',
+            code: 'MOUNTAIN30',
+            hotelId: 'hotel_2', // Mountain Peak Lodge only
+            discountType: 'PERCENTAGE',
+            discountValue: 30,
+            maxDiscountAmount: 300,
+            applicableRoomTypeIds: ['rt_6', 'rt_7'], // Ski-In Suite and Alpine Chalet only
+            validFrom: formatDate(today),
+            validTo: formatDate(thirtyDaysFromNow),
+            maxUses: 30,
+            usedCount: 8,
+            isActive: true,
+            createdAt: addDays(today, -14).toISOString(),
+        },
+        {
+            id: 'promo_8',
+            code: 'EXHAUSTED10',
+            discountType: 'PERCENTAGE',
+            discountValue: 10,
+            maxUses: 50,
+            usedCount: 50, // Fully used
+            isActive: true,
+            createdAt: addDays(today, -45).toISOString(),
+        },
+    ];
+}
+
+export const mockPromoCodes = generatePromoCodes();

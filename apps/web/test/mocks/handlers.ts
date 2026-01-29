@@ -7,10 +7,14 @@ import {
   mockReservations,
   mockPayments,
   mockBookingMetrics,
+  mockPhysicalRooms,
+  mockRoomInventory,
+  mockPricingRules,
+  mockPromoCodes,
   generateRoomAvailability,
   generateActivityAvailability,
 } from './booking-fixtures';
-import type { Reservation, ReservationStatus } from '@repo/shared';
+import type { Reservation, ReservationStatus, PhysicalRoomStatus } from '@repo/shared';
 
 const API_URL = 'http://localhost:3001';
 
@@ -547,6 +551,394 @@ export const handlers = [
       meta: { requestId: 'test-request-id' },
       error: null,
     });
+  }),
+
+  // ============================================================================
+  // Physical Rooms Endpoints
+  // ============================================================================
+
+  // List physical rooms for a room type
+  http.get(`${API_URL}/api/v1/hotels/:hotelId/room-types/:roomTypeId/rooms`, async ({ params }) => {
+    await delay(50);
+    const rooms = mockPhysicalRooms.filter(
+      (r) => r.hotelId === params.hotelId && r.roomTypeId === params.roomTypeId
+    );
+    return HttpResponse.json({
+      data: rooms,
+      meta: { requestId: 'test-request-id' },
+      error: null,
+    });
+  }),
+
+  // Create physical room
+  http.post(`${API_URL}/api/v1/hotels/:hotelId/room-types/:roomTypeId/rooms`, async ({ params, request }) => {
+    await delay(100);
+    const body = await request.json() as {
+      code: string;
+      floor?: number;
+      status?: PhysicalRoomStatus;
+      notes?: string;
+    };
+    const newRoom = {
+      id: `room_${Date.now()}`,
+      roomTypeId: params.roomTypeId as string,
+      hotelId: params.hotelId as string,
+      code: body.code,
+      floor: body.floor,
+      status: body.status || 'AVAILABLE' as PhysicalRoomStatus,
+      notes: body.notes,
+    };
+    mockPhysicalRooms.push(newRoom);
+    return HttpResponse.json({ data: newRoom, meta: { requestId: 'test' }, error: null }, { status: 201 });
+  }),
+
+  // Update physical room
+  http.patch(`${API_URL}/api/v1/hotels/:hotelId/room-types/:roomTypeId/rooms/:id`, async ({ params, request }) => {
+    await delay(50);
+    const updates = await request.json() as Partial<typeof mockPhysicalRooms[0]>;
+    const roomIndex = mockPhysicalRooms.findIndex(
+      (r) => r.id === params.id && r.hotelId === params.hotelId && r.roomTypeId === params.roomTypeId
+    );
+    if (roomIndex === -1) {
+      return HttpResponse.json(
+        { data: null, meta: { requestId: 'test' }, error: { code: 'NOT_FOUND', message: 'Room not found' } },
+        { status: 404 }
+      );
+    }
+    mockPhysicalRooms[roomIndex] = { ...mockPhysicalRooms[roomIndex], ...updates };
+    return HttpResponse.json({ data: mockPhysicalRooms[roomIndex], meta: { requestId: 'test' }, error: null });
+  }),
+
+  // Delete physical room
+  http.delete(`${API_URL}/api/v1/hotels/:hotelId/room-types/:roomTypeId/rooms/:id`, async ({ params }) => {
+    await delay(50);
+    const roomIndex = mockPhysicalRooms.findIndex(
+      (r) => r.id === params.id && r.hotelId === params.hotelId && r.roomTypeId === params.roomTypeId
+    );
+    if (roomIndex === -1) {
+      return HttpResponse.json(
+        { data: null, meta: { requestId: 'test' }, error: { code: 'NOT_FOUND', message: 'Room not found' } },
+        { status: 404 }
+      );
+    }
+    mockPhysicalRooms.splice(roomIndex, 1);
+    return HttpResponse.json({ data: null, meta: { requestId: 'test' }, error: null });
+  }),
+
+  // ============================================================================
+  // Room Inventory Endpoints
+  // ============================================================================
+
+  // Get room inventory for a hotel
+  http.get(`${API_URL}/api/v1/hotels/:hotelId/inventory`, async ({ params, request }) => {
+    await delay(50);
+    const url = new URL(request.url);
+    const startDate = url.searchParams.get('startDate');
+    const endDate = url.searchParams.get('endDate');
+    const roomTypeId = url.searchParams.get('roomTypeId');
+
+    let inventory = mockRoomInventory.filter((i) => i.hotelId === params.hotelId);
+
+    if (startDate) {
+      inventory = inventory.filter((i) => i.date >= startDate);
+    }
+    if (endDate) {
+      inventory = inventory.filter((i) => i.date <= endDate);
+    }
+    if (roomTypeId) {
+      inventory = inventory.filter((i) => i.roomTypeId === roomTypeId);
+    }
+
+    return HttpResponse.json({
+      data: inventory,
+      meta: { requestId: 'test-request-id' },
+      error: null,
+    });
+  }),
+
+  // Bulk update inventory
+  http.put(`${API_URL}/api/v1/hotels/:hotelId/inventory`, async ({ params, request }) => {
+    await delay(100);
+    const updates = await request.json() as {
+      roomTypeId: string;
+      startDate: string;
+      endDate: string;
+      availableRooms?: number;
+      blockedRooms?: number;
+    }[];
+
+    const updatedRecords: typeof mockRoomInventory = [];
+
+    updates.forEach((update) => {
+      // Find and update matching inventory records
+      mockRoomInventory.forEach((inv, index) => {
+        if (
+          inv.hotelId === params.hotelId &&
+          inv.roomTypeId === update.roomTypeId &&
+          inv.date >= update.startDate &&
+          inv.date <= update.endDate
+        ) {
+          if (update.availableRooms !== undefined) {
+            mockRoomInventory[index].availableRooms = update.availableRooms;
+          }
+          if (update.blockedRooms !== undefined) {
+            mockRoomInventory[index].blockedRooms = update.blockedRooms;
+          }
+          updatedRecords.push(mockRoomInventory[index]);
+        }
+      });
+    });
+
+    return HttpResponse.json({
+      data: updatedRecords,
+      meta: { requestId: 'test', updatedCount: updatedRecords.length },
+      error: null,
+    });
+  }),
+
+  // ============================================================================
+  // Pricing Rules Endpoints
+  // ============================================================================
+
+  // List pricing rules for a hotel
+  http.get(`${API_URL}/api/v1/hotels/:hotelId/pricing-rules`, async ({ params }) => {
+    await delay(50);
+    const rules = mockPricingRules.filter((r) => r.hotelId === params.hotelId);
+    // Sort by priority descending
+    rules.sort((a, b) => b.priority - a.priority);
+    return HttpResponse.json({
+      data: rules,
+      meta: { requestId: 'test-request-id' },
+      error: null,
+    });
+  }),
+
+  // Create pricing rule
+  http.post(`${API_URL}/api/v1/hotels/:hotelId/pricing-rules`, async ({ params, request }) => {
+    await delay(100);
+    const body = await request.json() as Omit<typeof mockPricingRules[0], 'id' | 'hotelId'>;
+    const newRule = {
+      id: `rule_${Date.now()}`,
+      hotelId: params.hotelId as string,
+      ...body,
+    };
+    mockPricingRules.push(newRule);
+    return HttpResponse.json({ data: newRule, meta: { requestId: 'test' }, error: null }, { status: 201 });
+  }),
+
+  // Update pricing rule
+  http.patch(`${API_URL}/api/v1/hotels/:hotelId/pricing-rules/:id`, async ({ params, request }) => {
+    await delay(50);
+    const updates = await request.json() as Partial<typeof mockPricingRules[0]>;
+    const ruleIndex = mockPricingRules.findIndex((r) => r.id === params.id && r.hotelId === params.hotelId);
+    if (ruleIndex === -1) {
+      return HttpResponse.json(
+        { data: null, meta: { requestId: 'test' }, error: { code: 'NOT_FOUND', message: 'Pricing rule not found' } },
+        { status: 404 }
+      );
+    }
+    mockPricingRules[ruleIndex] = { ...mockPricingRules[ruleIndex], ...updates };
+    return HttpResponse.json({ data: mockPricingRules[ruleIndex], meta: { requestId: 'test' }, error: null });
+  }),
+
+  // Delete pricing rule
+  http.delete(`${API_URL}/api/v1/hotels/:hotelId/pricing-rules/:id`, async ({ params }) => {
+    await delay(50);
+    const ruleIndex = mockPricingRules.findIndex((r) => r.id === params.id && r.hotelId === params.hotelId);
+    if (ruleIndex === -1) {
+      return HttpResponse.json(
+        { data: null, meta: { requestId: 'test' }, error: { code: 'NOT_FOUND', message: 'Pricing rule not found' } },
+        { status: 404 }
+      );
+    }
+    mockPricingRules.splice(ruleIndex, 1);
+    return HttpResponse.json({ data: null, meta: { requestId: 'test' }, error: null });
+  }),
+
+  // ============================================================================
+  // Promo Codes Endpoints
+  // ============================================================================
+
+  // List all promo codes
+  http.get(`${API_URL}/api/v1/promo-codes`, async ({ request }) => {
+    await delay(50);
+    const url = new URL(request.url);
+    const search = url.searchParams.get('search') || '';
+    const status = url.searchParams.get('status') || '';
+    const hotelId = url.searchParams.get('hotelId') || '';
+
+    let codes = [...mockPromoCodes];
+
+    if (search) {
+      codes = codes.filter((c) => c.code.toLowerCase().includes(search.toLowerCase()));
+    }
+
+    if (hotelId) {
+      codes = codes.filter((c) => !c.hotelId || c.hotelId === hotelId);
+    }
+
+    if (status) {
+      const today = new Date().toISOString().split('T')[0];
+      codes = codes.filter((c) => {
+        const isExpired = c.validTo && c.validTo < today;
+        const isExhausted = c.maxUses && c.usedCount >= c.maxUses;
+        const computedStatus = !c.isActive ? 'INACTIVE' : isExpired ? 'EXPIRED' : isExhausted ? 'EXHAUSTED' : 'ACTIVE';
+        return computedStatus === status;
+      });
+    }
+
+    return HttpResponse.json({
+      data: codes,
+      meta: { requestId: 'test-request-id' },
+      error: null,
+    });
+  }),
+
+  // Validate promo code
+  http.get(`${API_URL}/api/v1/promo-codes/:code/validate`, async ({ params, request }) => {
+    await delay(50);
+    const url = new URL(request.url);
+    const bookingAmount = parseFloat(url.searchParams.get('amount') || '0');
+    const hotelId = url.searchParams.get('hotelId') || '';
+    const roomTypeId = url.searchParams.get('roomTypeId') || '';
+
+    const promo = mockPromoCodes.find((c) => c.code.toUpperCase() === (params.code as string).toUpperCase());
+
+    if (!promo) {
+      return HttpResponse.json(
+        { data: null, meta: { requestId: 'test' }, error: { code: 'NOT_FOUND', message: 'Promo code not found' } },
+        { status: 404 }
+      );
+    }
+
+    const today = new Date().toISOString().split('T')[0];
+    const isExpired = promo.validTo && promo.validTo < today;
+    const isNotYetValid = promo.validFrom && promo.validFrom > today;
+    const isExhausted = promo.maxUses && promo.usedCount >= promo.maxUses;
+    const belowMinimum = promo.minBookingAmount && bookingAmount < promo.minBookingAmount;
+    const wrongHotel = promo.hotelId && hotelId && promo.hotelId !== hotelId;
+    const wrongRoomType = promo.applicableRoomTypeIds && roomTypeId && !promo.applicableRoomTypeIds.includes(roomTypeId);
+
+    if (!promo.isActive) {
+      return HttpResponse.json({
+        data: { valid: false, reason: 'Promo code is inactive' },
+        meta: { requestId: 'test' },
+        error: null,
+      });
+    }
+
+    if (isExpired) {
+      return HttpResponse.json({
+        data: { valid: false, reason: 'Promo code has expired' },
+        meta: { requestId: 'test' },
+        error: null,
+      });
+    }
+
+    if (isNotYetValid) {
+      return HttpResponse.json({
+        data: { valid: false, reason: 'Promo code is not yet valid' },
+        meta: { requestId: 'test' },
+        error: null,
+      });
+    }
+
+    if (isExhausted) {
+      return HttpResponse.json({
+        data: { valid: false, reason: 'Promo code usage limit reached' },
+        meta: { requestId: 'test' },
+        error: null,
+      });
+    }
+
+    if (belowMinimum) {
+      return HttpResponse.json({
+        data: { valid: false, reason: `Minimum booking amount is $${promo.minBookingAmount}` },
+        meta: { requestId: 'test' },
+        error: null,
+      });
+    }
+
+    if (wrongHotel) {
+      return HttpResponse.json({
+        data: { valid: false, reason: 'Promo code not valid for this hotel' },
+        meta: { requestId: 'test' },
+        error: null,
+      });
+    }
+
+    if (wrongRoomType) {
+      return HttpResponse.json({
+        data: { valid: false, reason: 'Promo code not valid for this room type' },
+        meta: { requestId: 'test' },
+        error: null,
+      });
+    }
+
+    // Calculate discount
+    let discount = 0;
+    if (promo.discountType === 'PERCENTAGE') {
+      discount = (bookingAmount * promo.discountValue) / 100;
+      if (promo.maxDiscountAmount) {
+        discount = Math.min(discount, promo.maxDiscountAmount);
+      }
+    } else {
+      discount = promo.discountValue;
+    }
+
+    return HttpResponse.json({
+      data: {
+        valid: true,
+        promo,
+        discountAmount: Math.round(discount * 100) / 100,
+        finalAmount: Math.round((bookingAmount - discount) * 100) / 100,
+      },
+      meta: { requestId: 'test' },
+      error: null,
+    });
+  }),
+
+  // Create promo code
+  http.post(`${API_URL}/api/v1/promo-codes`, async ({ request }) => {
+    await delay(100);
+    const body = await request.json() as Omit<typeof mockPromoCodes[0], 'id' | 'usedCount' | 'createdAt'>;
+    const newPromo = {
+      id: `promo_${Date.now()}`,
+      ...body,
+      usedCount: 0,
+      createdAt: new Date().toISOString(),
+    };
+    mockPromoCodes.push(newPromo);
+    return HttpResponse.json({ data: newPromo, meta: { requestId: 'test' }, error: null }, { status: 201 });
+  }),
+
+  // Update promo code
+  http.patch(`${API_URL}/api/v1/promo-codes/:id`, async ({ params, request }) => {
+    await delay(50);
+    const updates = await request.json() as Partial<typeof mockPromoCodes[0]>;
+    const promoIndex = mockPromoCodes.findIndex((p) => p.id === params.id);
+    if (promoIndex === -1) {
+      return HttpResponse.json(
+        { data: null, meta: { requestId: 'test' }, error: { code: 'NOT_FOUND', message: 'Promo code not found' } },
+        { status: 404 }
+      );
+    }
+    mockPromoCodes[promoIndex] = { ...mockPromoCodes[promoIndex], ...updates };
+    return HttpResponse.json({ data: mockPromoCodes[promoIndex], meta: { requestId: 'test' }, error: null });
+  }),
+
+  // Delete promo code
+  http.delete(`${API_URL}/api/v1/promo-codes/:id`, async ({ params }) => {
+    await delay(50);
+    const promoIndex = mockPromoCodes.findIndex((p) => p.id === params.id);
+    if (promoIndex === -1) {
+      return HttpResponse.json(
+        { data: null, meta: { requestId: 'test' }, error: { code: 'NOT_FOUND', message: 'Promo code not found' } },
+        { status: 404 }
+      );
+    }
+    mockPromoCodes.splice(promoIndex, 1);
+    return HttpResponse.json({ data: null, meta: { requestId: 'test' }, error: null });
   }),
 ];
 

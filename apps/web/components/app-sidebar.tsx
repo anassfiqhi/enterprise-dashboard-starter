@@ -9,6 +9,7 @@ import {
   LayoutDashboardIcon,
   SearchIcon,
   SettingsIcon,
+  Tag,
 } from "lucide-react"
 import { useSelector } from "react-redux"
 import type { RootState } from "@/lib/store"
@@ -83,6 +84,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         url: "/hotels",
         icon: Building2,
         isActive: pathname?.startsWith("/hotels") ?? false,
+      })
+    }
+
+    // Promo Codes - discount code management
+    if (hasPermission("reservations", "read")) {
+      items.push({
+        title: "Promo Codes",
+        url: "/promo-codes",
+        icon: Tag,
+        isActive: pathname?.startsWith("/promo-codes") ?? false,
       })
     }
 

@@ -2,9 +2,11 @@
 
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import type { Hotel, RoomType, ActivityType } from '@repo/shared';
+import type { Hotel, RoomType, ActivityType, PhysicalRoom, PricingRule } from '@repo/shared';
 import { useHotel } from '@/hooks/useHotel';
 import { useHotelMutations } from '@/hooks/useHotelMutations';
+import { usePhysicalRooms, usePhysicalRoomMutations } from '@/hooks/usePhysicalRooms';
+import { usePricingRules, usePricingRuleMutations } from '@/hooks/usePricingRules';
 import {
     HotelFormDialog,
     RoomTypeCard,
@@ -12,12 +14,20 @@ import {
     ActivityTypeCard,
     ActivityTypeFormDialog,
     DeleteConfirmDialog,
+    PhysicalRoomCard,
+    PhysicalRoomFormDialog,
 } from '@/components/hotels';
+import { PricingRuleCard, PricingRuleFormDialog } from '@/components/pricing';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+    Collapsible,
+    CollapsibleContent,
+    CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import {
     ArrowLeft,
     Building2,
@@ -28,13 +38,18 @@ import {
     BedDouble,
     Activity,
     Trash2,
+    DoorOpen,
+    DollarSign,
+    ChevronDown,
 } from 'lucide-react';
 import Link from 'next/link';
 
 type DeleteTarget =
     | { type: 'hotel'; hotel: Hotel }
     | { type: 'roomType'; roomType: RoomType }
-    | { type: 'activityType'; activityType: ActivityType };
+    | { type: 'activityType'; activityType: ActivityType }
+    | { type: 'physicalRoom'; room: PhysicalRoom }
+    | { type: 'pricingRule'; rule: PricingRule };
 
 export default function HotelDetailPage() {
     const params = useParams();
@@ -43,6 +58,11 @@ export default function HotelDetailPage() {
 
     const { data: hotel, isLoading } = useHotel(hotelId);
     const { deleteHotel, deleteRoomType, deleteActivityType } = useHotelMutations();
+    const { deletePhysicalRoom } = usePhysicalRoomMutations();
+    const { deletePricingRule, updatePricingRule } = usePricingRuleMutations();
+
+    // Fetch pricing rules for this hotel
+    const { data: pricingRules, isLoading: isPricingRulesLoading } = usePricingRules(hotelId);
 
     // Hotel edit state
     const [hotelFormOpen, setHotelFormOpen] = useState(false);
@@ -54,6 +74,16 @@ export default function HotelDetailPage() {
     // Activity type state
     const [activityFormOpen, setActivityFormOpen] = useState(false);
     const [editingActivityType, setEditingActivityType] = useState<ActivityType | null>(null);
+
+    // Physical room state
+    const [physicalRoomFormOpen, setPhysicalRoomFormOpen] = useState(false);
+    const [editingPhysicalRoom, setEditingPhysicalRoom] = useState<PhysicalRoom | null>(null);
+    const [selectedRoomTypeId, setSelectedRoomTypeId] = useState<string>('');
+    const [expandedRoomTypes, setExpandedRoomTypes] = useState<Set<string>>(new Set());
+
+    // Pricing rule state
+    const [pricingRuleFormOpen, setPricingRuleFormOpen] = useState(false);
+    const [editingPricingRule, setEditingPricingRule] = useState<PricingRule | null>(null);
 
     // Delete confirmation state
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -79,11 +109,58 @@ export default function HotelDetailPage() {
         setDeleteDialogOpen(true);
     };
 
+    const handleAddPhysicalRoom = (roomTypeId: string) => {
+        setSelectedRoomTypeId(roomTypeId);
+        setEditingPhysicalRoom(null);
+        setPhysicalRoomFormOpen(true);
+    };
+
+    const handleEditPhysicalRoom = (room: PhysicalRoom) => {
+        setSelectedRoomTypeId(room.roomTypeId);
+        setEditingPhysicalRoom(room);
+        setPhysicalRoomFormOpen(true);
+    };
+
+    const handleDeletePhysicalRoom = (room: PhysicalRoom) => {
+        setDeleteTarget({ type: 'physicalRoom', room });
+        setDeleteDialogOpen(true);
+    };
+
+    const handleEditPricingRule = (rule: PricingRule) => {
+        setEditingPricingRule(rule);
+        setPricingRuleFormOpen(true);
+    };
+
+    const handleDeletePricingRule = (rule: PricingRule) => {
+        setDeleteTarget({ type: 'pricingRule', rule });
+        setDeleteDialogOpen(true);
+    };
+
+    const handleTogglePricingRuleActive = async (rule: PricingRule, isActive: boolean) => {
+        await updatePricingRule.mutateAsync({
+            id: rule.id,
+            hotelId,
+            isActive,
+        });
+    };
+
     const handleDeleteHotel = () => {
         if (hotel) {
             setDeleteTarget({ type: 'hotel', hotel: hotel as Hotel });
             setDeleteDialogOpen(true);
         }
+    };
+
+    const toggleRoomTypeExpanded = (roomTypeId: string) => {
+        setExpandedRoomTypes((prev) => {
+            const next = new Set(prev);
+            if (next.has(roomTypeId)) {
+                next.delete(roomTypeId);
+            } else {
+                next.add(roomTypeId);
+            }
+            return next;
+        });
     };
 
     const confirmDelete = async () => {
@@ -100,6 +177,17 @@ export default function HotelDetailPage() {
         } else if (deleteTarget.type === 'activityType') {
             await deleteActivityType.mutateAsync({
                 id: deleteTarget.activityType.id,
+                hotelId,
+            });
+        } else if (deleteTarget.type === 'physicalRoom') {
+            await deletePhysicalRoom.mutateAsync({
+                id: deleteTarget.room.id,
+                hotelId,
+                roomTypeId: deleteTarget.room.roomTypeId,
+            });
+        } else if (deleteTarget.type === 'pricingRule') {
+            await deletePricingRule.mutateAsync({
+                id: deleteTarget.rule.id,
                 hotelId,
             });
         }
@@ -126,6 +214,16 @@ export default function HotelDetailPage() {
                 return {
                     title: 'Delete Activity',
                     description: `Are you sure you want to delete "${deleteTarget.activityType.name}"? This action cannot be undone.`,
+                };
+            case 'physicalRoom':
+                return {
+                    title: 'Delete Room',
+                    description: `Are you sure you want to delete room "${deleteTarget.room.code}"? This action cannot be undone.`,
+                };
+            case 'pricingRule':
+                return {
+                    title: 'Delete Pricing Rule',
+                    description: `Are you sure you want to delete "${deleteTarget.rule.name}"? This action cannot be undone.`,
                 };
         }
     };
@@ -232,7 +330,7 @@ export default function HotelDetailPage() {
                         </Card>
                     </div>
 
-                    {/* Room Types & Activities Tabs */}
+                    {/* Tabs */}
                     <div className="px-4 lg:px-6">
                         <Tabs defaultValue="rooms" className="w-full">
                             <TabsList>
@@ -240,12 +338,21 @@ export default function HotelDetailPage() {
                                     <BedDouble className="h-4 w-4" />
                                     Room Types
                                 </TabsTrigger>
+                                <TabsTrigger value="physical-rooms" className="flex items-center gap-2">
+                                    <DoorOpen className="h-4 w-4" />
+                                    Rooms
+                                </TabsTrigger>
                                 <TabsTrigger value="activities" className="flex items-center gap-2">
                                     <Activity className="h-4 w-4" />
                                     Activities
                                 </TabsTrigger>
+                                <TabsTrigger value="pricing" className="flex items-center gap-2">
+                                    <DollarSign className="h-4 w-4" />
+                                    Pricing
+                                </TabsTrigger>
                             </TabsList>
 
+                            {/* Room Types Tab */}
                             <TabsContent value="rooms" className="mt-4">
                                 <div className="flex items-center justify-between mb-4">
                                     <div>
@@ -298,6 +405,44 @@ export default function HotelDetailPage() {
                                 )}
                             </TabsContent>
 
+                            {/* Physical Rooms Tab */}
+                            <TabsContent value="physical-rooms" className="mt-4">
+                                <div className="flex items-center justify-between mb-4">
+                                    <div>
+                                        <h3 className="text-lg font-medium">Physical Rooms</h3>
+                                        <p className="text-sm text-muted-foreground">
+                                            Individual rooms organized by room type
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {!hotel.roomTypes || hotel.roomTypes.length === 0 ? (
+                                    <Card className="p-8 text-center">
+                                        <DoorOpen className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+                                        <h4 className="font-medium mb-1">No room types yet</h4>
+                                        <p className="text-sm text-muted-foreground mb-4">
+                                            Add room types first, then you can add individual rooms
+                                        </p>
+                                    </Card>
+                                ) : (
+                                    <div className="space-y-4">
+                                        {hotel.roomTypes.map((roomType) => (
+                                            <PhysicalRoomsSection
+                                                key={roomType.id}
+                                                roomType={roomType}
+                                                hotelId={hotelId}
+                                                isExpanded={expandedRoomTypes.has(roomType.id)}
+                                                onToggle={() => toggleRoomTypeExpanded(roomType.id)}
+                                                onAddRoom={() => handleAddPhysicalRoom(roomType.id)}
+                                                onEditRoom={handleEditPhysicalRoom}
+                                                onDeleteRoom={handleDeletePhysicalRoom}
+                                            />
+                                        ))}
+                                    </div>
+                                )}
+                            </TabsContent>
+
+                            {/* Activities Tab */}
                             <TabsContent value="activities" className="mt-4">
                                 <div className="flex items-center justify-between mb-4">
                                     <div>
@@ -349,6 +494,66 @@ export default function HotelDetailPage() {
                                     </div>
                                 )}
                             </TabsContent>
+
+                            {/* Pricing Rules Tab */}
+                            <TabsContent value="pricing" className="mt-4">
+                                <div className="flex items-center justify-between mb-4">
+                                    <div>
+                                        <h3 className="text-lg font-medium">Pricing Rules</h3>
+                                        <p className="text-sm text-muted-foreground">
+                                            Dynamic pricing, seasonal rates, and discounts
+                                        </p>
+                                    </div>
+                                    <Button
+                                        size="sm"
+                                        onClick={() => {
+                                            setEditingPricingRule(null);
+                                            setPricingRuleFormOpen(true);
+                                        }}
+                                    >
+                                        <Plus className="mr-2 h-4 w-4" />
+                                        Add Rule
+                                    </Button>
+                                </div>
+
+                                {isPricingRulesLoading ? (
+                                    <div className="grid gap-4 sm:grid-cols-2">
+                                        {Array.from({ length: 4 }).map((_, i) => (
+                                            <Skeleton key={i} className="h-[120px]" />
+                                        ))}
+                                    </div>
+                                ) : !pricingRules || pricingRules.length === 0 ? (
+                                    <Card className="p-8 text-center">
+                                        <DollarSign className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+                                        <h4 className="font-medium mb-1">No pricing rules yet</h4>
+                                        <p className="text-sm text-muted-foreground mb-4">
+                                            Add rules for dynamic pricing, seasonal rates, and discounts
+                                        </p>
+                                        <Button
+                                            size="sm"
+                                            onClick={() => {
+                                                setEditingPricingRule(null);
+                                                setPricingRuleFormOpen(true);
+                                            }}
+                                        >
+                                            <Plus className="mr-2 h-4 w-4" />
+                                            Add Rule
+                                        </Button>
+                                    </Card>
+                                ) : (
+                                    <div className="grid gap-4 sm:grid-cols-2">
+                                        {pricingRules.map((rule) => (
+                                            <PricingRuleCard
+                                                key={rule.id}
+                                                rule={rule}
+                                                onEdit={handleEditPricingRule}
+                                                onDelete={handleDeletePricingRule}
+                                                onToggleActive={handleTogglePricingRuleActive}
+                                            />
+                                        ))}
+                                    </div>
+                                )}
+                            </TabsContent>
                         </Tabs>
                     </div>
                 </div>
@@ -381,6 +586,30 @@ export default function HotelDetailPage() {
                 activityType={editingActivityType}
             />
 
+            <PhysicalRoomFormDialog
+                open={physicalRoomFormOpen}
+                onOpenChange={(open) => {
+                    setPhysicalRoomFormOpen(open);
+                    if (!open) {
+                        setEditingPhysicalRoom(null);
+                        setSelectedRoomTypeId('');
+                    }
+                }}
+                hotelId={hotelId}
+                roomTypeId={selectedRoomTypeId}
+                room={editingPhysicalRoom}
+            />
+
+            <PricingRuleFormDialog
+                open={pricingRuleFormOpen}
+                onOpenChange={(open) => {
+                    setPricingRuleFormOpen(open);
+                    if (!open) setEditingPricingRule(null);
+                }}
+                hotelId={hotelId}
+                rule={editingPricingRule}
+            />
+
             <DeleteConfirmDialog
                 open={deleteDialogOpen}
                 onOpenChange={setDeleteDialogOpen}
@@ -389,9 +618,86 @@ export default function HotelDetailPage() {
                 isPending={
                     deleteHotel.isPending ||
                     deleteRoomType.isPending ||
-                    deleteActivityType.isPending
+                    deleteActivityType.isPending ||
+                    deletePhysicalRoom.isPending ||
+                    deletePricingRule.isPending
                 }
             />
         </div>
+    );
+}
+
+// Component to show physical rooms for a room type
+function PhysicalRoomsSection({
+    roomType,
+    hotelId,
+    isExpanded,
+    onToggle,
+    onAddRoom,
+    onEditRoom,
+    onDeleteRoom,
+}: {
+    roomType: RoomType;
+    hotelId: string;
+    isExpanded: boolean;
+    onToggle: () => void;
+    onAddRoom: () => void;
+    onEditRoom: (room: PhysicalRoom) => void;
+    onDeleteRoom: (room: PhysicalRoom) => void;
+}) {
+    const { data: rooms, isLoading } = usePhysicalRooms(hotelId, roomType.id);
+
+    return (
+        <Collapsible open={isExpanded} onOpenChange={onToggle}>
+            <Card>
+                <CardHeader className="py-3">
+                    <div className="flex items-center justify-between">
+                        <CollapsibleTrigger asChild>
+                            <Button variant="ghost" className="flex items-center gap-2 p-0 h-auto hover:bg-transparent">
+                                <ChevronDown
+                                    className={`h-4 w-4 transition-transform ${isExpanded ? '' : '-rotate-90'}`}
+                                />
+                                <CardTitle className="text-base font-medium">
+                                    {roomType.name}
+                                </CardTitle>
+                                <Badge variant="secondary" className="ml-2">
+                                    {rooms?.length || 0} rooms
+                                </Badge>
+                            </Button>
+                        </CollapsibleTrigger>
+                        <Button size="sm" variant="outline" onClick={onAddRoom}>
+                            <Plus className="mr-2 h-4 w-4" />
+                            Add Room
+                        </Button>
+                    </div>
+                </CardHeader>
+                <CollapsibleContent>
+                    <CardContent className="pt-0">
+                        {isLoading ? (
+                            <div className="space-y-2">
+                                {Array.from({ length: 2 }).map((_, i) => (
+                                    <Skeleton key={i} className="h-[60px]" />
+                                ))}
+                            </div>
+                        ) : !rooms || rooms.length === 0 ? (
+                            <div className="text-center py-4 text-sm text-muted-foreground">
+                                No rooms added yet
+                            </div>
+                        ) : (
+                            <div className="space-y-2">
+                                {rooms.map((room) => (
+                                    <PhysicalRoomCard
+                                        key={room.id}
+                                        room={room}
+                                        onEdit={onEditRoom}
+                                        onDelete={onDeleteRoom}
+                                    />
+                                ))}
+                            </div>
+                        )}
+                    </CardContent>
+                </CollapsibleContent>
+            </Card>
+        </Collapsible>
     );
 }

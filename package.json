@@ -20,6 +20,7 @@
         "vitest": "^4.0.17"
     },
     "dependencies": {
-        "@radix-ui/react-progress": "^1.1.8"
+        "@radix-ui/react-progress": "^1.1.8",
+        "@radix-ui/react-switch": "^1.2.6"
     }
 }
