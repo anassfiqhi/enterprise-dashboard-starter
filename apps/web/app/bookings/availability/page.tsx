@@ -1,30 +1,30 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/lib/store';
 import { setHotelId, setViewType, navigateMonth } from '@/lib/features/ui/availabilityFiltersSlice';
-import { useHotels } from '@/hooks/useHotels';
 import { Button } from '@/components/ui/button';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { AvailabilityCalendar } from '@/components/bookings/AvailabilityCalendar';
 import { AvailabilityLegend } from '@/components/bookings/AvailabilityLegend';
-import { ChevronLeft, ChevronRight, Building2, Bed, Calendar as CalendarIcon } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Bed, Calendar as CalendarIcon, Building2 } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
 export default function AvailabilityPage() {
     const dispatch = useDispatch();
-    const { hotelId, viewType, startDate, endDate } = useSelector(
+    const { viewType, startDate, endDate } = useSelector(
         (state: RootState) => state.availabilityFilters
     );
-    const { data: hotels, isLoading: hotelsLoading } = useHotels();
+    const activeHotel = useSelector((state: RootState) => state.session.activeHotel);
+
+    // Sync hotelId from session to availability filters
+    useEffect(() => {
+        if (activeHotel?.id) {
+            dispatch(setHotelId(activeHotel.id));
+        }
+    }, [activeHotel?.id, dispatch]);
 
     const formatMonthRange = () => {
         const start = new Date(startDate);
@@ -35,6 +35,18 @@ export default function AvailabilityPage() {
         return `${start.toLocaleDateString('en-US', { month: 'short' })} - ${end.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}`;
     };
 
+    if (!activeHotel) {
+        return (
+            <div className="flex flex-1 flex-col items-center justify-center gap-4 p-4">
+                <Building2 className="h-12 w-12 text-muted-foreground" />
+                <h2 className="text-lg font-semibold">No hotel selected</h2>
+                <p className="text-muted-foreground text-center">
+                    Please select a hotel from the organization switcher to view availability.
+                </p>
+            </div>
+        );
+    }
+
     return (
         <div className="flex flex-1 flex-col">
             <div className="@container/main flex flex-1 flex-col gap-2">
@@ -43,34 +55,13 @@ export default function AvailabilityPage() {
                         <div>
                             <h1 className="text-2xl font-bold">Availability</h1>
                             <p className="text-sm text-muted-foreground">
-                                View room and activity availability by date
+                                View room and activity availability for {activeHotel.name}
                             </p>
                         </div>
                     </div>
 
                     {/* Controls */}
                     <div className="flex flex-wrap gap-4 items-center px-4 lg:px-6">
-                        {/* Hotel Selector */}
-                        <Select
-                            value={hotelId || 'select'}
-                            onValueChange={(value) => dispatch(setHotelId(value === 'select' ? '' : value))}
-                        >
-                            <SelectTrigger className="w-[280px]">
-                                <Building2 className="h-4 w-4 mr-2 text-muted-foreground" />
-                                <SelectValue placeholder="Select a hotel" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="select" disabled>
-                                    Select a hotel
-                                </SelectItem>
-                                {hotels?.map((hotel) => (
-                                    <SelectItem key={hotel.id} value={hotel.id}>
-                                        {hotel.name}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-
                         {/* View Type Toggle */}
                         <ToggleGroup
                             type="single"
