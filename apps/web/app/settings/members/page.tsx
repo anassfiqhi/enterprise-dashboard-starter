@@ -95,15 +95,15 @@ function InvitationsLoadingSkeleton() {
 
 function MembersTab() {
     const { data: members, isLoading, error } = useMembers();
-    const { hasPermission } = usePermissions();
+    const { can } = usePermissions();
     const updateRole = useUpdateMemberRole();
     const removeMember = useRemoveMember();
     const [pendingRemove, setPendingRemove] = useState<string | null>(null);
 
     const currentUserId = useSelector((state: RootState) => state.session.user?.id);
 
-    const canUpdateMembers = hasPermission("member", "update");
-    const canDeleteMembers = hasPermission("member", "delete");
+    const canUpdateMembers = can("member", "update");
+    const canDeleteMembers = can("member", "delete");
 
     if (isLoading) {
         return <MembersLoadingSkeleton />;
@@ -251,7 +251,7 @@ function MembersTab() {
 
 function InvitationsTab() {
     const { data: invitations, isLoading, error } = useInvitations();
-    const { hasPermission } = usePermissions();
+    const { can } = usePermissions();
     const inviteMember = useInviteMember();
     const cancelInvitation = useCancelInvitation();
 
@@ -259,8 +259,8 @@ function InvitationsTab() {
     const [role, setRole] = useState<"member" | "admin" | "owner">("member");
     const [pendingCancel, setPendingCancel] = useState<string | null>(null);
 
-    const canInvite = hasPermission("invitation", "create");
-    const canCancel = hasPermission("invitation", "cancel");
+    const canInvite = can("invitation", "create");
+    const canCancel = can("invitation", "delete");
 
     if (isLoading) {
         return <InvitationsLoadingSkeleton />;
@@ -441,15 +441,15 @@ function InvitationsTab() {
 }
 
 export default function MembersPage() {
-    const { hasPermission, hasAnyPermission } = usePermissions();
+    const { canAny } = usePermissions();
 
-    const canViewMembers = hasAnyPermission([
+    const canViewMembers = canAny([
         { resource: "member", action: "update" },
         { resource: "member", action: "delete" },
     ]);
-    const canViewInvitations = hasAnyPermission([
+    const canViewInvitations = canAny([
         { resource: "invitation", action: "create" },
-        { resource: "invitation", action: "cancel" },
+        { resource: "invitation", action: "delete" },
     ]);
 
     const defaultTab = canViewMembers ? "members" : "invitations";

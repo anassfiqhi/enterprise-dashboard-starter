@@ -12,7 +12,7 @@ import { toast } from "sonner";
  */
 export function useMembers() {
     const organizationId = useSelector(
-        (state: RootState) => state.session.organization?.id
+        (state: RootState) => state.session.activeHotel?.id
     );
 
     return useQuery({
@@ -39,7 +39,7 @@ export function useMembers() {
 export function useUpdateMemberRole() {
     const queryClient = useQueryClient();
     const organizationId = useSelector(
-        (state: RootState) => state.session.organization?.id
+        (state: RootState) => state.session.activeHotel?.id
     );
 
     return useMutation({
@@ -69,7 +69,7 @@ export function useUpdateMemberRole() {
 export function useRemoveMember() {
     const queryClient = useQueryClient();
     const organizationId = useSelector(
-        (state: RootState) => state.session.organization?.id
+        (state: RootState) => state.session.activeHotel?.id
     );
 
     return useMutation({

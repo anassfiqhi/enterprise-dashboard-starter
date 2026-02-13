@@ -12,7 +12,7 @@ export default function SettingsLayout({
     children: React.ReactNode;
 }) {
     const router = useRouter();
-    const { user, organization, isLoading } = useSelector(
+    const { user, activeHotel, isLoading } = useSelector(
         (state: RootState) => state.session
     );
 
@@ -24,13 +24,13 @@ export default function SettingsLayout({
     }, [user, isLoading, router]);
 
     useEffect(() => {
-        // Redirect to home if no organization selected
-        if (!isLoading && user && !organization) {
+        // Redirect to home if no hotel selected
+        if (!isLoading && user && !activeHotel) {
             router.push("/");
         }
-    }, [user, organization, isLoading, router]);
+    }, [user, activeHotel, isLoading, router]);
 
-    if (isLoading || !user || !organization) {
+    if (isLoading || !user || !activeHotel) {
         return (
             <div className="flex flex-1 flex-col">
                 <div className="@container/main flex flex-1 items-center justify-center">

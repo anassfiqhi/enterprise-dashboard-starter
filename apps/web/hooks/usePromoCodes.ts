@@ -1,28 +1,36 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSelector } from 'react-redux';
 import type { PromoCode, DiscountType } from '@repo/shared';
+import type { RootState } from '@/lib/store';
+import { config } from '@/lib/config';
 import { toast } from 'sonner';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 // Query options for promo codes
 export interface PromoCodesQueryOptions {
     search?: string;
     status?: 'ACTIVE' | 'EXPIRED' | 'EXHAUSTED' | 'INACTIVE';
-    hotelId?: string;
 }
 
-// Fetch all promo codes with optional filters
+/**
+ * Fetch all promo codes for the current hotel
+ * Automatically scopes to the current active hotel
+ */
 export function usePromoCodes(options: PromoCodesQueryOptions = {}) {
+    const hotelId = useSelector((state: RootState) => state.session.activeHotel?.id);
+
     return useQuery({
-        queryKey: ['promoCodes', options] as const,
+        queryKey: ['promoCodes', hotelId, options] as const,
         queryFn: async () => {
+            if (!hotelId) throw new Error('No hotel selected');
+
             const params = new URLSearchParams();
+            params.append('hotelId', hotelId);
             if (options.search) params.append('search', options.search);
             if (options.status) params.append('status', options.status);
-            if (options.hotelId) params.append('hotelId', options.hotelId);
 
             const response = await fetch(
-                `${API_URL}/api/v1/promo-codes?${params.toString()}`
+                `${config.apiUrl}/api/v1/promo-codes?${params.toString()}`,
+                { credentials: 'include' }
             );
             if (!response.ok) {
                 throw new Error('Failed to fetch promo codes');
@@ -30,6 +38,7 @@ export function usePromoCodes(options: PromoCodesQueryOptions = {}) {
             const json = await response.json();
             return json.data as PromoCode[];
         },
+        enabled: !!hotelId,
     });
 }
 
@@ -37,7 +46,6 @@ export function usePromoCodes(options: PromoCodesQueryOptions = {}) {
 export interface ValidatePromoCodeOptions {
     code: string;
     amount: number;
-    hotelId?: string;
     roomTypeId?: string;
 }
 
@@ -50,17 +58,20 @@ export interface ValidatePromoCodeResult {
 }
 
 export function useValidatePromoCode(options: ValidatePromoCodeOptions | null) {
+    const hotelId = useSelector((state: RootState) => state.session.activeHotel?.id);
+
     return useQuery({
-        queryKey: ['validatePromoCode', options] as const,
+        queryKey: ['validatePromoCode', hotelId, options] as const,
         queryFn: async () => {
-            if (!options) return null;
+            if (!options || !hotelId) return null;
             const params = new URLSearchParams();
             params.append('amount', options.amount.toString());
-            if (options.hotelId) params.append('hotelId', options.hotelId);
+            params.append('hotelId', hotelId);
             if (options.roomTypeId) params.append('roomTypeId', options.roomTypeId);
 
             const response = await fetch(
-                `${API_URL}/api/v1/promo-codes/${options.code}/validate?${params.toString()}`
+                `${config.apiUrl}/api/v1/promo-codes/${options.code}/validate?${params.toString()}`,
+                { credentials: 'include' }
             );
             if (!response.ok) {
                 if (response.status === 404) {
@@ -71,14 +82,13 @@ export function useValidatePromoCode(options: ValidatePromoCodeOptions | null) {
             const json = await response.json();
             return json.data as ValidatePromoCodeResult;
         },
-        enabled: !!options?.code,
+        enabled: !!options?.code && !!hotelId,
     });
 }
 
 // Input types for mutations
 export interface CreatePromoCodeInput {
     code: string;
-    hotelId?: string;
     discountType: DiscountType;
     discountValue: number;
     currency?: string;
@@ -96,7 +106,6 @@ export interface CreatePromoCodeInput {
 export interface UpdatePromoCodeInput {
     id: string;
     code?: string;
-    hotelId?: string;
     discountType?: DiscountType;
     discountValue?: number;
     currency?: string;
@@ -111,15 +120,23 @@ export interface UpdatePromoCodeInput {
     isActive?: boolean;
 }
 
+/**
+ * Hook for promo code CRUD mutations
+ * Automatically associates promo codes with the current active hotel
+ */
 export function usePromoCodeMutations() {
     const queryClient = useQueryClient();
+    const hotelId = useSelector((state: RootState) => state.session.activeHotel?.id);
 
     const createPromoCode = useMutation({
         mutationFn: async (input: CreatePromoCodeInput) => {
-            const response = await fetch(`${API_URL}/api/v1/promo-codes`, {
+            if (!hotelId) throw new Error('No hotel selected');
+
+            const response = await fetch(`${config.apiUrl}/api/v1/promo-codes`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(input),
+                credentials: 'include',
+                body: JSON.stringify({ ...input, hotelId }),
             });
             if (!response.ok) {
                 throw new Error('Failed to create promo code');
@@ -128,7 +145,7 @@ export function usePromoCodeMutations() {
             return json.data as PromoCode;
         },
         onSuccess: (_, variables) => {
-            queryClient.invalidateQueries({ queryKey: ['promoCodes'] });
+            queryClient.invalidateQueries({ queryKey: ['promoCodes', hotelId] });
             toast.success(`"${variables.code}" has been created`);
         },
         onError: (error: Error) => {
@@ -139,9 +156,10 @@ export function usePromoCodeMutations() {
     const updatePromoCode = useMutation({
         mutationFn: async (input: UpdatePromoCodeInput) => {
             const { id, ...data } = input;
-            const response = await fetch(`${API_URL}/api/v1/promo-codes/${id}`, {
+            const response = await fetch(`${config.apiUrl}/api/v1/promo-codes/${id}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
                 body: JSON.stringify(data),
             });
             if (!response.ok) {
@@ -151,7 +169,7 @@ export function usePromoCodeMutations() {
             return json.data as PromoCode;
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['promoCodes'] });
+            queryClient.invalidateQueries({ queryKey: ['promoCodes', hotelId] });
             toast.success('Promo code has been updated');
         },
         onError: (error: Error) => {
@@ -161,15 +179,16 @@ export function usePromoCodeMutations() {
 
     const deletePromoCode = useMutation({
         mutationFn: async (id: string) => {
-            const response = await fetch(`${API_URL}/api/v1/promo-codes/${id}`, {
+            const response = await fetch(`${config.apiUrl}/api/v1/promo-codes/${id}`, {
                 method: 'DELETE',
+                credentials: 'include',
             });
             if (!response.ok) {
                 throw new Error('Failed to delete promo code');
             }
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['promoCodes'] });
+            queryClient.invalidateQueries({ queryKey: ['promoCodes', hotelId] });
             toast.success('Promo code has been deleted');
         },
         onError: (error: Error) => {

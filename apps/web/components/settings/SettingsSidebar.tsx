@@ -26,7 +26,7 @@ const navItems = [
 
 export function SettingsSidebar() {
     const pathname = usePathname();
-    const { hasAnyPermission } = usePermissions();
+    const { canAny } = usePermissions();
 
     return (
         <aside className="w-64 border-r bg-muted/10 p-4">
@@ -36,7 +36,7 @@ export function SettingsSidebar() {
                     // Check if user has any of the required permissions
                     const hasAccess = item.permissions.some((perm) =>
                         perm.actions.some((action) =>
-                            hasAnyPermission([{ resource: perm.resource, action }])
+                            canAny([{ resource: perm.resource, action }])
                         )
                     );
 

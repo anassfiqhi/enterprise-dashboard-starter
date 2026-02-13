@@ -26,10 +26,10 @@ export default function OrganizationPage() {
     const dispatch = useDispatch();
     const router = useRouter();
     const queryClient = useQueryClient();
-    const organization = useSelector(
-        (state: RootState) => state.session.organization
+    const activeHotel = useSelector(
+        (state: RootState) => state.session.activeHotel
     );
-    const { hasPermission } = usePermissions();
+    const { can } = usePermissions();
 
     const [name, setName] = useState("");
     const [slug, setSlug] = useState("");
@@ -37,19 +37,19 @@ export default function OrganizationPage() {
     const [isDeleting, setIsDeleting] = useState(false);
     const [deleteConfirm, setDeleteConfirm] = useState(false);
 
-    const canUpdate = hasPermission("organization", "update");
-    const canDelete = hasPermission("organization", "delete");
+    const canUpdate = can("organization", "update");
+    const canDelete = can("organization", "delete");
 
     useEffect(() => {
-        if (organization) {
-            setName(organization.name);
-            setSlug(organization.slug || "");
+        if (activeHotel) {
+            setName(activeHotel.name);
+            setSlug(activeHotel.slug || "");
         }
-    }, [organization]);
+    }, [activeHotel]);
 
     const handleUpdate = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!organization || !canUpdate) return;
+        if (!activeHotel || !canUpdate) return;
 
         setIsUpdating(true);
         try {
@@ -74,7 +74,7 @@ export default function OrganizationPage() {
     };
 
     const handleDelete = async () => {
-        if (!organization || !canDelete) return;
+        if (!activeHotel || !canDelete) return;
 
         if (!deleteConfirm) {
             setDeleteConfirm(true);
@@ -85,7 +85,7 @@ export default function OrganizationPage() {
         setIsDeleting(true);
         try {
             const response = await authClient.organization.delete({
-                organizationId: organization.id,
+                organizationId: activeHotel.id,
             });
 
             if (response.error) {
@@ -107,12 +107,12 @@ export default function OrganizationPage() {
         }
     };
 
-    if (!organization) {
+    if (!activeHotel) {
         return (
             <Card>
                 <CardContent className="py-8">
                     <p className="text-center text-muted-foreground">
-                        No organization selected
+                        No hotel selected
                     </p>
                 </CardContent>
             </Card>
