@@ -27,8 +27,8 @@ interface UserNavProps {
 export function UserNav({ user }: UserNavProps) {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
-    const organization = useSelector((state: RootState) => state.session.organization);
-    const role = useSelector((state: RootState) => state.session.role);
+    const activeHotel = useSelector((state: RootState) => state.session.activeHotel);
+    const activeMember = useSelector((state: RootState) => state.session.activeMember);
 
     const handleLogout = async () => {
         setIsLoading(true);
@@ -82,17 +82,17 @@ export function UserNav({ user }: UserNavProps) {
                                 {user.email}
                             </p>
                         )}
-                        {organization && (
+                        {activeHotel && (
                             <div className="flex items-center gap-1 mt-2 pt-2 border-t">
                                 <Building2 className="h-3 w-3 text-muted-foreground" />
                                 <p className="text-xs text-muted-foreground">
-                                    {organization.name}
+                                    {activeHotel.name}
                                 </p>
                             </div>
                         )}
-                        {role && (
+                        {activeMember?.role && (
                             <p className="text-xs text-muted-foreground capitalize">
-                                {role}
+                                {activeMember.role}
                             </p>
                         )}
                     </div>
@@ -102,7 +102,7 @@ export function UserNav({ user }: UserNavProps) {
                     <User className="mr-2 h-4 w-4" />
                     <span>Profile</span>
                 </DropdownMenuItem>
-                {organization && (
+                {activeHotel && (
                     <DropdownMenuItem onClick={() => router.push('/settings/members')}>
                         <Settings className="mr-2 h-4 w-4" />
                         <span>Settings</span>

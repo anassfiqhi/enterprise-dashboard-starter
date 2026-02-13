@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useSelector } from "react-redux"
 import { useRouter } from "next/navigation"
 import { ChevronsUpDown, Plus, Building2 } from "lucide-react"
@@ -34,47 +34,32 @@ interface Organization {
 export function SidebarOrgSwitcher() {
   const router = useRouter()
   const { isMobile, setOpenMobile } = useSidebar()
-  const activeOrg = useSelector((state: RootState) => state.session.organization)
-  const [organizations, setOrganizations] = useState<Organization[]>([])
+  const activeHotel = useSelector((state: RootState) => state.session.activeHotel)
+  const hotels = useSelector((state: RootState) => state.session.hotels)
   const [isLoading, setIsLoading] = useState(false)
 
-  useEffect(() => {
-    loadOrganizations()
-  }, [])
-
-  const loadOrganizations = async () => {
-    try {
-      const response = await authClient.organization.list()
-      if (response.data) {
-        setOrganizations(response.data)
-      }
-    } catch (error) {
-      console.error("Failed to load organizations:", error)
-    }
-  }
-
-  const handleOrgChange = async (org: Organization) => {
-    if (org.id === activeOrg?.id) return
+  const handleHotelChange = async (hotel: Organization) => {
+    if (hotel.id === activeHotel?.id) return
 
     setIsLoading(true)
     try {
       await authClient.organization.setActive({
-        organizationId: org.id,
+        organizationId: hotel.id,
       })
-      toast.success(`Switched to ${org.name}`)
+      toast.success(`Switched to ${hotel.name}`)
       if (isMobile) {
         setOpenMobile(false)
       }
       router.refresh()
     } catch (error) {
-      console.error("Failed to switch organization:", error)
-      toast.error("Failed to switch organization")
+      console.error("Failed to switch hotel:", error)
+      toast.error("Failed to switch hotel")
     } finally {
       setIsLoading(false)
     }
   }
 
-  if (!activeOrg) {
+  if (!activeHotel) {
     return (
       <SidebarMenu>
         <SidebarMenuItem>
@@ -109,11 +94,11 @@ export function SidebarOrgSwitcher() {
                 <Building2 className="size-4" />
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{activeOrg.name}</span>
+                <span className="truncate font-medium">{activeHotel.name}</span>
                 <span className="truncate text-xs text-muted-foreground">
-                  {organizations.length > 1
-                    ? `${organizations.length} organizations`
-                    : "Organization"}
+                  {hotels.length > 1
+                    ? `${hotels.length} hotels`
+                    : "Hotel"}
                 </span>
               </div>
               <ChevronsUpDown className="ml-auto" />
@@ -126,19 +111,19 @@ export function SidebarOrgSwitcher() {
             sideOffset={4}
           >
             <DropdownMenuLabel className="text-xs text-muted-foreground">
-              Organizations
+              Hotels
             </DropdownMenuLabel>
-            {organizations.map((org) => (
+            {hotels.map((hotel) => (
               <DropdownMenuItem
-                key={org.id}
-                onClick={() => handleOrgChange(org)}
+                key={hotel.id}
+                onClick={() => handleHotelChange(hotel)}
                 className="gap-2 p-2 cursor-pointer"
               >
                 <div className="flex size-6 items-center justify-center rounded-sm border">
                   <Building2 className="size-4 shrink-0" />
                 </div>
-                <span className="truncate">{org.name}</span>
-                {org.id === activeOrg.id && (
+                <span className="truncate">{hotel.name}</span>
+                {hotel.id === activeHotel.id && (
                   <span className="ml-auto text-xs text-muted-foreground">Active</span>
                 )}
               </DropdownMenuItem>
@@ -148,7 +133,7 @@ export function SidebarOrgSwitcher() {
               <div className="flex size-6 items-center justify-center rounded-md border bg-background">
                 <Plus className="size-4" />
               </div>
-              <span className="text-muted-foreground">Add organization</span>
+              <span className="text-muted-foreground">Add hotel</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

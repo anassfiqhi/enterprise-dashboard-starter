@@ -5,9 +5,6 @@ import type { Reservation } from '@repo/shared';
 import { useBookingMetrics } from '@/hooks/useBookingMetrics';
 import { useReservations } from '@/hooks/useReservations';
 import { BookingMetricsCards } from '@/components/bookings/BookingMetricsCards';
-import { RevenueChart } from '@/components/bookings/RevenueChart';
-import { OccupancyChart } from '@/components/bookings/OccupancyChart';
-import { BookingTrendsChart } from '@/components/bookings/BookingTrendsChart';
 import { ReservationStatusBadge } from '@/components/bookings/ReservationStatusBadge';
 import { ReservationDetailSheet } from '@/components/bookings/ReservationDetailSheet';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,7 +19,7 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { ArrowRight, Calendar, Building2, CalendarDays, BarChart3 } from 'lucide-react';
+import { ArrowRight, Calendar, Building2, CalendarDays, Plus } from 'lucide-react';
 
 function formatDate(dateStr: string | undefined): string {
     if (!dateStr) return '-';
@@ -66,16 +63,10 @@ export default function Home() {
                                     Availability
                                 </Link>
                             </Button>
-                            <Button variant="outline" size="sm" asChild>
-                                <Link href="/bookings/analytics">
-                                    <BarChart3 className="mr-2 h-4 w-4" />
-                                    Analytics
-                                </Link>
-                            </Button>
                             <Button size="sm" asChild>
                                 <Link href="/bookings">
-                                    View All Bookings
-                                    <ArrowRight className="ml-2 h-4 w-4" />
+                                    <Plus className="mr-2 h-4 w-4" />
+                                    New Booking
                                 </Link>
                             </Button>
                         </div>
@@ -84,71 +75,6 @@ export default function Home() {
                     {/* Metrics Cards */}
                     <div className="px-4 lg:px-6">
                         <BookingMetricsCards metrics={metrics} isLoading={metricsLoading} />
-                    </div>
-
-                    {/* Revenue & Occupancy Charts - 2 Column */}
-                    <div className="grid gap-4 px-4 lg:px-6 md:grid-cols-2">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Revenue Trend</CardTitle>
-                                <CardDescription>
-                                    Daily revenue over the past 30 days
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                {metricsLoading ? (
-                                    <Skeleton className="h-[300px] w-full" />
-                                ) : metrics?.revenueByDay ? (
-                                    <RevenueChart data={metrics.revenueByDay} />
-                                ) : (
-                                    <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                                        No revenue data available
-                                    </div>
-                                )}
-                            </CardContent>
-                        </Card>
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Occupancy Rate</CardTitle>
-                                <CardDescription>
-                                    Room occupancy percentage over the past 30 days
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                {metricsLoading ? (
-                                    <Skeleton className="h-[300px] w-full" />
-                                ) : metrics?.occupancyByDay ? (
-                                    <OccupancyChart data={metrics.occupancyByDay} />
-                                ) : (
-                                    <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                                        No occupancy data available
-                                    </div>
-                                )}
-                            </CardContent>
-                        </Card>
-                    </div>
-
-                    {/* Booking Trends */}
-                    <div className="px-4 lg:px-6">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Bookings by Status</CardTitle>
-                                <CardDescription>
-                                    Distribution of bookings across different statuses
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                {metricsLoading ? (
-                                    <Skeleton className="h-[200px] w-full" />
-                                ) : metrics?.bookingsByStatus ? (
-                                    <BookingTrendsChart data={metrics.bookingsByStatus} />
-                                ) : (
-                                    <div className="h-[200px] flex items-center justify-center text-muted-foreground">
-                                        No booking status data available
-                                    </div>
-                                )}
-                            </CardContent>
-                        </Card>
                     </div>
 
                     {/* Recent Reservations */}

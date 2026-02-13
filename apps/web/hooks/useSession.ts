@@ -1,30 +1,31 @@
 import { useQuery } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import { setSession, setLoading, clearSession, MutableOrganizationPermissions } from '@/lib/features/ui/sessionSlice';
+import { setSession, setLoading, clearSession, MutablePermissions } from '@/lib/features/ui/sessionSlice';
 import { config } from '@/lib/config';
-import type { SessionData, ResponseEnvelope } from '@repo/shared';
+import type { SessionData, ResponseEnvelope, OrganizationPermissions } from '@repo/shared';
 
 /**
- * Convert readonly permissions to mutable for Redux
+ * Convert readonly permissions to mutable for Redux (avoids immer readonly conflicts)
  */
-function toMutablePermissions(permissions: SessionData['permissions']): MutableOrganizationPermissions | null {
+function toMutablePermissions(
+  permissions: OrganizationPermissions | null
+): MutablePermissions | null {
   if (!permissions) return null;
 
-  return {
-    organization: permissions.organization ? [...permissions.organization] : undefined,
-    member: permissions.member ? [...permissions.member] : undefined,
-    invitation: permissions.invitation ? [...permissions.invitation] : undefined,
-    orders: permissions.orders ? [...permissions.orders] : undefined,
-    metrics: permissions.metrics ? [...permissions.metrics] : undefined,
-    reservations: permissions.reservations ? [...permissions.reservations] : undefined,
-    hotels: permissions.hotels ? [...permissions.hotels] : undefined,
-  };
+  const result: MutablePermissions = {};
+  for (const key of Object.keys(permissions) as (keyof OrganizationPermissions)[]) {
+    const value = permissions[key];
+    if (value) {
+      result[key] = [...value];
+    }
+  }
+  return result;
 }
 
 /**
- * Hook to fetch current session with organization context
- * (SPEC Section 5.2 - organization-based permissions snapshot)
+ * Hook to fetch current session with hotel context
+ * Syncs session data to Redux for global access
  */
 export function useSession() {
   const dispatch = useDispatch();
@@ -67,9 +68,12 @@ export function useSession() {
           id: query.data.user.id,
           email: query.data.user.email,
           name: query.data.user.name || 'User',
+          image: query.data.user.image ?? undefined,
+          isSuperAdmin: query.data.user.isSuperAdmin,
         },
-        organization: query.data.organization,
-        role: query.data.role,
+        activeHotel: query.data.activeHotel,
+        hotels: query.data.hotels,
+        activeMember: query.data.activeMember,
         permissions: toMutablePermissions(query.data.permissions),
       }));
     } else if (query.isError || query.data === null) {

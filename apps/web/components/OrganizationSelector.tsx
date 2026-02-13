@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/lib/store';
 import { authClient } from '@/lib/auth-client';
@@ -17,53 +17,32 @@ import {
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 
-interface Organization {
-    id: string;
-    name: string;
-    slug: string;
-}
-
 export function OrganizationSelector() {
     const router = useRouter();
-    const organization = useSelector((state: RootState) => state.session.organization);
-    const [organizations, setOrganizations] = useState<Organization[]>([]);
+    const activeHotel = useSelector((state: RootState) => state.session.activeHotel);
+    const hotels = useSelector((state: RootState) => state.session.hotels);
     const [isLoading, setIsLoading] = useState(false);
 
-    useEffect(() => {
-        loadOrganizations();
-    }, []);
-
-    const loadOrganizations = async () => {
-        try {
-            const response = await authClient.organization.list();
-            if (response.data) {
-                setOrganizations(response.data);
-            }
-        } catch (error) {
-            console.error('Failed to load organizations:', error);
-        }
-    };
-
-    const handleOrganizationChange = async (orgId: string) => {
-        if (orgId === organization?.id) return;
+    const handleHotelChange = async (hotelId: string) => {
+        if (hotelId === activeHotel?.id) return;
 
         setIsLoading(true);
         try {
             await authClient.organization.setActive({
-                organizationId: orgId,
+                organizationId: hotelId,
             });
 
-            toast.success('Organization switched successfully');
+            toast.success('Hotel switched successfully');
             router.refresh();
         } catch (error) {
-            console.error('Failed to switch organization:', error);
-            toast.error('Failed to switch organization');
+            console.error('Failed to switch hotel:', error);
+            toast.error('Failed to switch hotel');
         } finally {
             setIsLoading(false);
         }
     };
 
-    if (!organization || organizations.length === 0) {
+    if (!activeHotel || hotels.length === 0) {
         return null;
     }
 
@@ -78,23 +57,23 @@ export function OrganizationSelector() {
                 >
                     <div className="flex items-center gap-2">
                         <Building2 className="h-4 w-4" />
-                        <span className="truncate">{organization.name}</span>
+                        <span className="truncate">{activeHotel.name}</span>
                     </div>
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-[200px]" align="start">
-                <DropdownMenuLabel>Switch Organization</DropdownMenuLabel>
+                <DropdownMenuLabel>Switch Hotel</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                {organizations.map((org) => (
+                {hotels.map((hotel) => (
                     <DropdownMenuItem
-                        key={org.id}
-                        onClick={() => handleOrganizationChange(org.id)}
+                        key={hotel.id}
+                        onClick={() => handleHotelChange(hotel.id)}
                         className="cursor-pointer"
                     >
                         <div className="flex items-center justify-between w-full">
-                            <span className="truncate">{org.name}</span>
-                            {org.id === organization.id && (
+                            <span className="truncate">{hotel.name}</span>
+                            {hotel.id === activeHotel.id && (
                                 <Check className="h-4 w-4" />
                             )}
                         </div>
