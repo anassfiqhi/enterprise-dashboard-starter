@@ -49,11 +49,15 @@ app.route('/api/v1/audit-logs', auditLogs);
 const port = Number(process.env.PORT!) || 3001;
 
 if (process.env.NODE_ENV === 'development') {
-  console.table({
-    'Port': port,
-    'Database URL': process.env.DATABASE_URL,
-    'Auth URL': process.env.BETTER_AUTH_URL,
-  });
+
+  console.log(`
+  \x1b[32m🚀 Hotel Management API is running!\x1b[0m
+
+  \x1b[34m➜\x1b[0m \x1b[1mPort:\x1b[0m         ${port}
+  \x1b[34m➜\x1b[0m \x1b[1mDatabase URL:\x1b[0m \x1b[90m${process.env.DATABASE_URL}\x1b[0m
+  \x1b[34m➜\x1b[0m \x1b[1mAuth URL:\x1b[0m     \x1b[90m${process.env.BETTER_AUTH_URL}\x1b[0m
+  `);
+
 }
 
 serve({
