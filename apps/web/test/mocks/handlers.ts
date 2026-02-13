@@ -1,5 +1,5 @@
 import { http, HttpResponse, delay } from 'msw';
-import { mockOrders, mockAdminSession, mockMetrics } from './fixtures';
+import { mockAdminSession, mockMetrics } from './fixtures';
 import {
   mockHotels,
   mockRoomTypes,
@@ -11,10 +11,11 @@ import {
   mockRoomInventory,
   mockPricingRules,
   mockPromoCodes,
+  mockGuests,
   generateRoomAvailability,
   generateActivityAvailability,
 } from './booking-fixtures';
-import type { Reservation, ReservationStatus, PhysicalRoomStatus } from '@repo/shared';
+import type { Reservation, ReservationStatus, PhysicalRoomStatus, Guest } from '@repo/shared';
 
 const API_URL = 'http://localhost:3001';
 
@@ -27,85 +28,6 @@ export const handlers = [
       meta: { requestId: 'test-request-id' },
       error: null,
     });
-  }),
-
-  // Orders list endpoint
-  http.get(`${API_URL}/api/v1/orders`, async ({ request }) => {
-    await delay(50);
-    const url = new URL(request.url);
-    const page = parseInt(url.searchParams.get('page') || '1');
-    const pageSize = parseInt(url.searchParams.get('pageSize') || '10');
-    const search = url.searchParams.get('search') || '';
-    const status = url.searchParams.get('status') || '';
-
-    let filteredOrders = [...mockOrders];
-
-    if (search) {
-      filteredOrders = filteredOrders.filter(
-        (o) => o.id.includes(search) || o.customer.toLowerCase().includes(search.toLowerCase())
-      );
-    }
-
-    if (status) {
-      filteredOrders = filteredOrders.filter((o) => o.status === status);
-    }
-
-    const start = (page - 1) * pageSize;
-    const paginatedOrders = filteredOrders.slice(start, start + pageSize);
-
-    return HttpResponse.json({
-      data: paginatedOrders,
-      meta: {
-        requestId: 'test-request-id',
-        total: filteredOrders.length,
-        page,
-        pageSize,
-        totalPages: Math.ceil(filteredOrders.length / pageSize),
-      },
-      error: null,
-    });
-  }),
-
-  // Single order endpoint
-  http.get(`${API_URL}/api/v1/orders/:id`, async ({ params }) => {
-    await delay(50);
-    const order = mockOrders.find((o) => o.id === params.id);
-    if (!order) {
-      return HttpResponse.json(
-        { data: null, meta: { requestId: 'test' }, error: { code: 'NOT_FOUND', message: 'Order not found' } },
-        { status: 404 }
-      );
-    }
-    return HttpResponse.json({ data: order, meta: { requestId: 'test' }, error: null });
-  }),
-
-  // Create order endpoint
-  http.post(`${API_URL}/api/v1/orders`, async ({ request }) => {
-    await delay(50);
-    const body = await request.json() as { customer: string; amount: number };
-    const newOrder = {
-      id: `ORD-${String(mockOrders.length + 1).padStart(5, '0')}`,
-      status: 'pending' as const,
-      customer: body.customer,
-      amount: body.amount,
-      createdAt: new Date().toISOString(),
-    };
-    return HttpResponse.json({ data: newOrder, meta: { requestId: 'test' }, error: null }, { status: 201 });
-  }),
-
-  // Update order endpoint
-  http.patch(`${API_URL}/api/v1/orders/:id`, async ({ params, request }) => {
-    await delay(50);
-    const updates = await request.json() as Partial<typeof mockOrders[0]>;
-    const order = mockOrders.find((o) => o.id === params.id);
-    if (!order) {
-      return HttpResponse.json(
-        { data: null, meta: { requestId: 'test' }, error: { code: 'NOT_FOUND', message: 'Order not found' } },
-        { status: 404 }
-      );
-    }
-    const updatedOrder = { ...order, ...updates };
-    return HttpResponse.json({ data: updatedOrder, meta: { requestId: 'test' }, error: null });
   }),
 
   // Metrics endpoint
@@ -346,6 +268,88 @@ export const handlers = [
     }
     mockActivityTypes.splice(activityIndex, 1);
     return HttpResponse.json({ data: null, meta: { requestId: 'test' }, error: null });
+  }),
+
+  // Create reservation endpoint
+  http.post(`${API_URL}/api/v1/reservations`, async ({ request }) => {
+    await delay(100);
+    const body = await request.json() as {
+      guestId: string;
+      hotelId: string;
+      roomTypeId?: string;
+      activityTypeId?: string;
+      checkInDate?: string;
+      checkOutDate?: string;
+      guests: number;
+      specialRequests?: string;
+    };
+
+    const guest = mockGuests.find((g) => g.id === body.guestId);
+    const hotel = mockHotels.find((h) => h.id === body.hotelId);
+    const roomType = body.roomTypeId
+      ? mockRoomTypes.find((rt) => rt.id === body.roomTypeId)
+      : undefined;
+    const activityType = body.activityTypeId
+      ? mockActivityTypes.find((at) => at.id === body.activityTypeId)
+      : undefined;
+
+    if (!guest || !hotel) {
+      return HttpResponse.json(
+        { data: null, meta: { requestId: 'test' }, error: { code: 'BAD_REQUEST', message: 'Invalid guest or hotel' } },
+        { status: 400 }
+      );
+    }
+
+    // Calculate price
+    let nights = 1;
+    if (body.checkInDate && body.checkOutDate) {
+      const checkIn = new Date(body.checkInDate);
+      const checkOut = new Date(body.checkOutDate);
+      nights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
+    }
+
+    let subtotal = 0;
+    if (roomType) {
+      subtotal = roomType.basePrice * nights;
+    } else if (activityType) {
+      subtotal = activityType.basePrice * body.guests;
+    }
+
+    const taxes = Math.round(subtotal * 0.12 * 100) / 100;
+    const fees = Math.round(subtotal * 0.03 * 100) / 100;
+    const total = Math.round((subtotal + taxes + fees) * 100) / 100;
+
+    const newReservation: Reservation = {
+      id: `RES-${String(mockReservations.length + 1).padStart(5, '0')}`,
+      hotelId: body.hotelId,
+      hotelName: hotel.name,
+      guestId: body.guestId,
+      guest: guest,
+      roomTypeId: body.roomTypeId,
+      roomTypeName: roomType?.name,
+      activityTypeId: body.activityTypeId,
+      activityTypeName: activityType?.name,
+      checkInDate: body.checkInDate,
+      checkOutDate: body.checkOutDate,
+      guests: body.guests,
+      specialRequests: body.specialRequests,
+      priceDetails: {
+        subtotal,
+        taxes,
+        fees,
+        total,
+        currency: 'USD',
+      },
+      priceTotal: total,
+      currency: 'USD',
+      status: 'PENDING',
+      channel: 'DIRECT',
+      createdAt: new Date().toISOString(),
+    };
+
+    mockReservations.unshift(newReservation);
+
+    return HttpResponse.json({ data: newReservation, meta: { requestId: 'test' }, error: null }, { status: 201 });
   }),
 
   // Reservations list endpoint
@@ -756,6 +760,150 @@ export const handlers = [
   }),
 
   // ============================================================================
+  // Guests Endpoints
+  // ============================================================================
+
+  // List guests with search and pagination
+  http.get(`${API_URL}/api/v1/guests`, async ({ request }) => {
+    await delay(50);
+    const url = new URL(request.url);
+    const page = parseInt(url.searchParams.get('page') || '1');
+    const pageSize = parseInt(url.searchParams.get('pageSize') || '20');
+    const search = url.searchParams.get('search') || '';
+
+    let filteredGuests = [...mockGuests];
+
+    if (search) {
+      const searchLower = search.toLowerCase();
+      filteredGuests = filteredGuests.filter(
+        (g) =>
+          g.firstName.toLowerCase().includes(searchLower) ||
+          g.lastName.toLowerCase().includes(searchLower) ||
+          g.email.toLowerCase().includes(searchLower) ||
+          g.phone?.includes(search)
+      );
+    }
+
+    const start = (page - 1) * pageSize;
+    const paginatedGuests = filteredGuests.slice(start, start + pageSize);
+
+    // Add reservation count to each guest
+    const guestsWithStats = paginatedGuests.map((guest) => {
+      const guestReservations = mockReservations.filter((r) => r.guestId === guest.id);
+      const totalSpent = guestReservations
+        .filter((r) => r.status === 'CONFIRMED')
+        .reduce((sum, r) => sum + r.priceTotal, 0);
+      return {
+        ...guest,
+        reservationCount: guestReservations.length,
+        totalSpent: Math.round(totalSpent * 100) / 100,
+        lastStay: guestReservations
+          .filter((r) => r.checkOutDate)
+          .sort((a, b) => (b.checkOutDate || '').localeCompare(a.checkOutDate || ''))[0]?.checkOutDate,
+      };
+    });
+
+    return HttpResponse.json({
+      data: guestsWithStats,
+      meta: {
+        requestId: 'test-request-id',
+        total: filteredGuests.length,
+        page,
+        pageSize,
+        totalPages: Math.ceil(filteredGuests.length / pageSize),
+      },
+      error: null,
+    });
+  }),
+
+  // Single guest with reservation history
+  http.get(`${API_URL}/api/v1/guests/:id`, async ({ params }) => {
+    await delay(50);
+    const guest = mockGuests.find((g) => g.id === params.id);
+    if (!guest) {
+      return HttpResponse.json(
+        { data: null, meta: { requestId: 'test' }, error: { code: 'NOT_FOUND', message: 'Guest not found' } },
+        { status: 404 }
+      );
+    }
+
+    // Get all reservations for this guest
+    const guestReservations = mockReservations.filter((r) => r.guestId === guest.id);
+    const confirmedReservations = guestReservations.filter((r) => r.status === 'CONFIRMED');
+    const totalSpent = confirmedReservations.reduce((sum, r) => sum + r.priceTotal, 0);
+
+    return HttpResponse.json({
+      data: {
+        ...guest,
+        reservations: guestReservations,
+        stats: {
+          totalReservations: guestReservations.length,
+          confirmedReservations: confirmedReservations.length,
+          cancelledReservations: guestReservations.filter((r) => r.status === 'CANCELLED').length,
+          totalSpent: Math.round(totalSpent * 100) / 100,
+          averageSpent: confirmedReservations.length > 0
+            ? Math.round((totalSpent / confirmedReservations.length) * 100) / 100
+            : 0,
+        },
+      },
+      meta: { requestId: 'test' },
+      error: null,
+    });
+  }),
+
+  // Create guest
+  http.post(`${API_URL}/api/v1/guests`, async ({ request }) => {
+    await delay(100);
+    const body = (await request.json()) as Omit<Guest, 'id'>;
+    const newGuest: Guest = {
+      id: `guest_${Date.now()}`,
+      firstName: body.firstName,
+      lastName: body.lastName,
+      email: body.email,
+      phone: body.phone,
+    };
+    mockGuests.push(newGuest);
+    return HttpResponse.json({ data: newGuest, meta: { requestId: 'test' }, error: null }, { status: 201 });
+  }),
+
+  // Update guest
+  http.patch(`${API_URL}/api/v1/guests/:id`, async ({ params, request }) => {
+    await delay(50);
+    const updates = (await request.json()) as Partial<Guest>;
+    const guestIndex = mockGuests.findIndex((g) => g.id === params.id);
+    if (guestIndex === -1) {
+      return HttpResponse.json(
+        { data: null, meta: { requestId: 'test' }, error: { code: 'NOT_FOUND', message: 'Guest not found' } },
+        { status: 404 }
+      );
+    }
+    mockGuests[guestIndex] = { ...mockGuests[guestIndex], ...updates };
+    return HttpResponse.json({ data: mockGuests[guestIndex], meta: { requestId: 'test' }, error: null });
+  }),
+
+  // Delete guest
+  http.delete(`${API_URL}/api/v1/guests/:id`, async ({ params }) => {
+    await delay(50);
+    const guestIndex = mockGuests.findIndex((g) => g.id === params.id);
+    if (guestIndex === -1) {
+      return HttpResponse.json(
+        { data: null, meta: { requestId: 'test' }, error: { code: 'NOT_FOUND', message: 'Guest not found' } },
+        { status: 404 }
+      );
+    }
+    // Check if guest has reservations
+    const hasReservations = mockReservations.some((r) => r.guestId === params.id);
+    if (hasReservations) {
+      return HttpResponse.json(
+        { data: null, meta: { requestId: 'test' }, error: { code: 'CONFLICT', message: 'Cannot delete guest with existing reservations' } },
+        { status: 409 }
+      );
+    }
+    mockGuests.splice(guestIndex, 1);
+    return HttpResponse.json({ data: null, meta: { requestId: 'test' }, error: null });
+  }),
+
+  // ============================================================================
   // Promo Codes Endpoints
   // ============================================================================
 
@@ -951,21 +1099,21 @@ export const errorHandlers = {
     );
   }),
 
-  forbidden: http.get(`${API_URL}/api/v1/orders`, () => {
+  forbidden: http.get(`${API_URL}/api/v1/reservations`, () => {
     return HttpResponse.json(
       { data: null, meta: { requestId: 'test' }, error: { code: 'FORBIDDEN', message: 'No permission' } },
       { status: 403 }
     );
   }),
 
-  serverError: http.get(`${API_URL}/api/v1/orders`, () => {
+  serverError: http.get(`${API_URL}/api/v1/reservations`, () => {
     return HttpResponse.json(
       { data: null, meta: { requestId: 'test' }, error: { code: 'INTERNAL_ERROR', message: 'Server error' } },
       { status: 500 }
     );
   }),
 
-  networkError: http.get(`${API_URL}/api/v1/orders`, () => {
+  networkError: http.get(`${API_URL}/api/v1/reservations`, () => {
     return HttpResponse.error();
   }),
 
