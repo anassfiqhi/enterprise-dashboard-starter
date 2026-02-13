@@ -4,36 +4,47 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { auth } from './auth';
 import { errorHandler } from './middleware/error';
-import sse from './sse';
-import orders from './orders';
-import metrics from './metrics';
-import session from './session';
+import guests from './routes/guests';
+import reservations from './routes/reservations';
+import roomTypes from './routes/room-types';
+import rooms from './routes/rooms';
+import activityTypes from './routes/activity-types';
+import activitySlots from './routes/activity-slots';
+import inventory from './routes/inventory';
+import pricingRules from './routes/pricing-rules';
+import auditLogs from './routes/audit-logs';
 
-const app = new Hono().basePath('/api');
+const app = new Hono();
 
-// Global error handler
-app.use('/*', errorHandler);
-
-// CORS
+// CORS - must be first
 app.use('/*', cors({
   origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
   credentials: true,
 }));
 
-app.get('/', (c) => {
-  return c.json({ status: 'ok', message: 'Hono API is running' });
-});
-
-// Auth routes
-app.on(['POST', 'GET'], '/auth/**', (c) => {
+// Auth routes (Better Auth) - handle at /api/auth/*
+app.on(["POST", "GET"], "/api/auth/*", (c) => {
   return auth.handler(c.req.raw);
 });
 
+// API routes
+app.get('/api', (c) => {
+  return c.json({ status: 'ok', message: 'Hotel Management API is running' });
+});
+
+// Global error handler for API routes
+app.use('/api/v1/*', errorHandler);
+
 // v1 API routes
-app.route('/v1/stream', sse);
-app.route('/v1/orders', orders);
-app.route('/v1/metrics', metrics);
-app.route('/v1/session', session);
+app.route('/api/v1/guests', guests);
+app.route('/api/v1/reservations', reservations);
+app.route('/api/v1/room-types', roomTypes);
+app.route('/api/v1/rooms', rooms);
+app.route('/api/v1/activity-types', activityTypes);
+app.route('/api/v1/activity-slots', activitySlots);
+app.route('/api/v1/inventory', inventory);
+app.route('/api/v1/pricing-rules', pricingRules);
+app.route('/api/v1/audit-logs', auditLogs);
 
 const port = Number(process.env.PORT!) || 3001;
 
