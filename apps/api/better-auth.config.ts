@@ -2,12 +2,10 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { organization } from "better-auth/plugins";
 import type { AccessControl } from "better-auth/plugins/access";
-import { db } from "./db/index";
-import * as schema from "./db/schema";
+import { db } from "./src/db/index";
+import * as schema from "./src/db/schema";
 import { ac, admin, staff } from "@repo/shared";
 import "dotenv/config";
-import "./auth.types"; // Extend Better Auth types
-
 
 if (!process.env.DATABASE_URL) {
     throw new Error("DATABASE_URL is not set");
@@ -31,7 +29,7 @@ export const auth = betterAuth({
             isSuperAdmin: {
                 type: "boolean",
                 defaultValue: false,
-                input: false, // Cannot be set via API, only database/admin
+                input: false,
             },
         },
     },
@@ -42,13 +40,9 @@ export const auth = betterAuth({
                 admin,
                 staff,
             },
-            // Admin is the highest role in a hotel (hotel manager)
             creatorRole: "admin",
             allowUserToCreateOrganization: async (user) => {
-                // Super admins can always create hotels
-                // isSuperAdmin is added via additionalFields
                 if (user.isSuperAdmin) return true;
-                // Regular users cannot create hotels by default
                 return false;
             },
             async sendInvitationEmail(data) {
@@ -61,7 +55,6 @@ export const auth = betterAuth({
                 console.log(`Link: ${inviteLink}`);
                 console.log("========================");
             },
-            // Hotel-specific organization fields
             schema: {
                 organization: {
                     additionalFields: {

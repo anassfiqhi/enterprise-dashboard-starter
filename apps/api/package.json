@@ -6,12 +6,14 @@
     "build": "tsup src/index.ts --format esm --clean",
     "start": "node dist/index.js",
     "seed": "tsx scripts/seed-db.ts",
-    "seed:interactive": "tsx src/seed.tsx",
+    "seed:interactive": "tsx scripts/seed.tsx",
     "db:reset": "tsx scripts/reset-db.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
+    "auth:generate": "pnpm dlx @better-auth/cli generate",
+    "auth:migrate": "pnpm dlx @better-auth/cli migrate",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"
@@ -22,6 +24,7 @@
     "better-auth": "^1.4.14",
     "drizzle-orm": "^0.45.1",
     "hono": "^4.11.3",
+    "nanoid": "^5.1.6",
     "pg": "^8.17.1",
     "zod": "^4.3.5"
   },
