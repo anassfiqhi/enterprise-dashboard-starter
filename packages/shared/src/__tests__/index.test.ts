@@ -7,9 +7,8 @@ import {
   createSuccessEnvelope,
   createErrorEnvelope,
   responseEnvelope,
-  owner,
   admin,
-  member,
+  staff,
 } from '../index';
 
 describe('Order Schemas', () => {
@@ -279,54 +278,77 @@ describe('Response Envelope Functions', () => {
 });
 
 describe('Role Permissions', () => {
-  describe('owner role', () => {
-    it('has all organization permissions', () => {
-      expect(owner.statements.organization).toContain('create');
-      expect(owner.statements.organization).toContain('update');
-      expect(owner.statements.organization).toContain('delete');
-    });
-
-    it('has all order permissions', () => {
-      expect(owner.statements.orders).toContain('read');
-      expect(owner.statements.orders).toContain('create');
-      expect(owner.statements.orders).toContain('update');
-      expect(owner.statements.orders).toContain('delete');
-    });
-
-    it('has metrics read permission', () => {
-      expect(owner.statements.metrics).toContain('read');
-    });
-  });
-
   describe('admin role', () => {
-    it('can update but not delete organization', () => {
-      expect(admin.statements.organization).toContain('update');
-      expect(admin.statements.organization).not.toContain('delete');
-      expect(admin.statements.organization).not.toContain('create');
+    it('has hotel update permission but not delete', () => {
+      expect(admin.statements.hotel).toContain('read');
+      expect(admin.statements.hotel).toContain('update');
+      expect(admin.statements.hotel).not.toContain('delete');
     });
 
-    it('has all order permissions', () => {
-      expect(admin.statements.orders).toContain('read');
-      expect(admin.statements.orders).toContain('create');
-      expect(admin.statements.orders).toContain('update');
-      expect(admin.statements.orders).toContain('delete');
+    it('has all guest permissions', () => {
+      expect(admin.statements.guests).toContain('read');
+      expect(admin.statements.guests).toContain('create');
+      expect(admin.statements.guests).toContain('update');
+      expect(admin.statements.guests).toContain('delete');
+    });
+
+    it('has all reservation permissions including cancel', () => {
+      expect(admin.statements.reservations).toContain('read');
+      expect(admin.statements.reservations).toContain('create');
+      expect(admin.statements.reservations).toContain('cancel');
+      expect(admin.statements.reservations).toContain('checkin');
+      expect(admin.statements.reservations).toContain('checkout');
+    });
+
+    it('has analytics read permission', () => {
+      expect(admin.statements.analytics).toContain('read');
+    });
+
+    it('has audit logs read permission', () => {
+      expect(admin.statements.auditLogs).toContain('read');
+    });
+
+    it('can manage room types', () => {
+      expect(admin.statements.roomTypes).toContain('read');
+      expect(admin.statements.roomTypes).toContain('create');
+      expect(admin.statements.roomTypes).toContain('update');
+      expect(admin.statements.roomTypes).toContain('delete');
     });
   });
 
-  describe('member role', () => {
-    it('has no organization permissions', () => {
-      expect(member.statements.organization).toHaveLength(0);
+  describe('staff role', () => {
+    it('has hotel read permission only', () => {
+      expect(admin.statements.hotel).toContain('read');
+      expect(staff.statements.hotel).not.toContain('update');
+      expect(staff.statements.hotel).not.toContain('delete');
     });
 
-    it('can only read orders', () => {
-      expect(member.statements.orders).toContain('read');
-      expect(member.statements.orders).not.toContain('create');
-      expect(member.statements.orders).not.toContain('update');
-      expect(member.statements.orders).not.toContain('delete');
+    it('can read and create guests but not update or delete', () => {
+      expect(staff.statements.guests).toContain('read');
+      expect(staff.statements.guests).toContain('create');
+      expect(staff.statements.guests).not.toContain('update');
+      expect(staff.statements.guests).not.toContain('delete');
     });
 
-    it('can read metrics', () => {
-      expect(member.statements.metrics).toContain('read');
+    it('can handle reservations but not cancel', () => {
+      expect(staff.statements.reservations).toContain('read');
+      expect(staff.statements.reservations).toContain('create');
+      expect(staff.statements.reservations).toContain('checkin');
+      expect(staff.statements.reservations).toContain('checkout');
+      expect(staff.statements.reservations).not.toContain('cancel');
+      expect(staff.statements.reservations).not.toContain('update');
+    });
+
+    it('has no analytics access', () => {
+      expect(staff.statements.analytics).toHaveLength(0);
+    });
+
+    it('has no audit logs access', () => {
+      expect(staff.statements.auditLogs).toHaveLength(0);
+    });
+
+    it('has no pricing rules access', () => {
+      expect(staff.statements.pricingRules).toHaveLength(0);
     });
   });
 });

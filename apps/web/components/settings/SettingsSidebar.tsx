@@ -3,21 +3,18 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { usePermissions } from "@/hooks/usePermissions";
-import { Users, Mail, Building2 } from "lucide-react";
+import { Users, Building2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
     {
         href: "/settings/members",
-        label: "Members",
+        label: "Team",
         icon: Users,
-        permissions: [{ resource: "member" as const, actions: ["update", "delete"] }],
-    },
-    {
-        href: "/settings/invitations",
-        label: "Invitations",
-        icon: Mail,
-        permissions: [{ resource: "invitation" as const, actions: ["create", "cancel"] }],
+        permissions: [
+            { resource: "member" as const, actions: ["update", "delete"] },
+            { resource: "invitation" as const, actions: ["create", "cancel"] },
+        ],
     },
     {
         href: "/settings/organization",

@@ -100,18 +100,31 @@ export function responseEnvelope<T>(data: T | null, errorCode?: string, errorMes
 
 // ============================================================================
 // Organization-Based Access Control Types (SPEC Section 5)
+// Hotel Management Permissions
 // ============================================================================
 
-export type OrganizationRole = 'owner' | 'admin' | 'member';
+export type OrganizationRole = 'admin' | 'staff';
 
 export interface OrganizationPermissions {
+    // Better Auth defaults
     organization?: readonly string[];
     member?: readonly string[];
     invitation?: readonly string[];
-    orders?: readonly string[];
-    metrics?: readonly string[];
+    // Hotel configuration
+    hotel?: readonly string[];
+    roomTypes?: readonly string[];
+    rooms?: readonly string[];
+    activityTypes?: readonly string[];
+    activitySlots?: readonly string[];
+    inventory?: readonly string[];
+    pricingRules?: readonly string[];
+    promoCodes?: readonly string[];
+    // Guest & Reservations
+    guests?: readonly string[];
     reservations?: readonly string[];
-    hotels?: readonly string[];
+    // Admin features
+    analytics?: readonly string[];
+    auditLogs?: readonly string[];
 }
 
 export interface SessionData {
@@ -119,13 +132,23 @@ export interface SessionData {
         id: string;
         email: string;
         name: string | null;
+        image?: string | null;
+        isSuperAdmin: boolean;
     };
-    organization: {
+    activeHotel: {
         id: string;
         name: string;
         slug: string;
     } | null;
-    role: OrganizationRole | null;
+    hotels: Array<{
+        id: string;
+        name: string;
+        slug: string;
+    }>;
+    activeMember: {
+        id: string;
+        role: OrganizationRole;
+    } | null;
     permissions: OrganizationPermissions | null;
     message?: string;
 }
@@ -177,7 +200,7 @@ export type Metrics = z.infer<typeof MetricsSchema>;
 // Organization Access Control (Better Auth Plugin)
 // ============================================================================
 
-export { ac, owner, admin, member } from './permissions';
+export { ac, admin, staff, statement } from './permissions';
 
 // ============================================================================
 // Booking Types (from booking-engine integration)
