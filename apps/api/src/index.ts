@@ -4,15 +4,16 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { auth } from './auth';
 import { errorHandler } from './middleware/error';
-import guests from './routes/guests';
-import reservations from './routes/reservations';
-import roomTypes from './routes/room-types';
-import rooms from './routes/rooms';
-import activityTypes from './routes/activity-types';
-import activitySlots from './routes/activity-slots';
-import inventory from './routes/inventory';
-import pricingRules from './routes/pricing-rules';
-import auditLogs from './routes/audit-logs';
+// import guests from './routes/guests';
+// import reservations from './routes/reservations';
+// import roomTypes from './routes/room-types';
+// import rooms from './routes/rooms';
+// import activityTypes from './routes/activity-types';
+// import activitySlots from './routes/activity-slots';
+// import inventory from './routes/inventory';
+// import pricingRules from './routes/pricing-rules';
+// import auditLogs from './routes/audit-logs';
+// import adminRoutes from './routes/admin';
 
 const app = new Hono();
 
@@ -36,15 +37,16 @@ app.get('/api', (c) => {
 app.use('/api/v1/*', errorHandler);
 
 // v1 API routes
-app.route('/api/v1/guests', guests);
-app.route('/api/v1/reservations', reservations);
-app.route('/api/v1/room-types', roomTypes);
-app.route('/api/v1/rooms', rooms);
-app.route('/api/v1/activity-types', activityTypes);
-app.route('/api/v1/activity-slots', activitySlots);
-app.route('/api/v1/inventory', inventory);
-app.route('/api/v1/pricing-rules', pricingRules);
-app.route('/api/v1/audit-logs', auditLogs);
+// app.route('/api/v1/guests', guests);
+// app.route('/api/v1/reservations', reservations);
+// app.route('/api/v1/room-types', roomTypes);
+// app.route('/api/v1/rooms', rooms);
+// app.route('/api/v1/activity-types', activityTypes);
+// app.route('/api/v1/activity-slots', activitySlots);
+// app.route('/api/v1/inventory', inventory);
+// app.route('/api/v1/pricing-rules', pricingRules);
+// app.route('/api/v1/audit-logs', auditLogs);
+// app.route('/api/v1/admin', adminRoutes);
 
 const port = Number(process.env.PORT!) || 3001;
 
