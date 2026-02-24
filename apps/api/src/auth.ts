@@ -1,13 +1,11 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { organization } from "better-auth/plugins";
+import { organization, admin as adminPlugin } from "better-auth/plugins";
 import type { AccessControl } from "better-auth/plugins/access";
 import { db } from "./db/index";
 import * as schema from "./db/schema";
-import { ac, admin, staff } from "@repo/shared";
+import { ac, manager, staff } from "@repo/shared";
 import "dotenv/config";
-import "./auth.types"; // Extend Better Auth types
-
 
 if (!process.env.DATABASE_URL) {
     throw new Error("DATABASE_URL is not set");
@@ -26,29 +24,31 @@ export const auth = betterAuth({
     emailAndPassword: {
         enabled: true
     },
-    user: {
-        additionalFields: {
-            isSuperAdmin: {
-                type: "boolean",
-                defaultValue: false,
-                input: false, // Cannot be set via API, only database/admin
+    databaseHooks: {
+        user: {
+            create: {
+                before: async (user, context) => {
+                    console.log("--- DatabaseHooks Start ---");
+                    console.log("user", user)
+                    console.log("context", context)
+                    console.log("--- DatabaseHooks End ---");
+                    return true
+                },
             },
         },
     },
     plugins: [
+        adminPlugin({
+            defaultRole: "user",
+        }),
         organization({
             ac: ac as AccessControl,
             roles: {
-                admin,
+                manager,
                 staff,
             },
-            // Admin is the highest role in a hotel (hotel manager)
-            creatorRole: "admin",
             allowUserToCreateOrganization: async (user) => {
-                // Super admins can always create hotels
-                // isSuperAdmin is added via additionalFields
-                if (user.isSuperAdmin) return true;
-                // Regular users cannot create hotels by default
+                if (user.role === "admin") return true;
                 return false;
             },
             async sendInvitationEmail(data) {
