@@ -18,7 +18,7 @@ Use these credentials to test different user roles in the hotel management syste
 - Can access ALL hotels
 - Can create and manage hotels
 - Can manage all users across the system
-- Bypasses all permission checks (isSuperAdmin = true)
+- Bypasses all permission checks (isAdmin = true)
 
 ---
 
