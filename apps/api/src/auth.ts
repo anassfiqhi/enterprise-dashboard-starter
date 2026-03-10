@@ -1,6 +1,6 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { organization, admin as adminPlugin } from "better-auth/plugins";
+import { organization, admin as adminPlugin, bearer, jwt } from "better-auth/plugins";
 import type { AccessControl } from "better-auth/plugins/access";
 import { db } from "./db/index";
 import * as schema from "./db/schema";
@@ -21,6 +21,12 @@ export const auth = betterAuth({
         provider: "pg",
         schema,
     }),
+    session: {
+        strategy: "jwt",
+        cookieCache: {
+            enabled: false,
+        },
+    },
     emailAndPassword: {
         enabled: true
     },
@@ -38,6 +44,8 @@ export const auth = betterAuth({
         },
     },
     plugins: [
+        bearer(),
+        jwt(),
         adminPlugin({
             defaultRole: "user",
         }),
@@ -95,4 +103,13 @@ export const auth = betterAuth({
             },
         }),
     ],
+    advanced: {
+        disableOriginCheck: process.env.NODE_ENV === 'development'
+    }
 });
+
+
+export type Session = typeof auth.$Infer.Session
+export type User = typeof auth.$Infer.Session.user
+export type Organization = typeof auth.$Infer.Organization
+export type Member = typeof auth.$Infer.Member

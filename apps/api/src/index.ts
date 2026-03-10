@@ -4,6 +4,7 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { auth } from './auth';
 import { errorHandler } from './middleware/error';
+import { requireAdmin, requireManager, requireStaff } from './middleware/rbac';
 // import guests from './routes/guests';
 // import reservations from './routes/reservations';
 // import roomTypes from './routes/room-types';
@@ -47,6 +48,20 @@ app.use('/api/v1/*', errorHandler);
 // app.route('/api/v1/pricing-rules', pricingRules);
 // app.route('/api/v1/audit-logs', auditLogs);
 // app.route('/api/v1/admin', adminRoutes);
+
+app.get('/api/v1/test/admin', requireAdmin, (c) => {
+  return c.json({ message: 'You have permission to update organization' });
+});
+
+app.get('/api/v1/test/manager', requireManager, (c) => {
+  console.log('[INDEX] /api/v1/test/manager handler hit');
+  return c.json({ message: 'You have permission to update organization' });
+});
+
+app.get('/api/v1/test/staff', requireStaff, (c) => {
+  console.log('[INDEX] /api/v1/test/staff handler hit');
+  return c.json({ message: 'You have permission to update organization' });
+});
 
 const port = Number(process.env.PORT!) || 3001;
 

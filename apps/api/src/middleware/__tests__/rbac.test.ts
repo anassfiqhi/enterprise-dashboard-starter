@@ -25,9 +25,11 @@ describe('RBAC Middleware', () => {
       vi.mocked(auth.api.getSession).mockResolvedValue(null);
 
       const app = new Hono();
-      app.get('/test', requirePermission({ orders: ['read'] }), (c) => c.json({ success: true }));
+      app.get('/test', requirePermission({ hotel: ['read'] }), (c) => c.json({ success: true }));
 
-      const res = await app.request('/test');
+      const res = await app.request('/test', {
+        headers: { 'Authorization': 'Bearer test-token' }
+      });
       expect(res.status).toBe(401);
 
       const body = await res.json();
@@ -42,17 +44,19 @@ describe('RBAC Middleware', () => {
       } as any);
 
       // getActiveMember returns null when no active org or not a member
-      vi.mocked(auth.api.getActiveMember).mockResolvedValue(null);
+      vi.mocked(auth.api.getActiveMember).mockResolvedValue(null as any);
 
       const app = new Hono();
-      app.get('/test', requirePermission({ orders: ['read'] }), (c) => c.json({ success: true }));
+      app.get('/test', requirePermission({ hotel: ['read'] }), (c) => c.json({ success: true }));
 
-      const res = await app.request('/test');
+      const res = await app.request('/test', {
+        headers: { 'Authorization': 'Bearer test' }
+      });
       expect(res.status).toBe(403);
 
       const body = await res.json();
       expect(body.error.code).toBe('FORBIDDEN');
-      expect(body.error.message).toContain('No active organization or not a member');
+      expect(body.error.message).toContain('No active hotel or not a member');
     });
 
     it('returns 403 when user lacks required permission', async () => {
@@ -71,9 +75,11 @@ describe('RBAC Middleware', () => {
 
       const app = new Hono();
       // Require create permission which member doesn't have
-      app.get('/test', requirePermission({ orders: ['create'] }), (c) => c.json({ success: true }));
+      app.get('/test', requirePermission({ hotel: ['create'] }), (c) => c.json({ success: true }));
 
-      const res = await app.request('/test');
+      const res = await app.request('/test', {
+        headers: { 'Authorization': 'Bearer test' }
+      });
       expect(res.status).toBe(403);
 
       const body = await res.json();
@@ -83,7 +89,7 @@ describe('RBAC Middleware', () => {
 
     it('allows access when user has required permission (admin)', async () => {
       vi.mocked(auth.api.getSession).mockResolvedValue({
-        user: { id: 'user_1', email: 'admin@example.com', name: 'Admin' },
+        user: { id: 'user_1', email: 'admin@example.com', name: 'Admin', role: 'admin' },
         session: { id: 'sess_1', activeOrganizationId: 'org_1' },
       } as any);
 
@@ -95,9 +101,11 @@ describe('RBAC Middleware', () => {
       } as any);
 
       const app = new Hono();
-      app.get('/test', requirePermission({ orders: ['read'] }), (c) => c.json({ success: true }));
+      app.get('/test', requirePermission({ hotel: ['read'] }), (c) => c.json({ success: true }));
 
-      const res = await app.request('/test');
+      const res = await app.request('/test', {
+        headers: { 'Authorization': 'Bearer test' }
+      });
       expect(res.status).toBe(200);
 
       const body = await res.json();
@@ -106,7 +114,7 @@ describe('RBAC Middleware', () => {
 
     it('allows access when user has required permission (owner)', async () => {
       vi.mocked(auth.api.getSession).mockResolvedValue({
-        user: { id: 'user_1', email: 'owner@example.com', name: 'Owner' },
+        user: { id: 'user_1', email: 'owner@example.com', name: 'Owner', role: 'admin' },
         session: { id: 'sess_1', activeOrganizationId: 'org_1' },
       } as any);
 
@@ -119,9 +127,11 @@ describe('RBAC Middleware', () => {
 
       const app = new Hono();
       // Owner has all permissions including delete
-      app.get('/test', requirePermission({ orders: ['delete'] }), (c) => c.json({ success: true }));
+      app.get('/test', requirePermission({ hotel: ['delete'] }), (c) => c.json({ success: true }));
 
-      const res = await app.request('/test');
+      const res = await app.request('/test', {
+        headers: { 'Authorization': 'Bearer test' }
+      });
       expect(res.status).toBe(200);
     });
 
@@ -139,24 +149,29 @@ describe('RBAC Middleware', () => {
       } as any);
 
       const app = new Hono();
-      app.get('/read', requirePermission({ orders: ['read'] }), (c) => c.json({ success: true }));
-      app.post('/create', requirePermission({ orders: ['create'] }), (c) => c.json({ success: true }));
+      app.get('/read', requirePermission({ hotel: ['read'] }), (c) => c.json({ success: true }));
+      app.post('/create', requirePermission({ hotel: ['create'] }), (c) => c.json({ success: true }));
 
       // Read should succeed
-      const readRes = await app.request('/read');
+      const readRes = await app.request('/read', {
+        headers: { 'Authorization': 'Bearer test' }
+      });
       expect(readRes.status).toBe(200);
 
       // Create should fail
-      const createRes = await app.request('/create', { method: 'POST' });
+      const createRes = await app.request('/create', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer test' }
+      });
       expect(createRes.status).toBe(403);
     });
 
     it('sets user, session, and organization context on success', async () => {
-      const mockUser = { id: 'user_1', email: 'admin@example.com', name: 'Admin' };
+      const mockUser = { id: 'user_1', email: 'admin@example.com', name: 'Admin', role: 'user' };
       const mockSession = { id: 'sess_1', activeOrganizationId: 'org_1' };
 
       vi.mocked(auth.api.getSession).mockResolvedValue({
-        user: mockUser,
+        user: { ...mockUser, role: 'user' },
         session: mockSession,
       } as any);
 
@@ -164,7 +179,7 @@ describe('RBAC Middleware', () => {
         id: 'member_1',
         userId: 'user_1',
         organizationId: 'org_1',
-        role: 'admin',
+        role: 'manager',
       } as any);
 
       let contextUser: any;
@@ -172,18 +187,20 @@ describe('RBAC Middleware', () => {
       let contextRole: any;
 
       const app = new Hono();
-      app.get('/test', requirePermission({ orders: ['read'] }), (c) => {
+      app.get('/test', requirePermission({ hotel: ['read'] }), (c) => {
         contextUser = c.get('user');
-        contextOrgId = c.get('organizationId');
+        contextOrgId = c.get('hotelId');
         contextRole = c.get('memberRole');
         return c.json({ success: true });
       });
 
-      await app.request('/test');
+      await app.request('/test', {
+        headers: { 'Authorization': 'Bearer test-token' }
+      });
 
       expect(contextUser).toEqual(mockUser);
       expect(contextOrgId).toBe('org_1');
-      expect(contextRole).toBe('admin');
+      expect(contextRole).toBe('manager');
     });
   });
 
@@ -194,7 +211,9 @@ describe('RBAC Middleware', () => {
       const app = new Hono();
       app.get('/test', requireAuth, (c) => c.json({ success: true }));
 
-      const res = await app.request('/test');
+      const res = await app.request('/test', {
+        headers: { 'Authorization': 'Bearer test' }
+      });
       expect(res.status).toBe(401);
 
       const body = await res.json();
@@ -210,7 +229,9 @@ describe('RBAC Middleware', () => {
       const app = new Hono();
       app.get('/test', requireAuth, (c) => c.json({ success: true }));
 
-      const res = await app.request('/test');
+      const res = await app.request('/test', {
+        headers: { 'Authorization': 'Bearer test' }
+      });
       expect(res.status).toBe(200);
     });
 
@@ -230,7 +251,9 @@ describe('RBAC Middleware', () => {
         return c.json({ success: true });
       });
 
-      await app.request('/test');
+      await app.request('/test', {
+        headers: { 'Authorization': 'Bearer test-token' }
+      });
 
       expect(contextUser).toEqual(mockUser);
       expect(contextSession).toEqual(mockSession);
