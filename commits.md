@@ -2,6 +2,9 @@
 
 This file contains a list of all commits in the repository.
 
+* **6d408da** - docs: update credentials and add commit history tracking, test(api): add auth strategy tests (anassfiqhi, 2026-03-10)
+* **4bb03f3** - feat(web): update UI and hooks for role-based access and Better Auth integration (anassfiqhi, 2026-03-10)
+* **b6e5b9e** - feat(api): migrate auth to Better Auth and implement RBAC middleware (anassfiqhi, 2026-03-10)
 * **ad69b77** - refactor(api): update seed script for new role system (anassfiqhi, 2026-02-24)
 * **b3db849** - refactor(api): remove hotel domain routes, migrations, and utilities (anassfiqhi, 2026-02-24)
 * **db1e23c** - refactor(api): migrate auth system to Better Auth admin plugin (anassfiqhi, 2026-02-24)
