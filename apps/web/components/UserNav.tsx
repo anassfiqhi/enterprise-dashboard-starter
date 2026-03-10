@@ -10,25 +10,28 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { authClient } from '@/lib/auth-client';
+import { RoleBadge } from '@/components/ui/role-badge';
+import { authClient, User } from '@/lib/auth-client';
 import { useRouter } from 'next/navigation';
-import { LogOut, User, Building2, Settings } from 'lucide-react';
+import { LogOut, Building2, Settings, UserIcon } from 'lucide-react';
 import { useState } from 'react';
-import { useSelector } from 'react-redux';
-import { RootState } from '@/lib/store';
+
 
 interface UserNavProps {
-    user?: {
-        name?: string;
-        email?: string;
-    };
+    user?: User
 }
 
 export function UserNav({ user }: UserNavProps) {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
-    const activeHotel = useSelector((state: RootState) => state.session.activeHotel);
-    const activeMember = useSelector((state: RootState) => state.session.activeMember);
+    const { data: activeOrg } = authClient.useActiveOrganization();
+    const activeHotel = activeOrg;
+    // We can get the active member role from useListOrganizations or just assume for now
+    // Better Auth doesn't expose activeMember directly in one hook easily without iteration
+    // For now we'll just skip the activeMember role display or fetch it properly if critical
+    const { data: activeMember } = authClient.useActiveMember(); // simplified for now to avoid complex hook logic in this refactor
+    const { data: session } = authClient.useSession();
+    const isAdmin = user?.role === 'admin';
 
     const handleLogout = async () => {
         setIsLoading(true);
@@ -71,15 +74,27 @@ export function UserNav({ user }: UserNavProps) {
                     </Avatar>
                 </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="end" forceMount>
+            <DropdownMenuContent
+                className={`w-56 ${isAdmin ? 'border-blue-500/30 bg-linear-to-br from-blue-500/5 to-transparent' : ''}`}
+                align="end"
+                forceMount
+            >
                 <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium leading-none">
-                            {user?.name || 'User'}
-                        </p>
+                        <div className="flex items-center gap-2">
+                            <p className="text-sm font-medium leading-none">
+                                {user?.name || 'User'}
+                            </p>
+                            {isAdmin && <RoleBadge role="Admin" size="sm" />}
+                        </div>
                         {user?.email && (
                             <p className="text-xs leading-none text-muted-foreground">
                                 {user.email}
+                            </p>
+                        )}
+                        {isAdmin && (
+                            <p className="text-xs text-blue-600 dark:text-blue-400 font-medium mt-1">
+                                System Administrator
                             </p>
                         )}
                         {activeHotel && (
@@ -90,16 +105,14 @@ export function UserNav({ user }: UserNavProps) {
                                 </p>
                             </div>
                         )}
-                        {activeMember?.role && (
-                            <p className="text-xs text-muted-foreground capitalize">
-                                {activeMember.role}
-                            </p>
+                        {activeMember?.role && !isAdmin && (
+                            <RoleBadge role={activeMember.role} size="sm" className="mt-1" />
                         )}
                     </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem disabled>
-                    <User className="mr-2 h-4 w-4" />
+                    <UserIcon className="mr-2 h-4 w-4" />
                     <span>Profile</span>
                 </DropdownMenuItem>
                 {activeHotel && (

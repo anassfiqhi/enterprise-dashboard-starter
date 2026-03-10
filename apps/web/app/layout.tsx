@@ -19,6 +19,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Enterprise Dashboard",
   description: "Data-heavy enterprise dashboard with real-time updates",
+  icons: {
+    icon: '/favicon.png',
+  },
 };
 
 export default function RootLayout({

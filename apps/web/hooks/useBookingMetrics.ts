@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { useSelector } from 'react-redux';
+import { authClient } from '@/lib/auth-client';
 import type { BookingMetrics, ResponseEnvelope } from '@repo/shared';
-import type { RootState } from '@/lib/store';
 import { config } from '@/lib/config';
 
 /**
@@ -9,7 +8,8 @@ import { config } from '@/lib/config';
  * Automatically scopes to the current active hotel
  */
 export function useBookingMetrics() {
-    const hotelId = useSelector((state: RootState) => state.session.activeHotel?.id);
+    const { data: activeOrg } = authClient.useActiveOrganization();
+    const hotelId = activeOrg?.id;
 
     return useQuery({
         queryKey: ['booking-metrics', hotelId] as const,

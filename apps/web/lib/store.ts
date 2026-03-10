@@ -1,22 +1,17 @@
 import { configureStore } from '@reduxjs/toolkit';
 
-import ordersFiltersReducer from './features/ui/ordersFiltersSlice';
-import tablePreferencesReducer from './features/ui/tablePreferencesSlice';
-import sessionReducer from './features/ui/sessionSlice';
-import reservationsFiltersReducer from './features/ui/reservationsFiltersSlice';
-import availabilityFiltersReducer from './features/ui/availabilityFiltersSlice';
+import { filtersReducer } from './reducers/filters';
+import { preferencesReducer } from './reducers/preferences';
 
 /**
- * Redux store configured per SPEC Section 8
- * UI state only - no server data (TanStack Query owns that)
+ * Redux store configured with domain-based organization
+ * - filters: UI filters grouped by feature (orders, reservations, availability)
+ * - preferences: User preferences (table, etc.)
  */
 export const store = configureStore({
     reducer: {
-        ordersFilters: ordersFiltersReducer,
-        tablePreferences: tablePreferencesReducer,
-        session: sessionReducer,
-        reservationsFilters: reservationsFiltersReducer,
-        availabilityFilters: availabilityFiltersReducer,
+        filters: filtersReducer,
+        preferences: preferencesReducer,
     },
 });
 

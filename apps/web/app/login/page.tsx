@@ -36,24 +36,9 @@ function LoginForm() {
                 password
             }, {
                 onSuccess: async () => {
-                    // After login, get user's organizations and set the first one as active
-                    try {
-                        const orgs = await authClient.organization.list();
-
-                        if (orgs.data && orgs.data.length > 0) {
-                            // Set the first organization as active
-                            await authClient.organization.setActive({
-                                organizationId: orgs.data[0].id
-                            });
-                        }
-                    } catch (orgError) {
-                        console.error('Failed to set active organization:', orgError);
-                        // Continue anyway - user can select org later
-                    }
-
-                    // Redirect to the intended page or dashboard
-                    router.push(redirectTo);
-                    router.refresh(); // Refresh to update session state
+                    // Redirect to organization selection page
+                    router.push('/select-org');
+                    router.refresh();
                 },
                 onError: (ctx: { error: { message: string } }) => {
                     setError(ctx.error.message || 'Login failed. Please check your credentials.');
@@ -85,6 +70,13 @@ function LoginForm() {
                         const org = await authClient.organization.create({
                             name: orgName,
                             slug: orgSlug,
+                            address: '',
+                            timezone: '',
+                            checkInTime: '',
+                            checkOutTime: '',
+                            phone: '',
+                            contactEmail: '',
+                            currency: 'USD'
                         });
 
                         if (org.data) {

@@ -1,7 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useSelector } from 'react-redux';
-import type { Guest, ResponseEnvelope } from '@repo/shared';
-import type { RootState } from '@/lib/store';
+import { authClient } from '@/lib/auth-client';
 import { config } from '@/lib/config';
 import { toast } from 'sonner';
 
@@ -28,7 +26,8 @@ export interface UpdateGuestInput extends Partial<CreateGuestInput> {
  */
 export function useGuestMutations() {
     const queryClient = useQueryClient();
-    const hotelId = useSelector((state: RootState) => state.session.activeHotel?.id);
+    const { data: activeOrg } = authClient.useActiveOrganization();
+    const hotelId = activeOrg?.id;
 
     const createGuest = useMutation({
         mutationFn: async (input: CreateGuestInput) => {

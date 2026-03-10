@@ -5,7 +5,7 @@ import type { Reservation } from '@repo/shared';
 import { useReservations } from '@/hooks/useReservations';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/lib/store';
-import { setPage } from '@/lib/features/ui/reservationsFiltersSlice';
+import { setPage } from '@/lib/reducers/filters/reservationsSlice';
 import {
     Table,
     TableBody,
@@ -39,7 +39,7 @@ function formatCurrency(amount: number, currency: string): string {
 
 export function ReservationsTable() {
     const dispatch = useDispatch();
-    const { page, pageSize } = useSelector((state: RootState) => state.reservationsFilters);
+    const { page, pageSize } = useSelector((state: RootState) => state.filters.reservations);
     const { data, isLoading, isError, error } = useReservations();
     const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
 

@@ -1,7 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useSelector } from 'react-redux';
-import type { PromoCode, DiscountType } from '@repo/shared';
-import type { RootState } from '@/lib/store';
+import { authClient } from '@/lib/auth-client';
 import { config } from '@/lib/config';
 import { toast } from 'sonner';
 
@@ -16,7 +14,8 @@ export interface PromoCodesQueryOptions {
  * Automatically scopes to the current active hotel
  */
 export function usePromoCodes(options: PromoCodesQueryOptions = {}) {
-    const hotelId = useSelector((state: RootState) => state.session.activeHotel?.id);
+    const { data: activeOrg } = authClient.useActiveOrganization();
+    const hotelId = activeOrg?.id;
 
     return useQuery({
         queryKey: ['promoCodes', hotelId, options] as const,
@@ -58,7 +57,8 @@ export interface ValidatePromoCodeResult {
 }
 
 export function useValidatePromoCode(options: ValidatePromoCodeOptions | null) {
-    const hotelId = useSelector((state: RootState) => state.session.activeHotel?.id);
+    const { data: activeOrg } = authClient.useActiveOrganization();
+    const hotelId = activeOrg?.id;
 
     return useQuery({
         queryKey: ['validatePromoCode', hotelId, options] as const,
@@ -126,7 +126,8 @@ export interface UpdatePromoCodeInput {
  */
 export function usePromoCodeMutations() {
     const queryClient = useQueryClient();
-    const hotelId = useSelector((state: RootState) => state.session.activeHotel?.id);
+    const { data: activeOrg } = authClient.useActiveOrganization();
+    const hotelId = activeOrg?.id;
 
     const createPromoCode = useMutation({
         mutationFn: async (input: CreatePromoCodeInput) => {

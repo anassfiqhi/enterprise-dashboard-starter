@@ -1,5 +1,5 @@
 import type { SessionData, Metrics } from '@repo/shared';
-import type { MutablePermissions } from '@/lib/features/ui/sessionSlice';
+import type { MutablePermissions } from '@/lib/reducers/auth/authSlice';
 
 // Admin session with full permissions
 export const mockAdminSession: SessionData = {
@@ -7,7 +7,7 @@ export const mockAdminSession: SessionData = {
     id: 'user_1',
     email: 'admin@example.com',
     name: 'Admin User',
-    isSuperAdmin: false,
+    isAdmin: false,
   },
   activeHotel: {
     id: 'hotel_1',
@@ -63,7 +63,7 @@ export const mockMemberSession: SessionData = {
     id: 'user_2',
     email: 'member@example.com',
     name: 'Member User',
-    isSuperAdmin: false,
+    isAdmin: false,
   },
   activeHotel: {
     id: 'hotel_1',
@@ -104,7 +104,7 @@ export const mockOwnerSession: SessionData = {
     id: 'user_3',
     email: 'owner@example.com',
     name: 'Owner User',
-    isSuperAdmin: false,
+    isAdmin: false,
   },
   activeHotel: {
     id: 'hotel_1',
@@ -146,7 +146,7 @@ export const mockSuperAdminSession: SessionData = {
     id: 'user_super',
     email: 'superadmin@example.com',
     name: 'Super Admin',
-    isSuperAdmin: true,
+    isAdmin: true,
   },
   activeHotel: null,
   hotels: [],

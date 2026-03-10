@@ -6,7 +6,7 @@ import { adminAc, memberAc } from "better-auth/plugins/organization/access";
  * Organization = Hotel in this context
  *
  * Roles:
- * - Super Admin: isSuperAdmin flag on user, bypasses all permission checks
+ * - Super Admin: isAdmin flag on user, bypasses all permission checks
  * - Admin: Full hotel access (hotel manager)
  * - Staff: Limited operational access (front desk)
  */
@@ -40,7 +40,7 @@ export const ac = createAccessControl(statement);
  * Admin role - Full access to hotel (hotel manager)
  * Can manage everything within their hotel
  */
-export const admin = ac.newRole({
+export const manager = ac.newRole({
   ...adminAc.statements,
   hotel: ["read", "update"],
   roomTypes: ["read", "create", "update", "delete"],

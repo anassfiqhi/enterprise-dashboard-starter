@@ -1,19 +1,16 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useSelector } from "react-redux";
-import { RootState } from "@/lib/store";
 import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
 
 /**
  * TanStack Query hook for organization invitations
- * Uses better-auth's organization plugin to fetch invitation data
+ * Automatically scopes to the current active organization
  */
 export function useInvitations() {
-    const organizationId = useSelector(
-        (state: RootState) => state.session.activeHotel?.id
-    );
+    const { data: activeOrg } = authClient.useActiveOrganization();
+    const organizationId = activeOrg?.id;
 
     return useQuery({
         queryKey: ["invitations", organizationId],
@@ -38,12 +35,11 @@ export function useInvitations() {
  */
 export function useInviteMember() {
     const queryClient = useQueryClient();
-    const organizationId = useSelector(
-        (state: RootState) => state.session.activeHotel?.id
-    );
+    const { data: activeOrg } = authClient.useActiveOrganization();
+    const organizationId = activeOrg?.id;
 
     return useMutation({
-        mutationFn: async ({ email, role }: { email: string; role: "member" | "admin" | "owner" }) => {
+        mutationFn: async ({ email, role }: { email: string; role: "admin" | "staff" | ("admin" | "staff")[] }) => {
             const response = await authClient.organization.inviteMember({
                 email,
                 role,
@@ -69,9 +65,8 @@ export function useInviteMember() {
  */
 export function useCancelInvitation() {
     const queryClient = useQueryClient();
-    const organizationId = useSelector(
-        (state: RootState) => state.session.activeHotel?.id
-    );
+    const { data: activeOrg } = authClient.useActiveOrganization();
+    const organizationId = activeOrg?.id;
 
     return useMutation({
         mutationFn: async ({ invitationId }: { invitationId: string }) => {

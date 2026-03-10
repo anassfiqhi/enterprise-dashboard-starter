@@ -10,7 +10,7 @@ import { config } from '@/lib/config';
  * ["orders", "list", { page, pageSize, search, status, sort }]
  */
 export function useOrders() {
-    const filters = useSelector((state: RootState) => state.ordersFilters);
+    const filters = useSelector((state: RootState) => state.filters.orders);
 
     return useQuery({
         queryKey: ['orders', 'list', filters] as const,

@@ -1,16 +1,25 @@
 import { useQuery } from '@tanstack/react-query';
+import { authClient } from '@/lib/auth-client';
 import type { Metrics, ResponseEnvelope } from '@repo/shared';
 import { config } from '@/lib/config';
 
 /**
- * TanStack Query hook for dashboard metrics (SPEC Phase 3)
- * Query key: ["metrics"]
+ * TanStack Query hook for dashboard metrics
+ * Automatically scopes to the current active hotel
  */
 export function useMetrics() {
+    const { data: activeOrg } = authClient.useActiveOrganization();
+    const hotelId = activeOrg?.id;
+
     return useQuery({
-        queryKey: ['metrics'] as const,
+        queryKey: ['metrics', hotelId] as const,
         queryFn: async () => {
-            const response = await fetch(`${config.apiUrl}/api/v1/metrics`, {
+            if (!hotelId) throw new Error('No hotel selected');
+
+            const params = new URLSearchParams();
+            params.append('hotelId', hotelId);
+
+            const response = await fetch(`${config.apiUrl}/api/v1/metrics?${params.toString()}`, {
                 credentials: 'include',
             });
 
@@ -27,5 +36,6 @@ export function useMetrics() {
 
             return envelope.data;
         },
+        enabled: !!hotelId,
     });
 }

@@ -14,8 +14,8 @@ const initialState: TablePreferencesState = {
  * Redux slice for Table UI preferences (SPEC Section 8.2)
  * Stores density, visible columns, etc.
  */
-const tablePreferencesSlice = createSlice({
-    name: 'ui/tablePreferences',
+const tableSlice = createSlice({
+    name: 'preferences/table',
     initialState,
     reducers: {
         setDensity: (state, action: PayloadAction<TablePreferencesState['density']>) => {
@@ -35,6 +35,6 @@ const tablePreferencesSlice = createSlice({
     },
 });
 
-export const { setDensity, setVisibleColumns, toggleColumn } = tablePreferencesSlice.actions;
+export const { setDensity, setVisibleColumns, toggleColumn } = tableSlice.actions;
 
-export default tablePreferencesSlice.reducer;
+export default tableSlice.reducer;

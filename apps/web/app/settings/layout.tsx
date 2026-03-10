@@ -1,8 +1,7 @@
 "use client";
 
 import { SettingsSidebar } from "@/components/settings/SettingsSidebar";
-import { useSelector } from "react-redux";
-import { RootState } from "@/lib/store";
+import { authClient } from '@/lib/auth-client';
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
@@ -12,9 +11,12 @@ export default function SettingsLayout({
     children: React.ReactNode;
 }) {
     const router = useRouter();
-    const { user, activeHotel, isLoading } = useSelector(
-        (state: RootState) => state.session
-    );
+    const { data: session, isPending: isSessionLoading } = authClient.useSession();
+    const { data: activeOrg, isPending: isOrgLoading } = authClient.useActiveOrganization();
+
+    const user = session?.user;
+    const activeHotel = activeOrg;
+    const isLoading = isSessionLoading || isOrgLoading;
 
     useEffect(() => {
         // Redirect to login if not authenticated

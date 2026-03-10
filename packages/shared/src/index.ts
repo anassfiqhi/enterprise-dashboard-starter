@@ -103,7 +103,7 @@ export function responseEnvelope<T>(data: T | null, errorCode?: string, errorMes
 // Hotel Management Permissions
 // ============================================================================
 
-export type OrganizationRole = 'admin' | 'staff';
+export type OrganizationRole = 'owner' | 'admin' | 'manager' | 'staff';
 
 export interface OrganizationPermissions {
     // Better Auth defaults
@@ -133,7 +133,7 @@ export interface SessionData {
         email: string;
         name: string | null;
         image?: string | null;
-        isSuperAdmin: boolean;
+        isAdmin: boolean;
     };
     activeHotel: {
         id: string;
@@ -164,25 +164,6 @@ export interface SSEEvent<T = any> {
     ts: number;
 }
 
-// Specific event types
-export interface OrderUpdatedEvent extends SSEEvent<Partial<Order>> {
-    type: 'order.updated';
-}
-
-export interface OrderCreatedEvent extends SSEEvent<Order> {
-    type: 'order.created';
-}
-
-export type OrderEvent = OrderUpdatedEvent | OrderCreatedEvent;
-
-// Zod schemas for SSE event validation
-export const OrderEventSchema = z.object({
-    type: z.enum(['order.updated', 'order.created']),
-    id: z.string(),
-    patch: z.record(z.string(), z.any()), // Flexible patch object (key: string, value: any)
-    ts: z.number(),
-});
-
 // ============================================================================
 // Metrics Schema
 // ============================================================================
@@ -200,7 +181,7 @@ export type Metrics = z.infer<typeof MetricsSchema>;
 // Organization Access Control (Better Auth Plugin)
 // ============================================================================
 
-export { ac, admin, staff, statement } from './permissions';
+export { ac, manager, staff, statement } from './permissions';
 
 // ============================================================================
 // Booking Types (from booking-engine integration)

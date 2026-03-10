@@ -1,8 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useSelector } from 'react-redux';
-import { RootState } from '@/lib/store';
+
 import { authClient } from '@/lib/auth-client';
 import { Building2, Check, ChevronsUpDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -19,8 +18,10 @@ import { useRouter } from 'next/navigation';
 
 export function OrganizationSelector() {
     const router = useRouter();
-    const activeHotel = useSelector((state: RootState) => state.session.activeHotel);
-    const hotels = useSelector((state: RootState) => state.session.hotels);
+    const { data: activeOrg } = authClient.useActiveOrganization();
+    const { data: hotelsData } = authClient.useListOrganizations();
+    const hotels = hotelsData || [];
+    const activeHotel = activeOrg;
     const [isLoading, setIsLoading] = useState(false);
 
     const handleHotelChange = async (hotelId: string) => {

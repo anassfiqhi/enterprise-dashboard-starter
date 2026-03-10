@@ -1,18 +1,36 @@
-import { useSelector } from 'react-redux';
-import { RootState } from '@/lib/store';
+import { useMemo } from 'react';
+import { authClient } from '@/lib/auth-client';
+import { admin, staff } from '@repo/shared';
 import type { OrganizationRole, OrganizationPermissions } from '@repo/shared';
 
 /**
- * Hook to check hotel-based permissions with Super Admin bypass
+ * Hook to check organization-based permissions with Super Admin bypass
  * Super Admin users bypass all permission checks
+ * 
+ * Uses Better Auth hooks to fetch session and active member data
  */
 export function usePermissions() {
-  const user = useSelector((state: RootState) => state.session.user);
-  const permissions = useSelector((state: RootState) => state.session.permissions);
-  const activeMember = useSelector((state: RootState) => state.session.activeMember);
-  const activeHotel = useSelector((state: RootState) => state.session.activeHotel);
+  // Use Better Auth hooks
+  const { data: session } = authClient.useSession();
+  const { data: activeMember } = authClient.useActiveMember();
+  const { data: activeOrganization } = authClient.useActiveOrganization();
 
-  const isSuperAdmin = user?.isSuperAdmin ?? false;
+  const user = session?.user ?? null;
+  const isAdmin = user?.isAdmin ?? false;
+
+  // Get permissions based on active member role
+  const permissions = useMemo((): OrganizationPermissions | null => {
+    if (!activeMember) return null;
+
+    switch (activeMember.role) {
+      case 'admin':
+        return admin.statements as OrganizationPermissions;
+      case 'staff':
+        return staff.statements as OrganizationPermissions;
+      default:
+        return null;
+    }
+  }, [activeMember?.role]);
 
   /**
    * Check if user has a specific permission for a resource
@@ -22,7 +40,7 @@ export function usePermissions() {
    */
   const can = (resource: keyof OrganizationPermissions, action: string): boolean => {
     // Super Admin bypasses all permission checks
-    if (isSuperAdmin) return true;
+    if (isAdmin) return true;
 
     if (!permissions) return false;
     const resourcePermissions = permissions[resource];
@@ -34,7 +52,7 @@ export function usePermissions() {
    * Check if user has all specified permissions
    */
   const canAll = (checks: Array<{ resource: keyof OrganizationPermissions; action: string }>): boolean => {
-    if (isSuperAdmin) return true;
+    if (isAdmin) return true;
     return checks.every(({ resource, action }) => can(resource, action));
   };
 
@@ -42,15 +60,15 @@ export function usePermissions() {
    * Check if user has any of the specified permissions
    */
   const canAny = (checks: Array<{ resource: keyof OrganizationPermissions; action: string }>): boolean => {
-    if (isSuperAdmin) return true;
+    if (isAdmin) return true;
     return checks.some(({ resource, action }) => can(resource, action));
   };
 
   /**
-   * Check if user has a specific role in the active hotel
+   * Check if user has a specific role in the active organization
    */
   const hasRole = (requiredRole: OrganizationRole): boolean => {
-    if (isSuperAdmin) return true;
+    if (isAdmin) return true;
     return activeMember?.role === requiredRole;
   };
 
@@ -58,17 +76,17 @@ export function usePermissions() {
    * Check if user has any of the specified roles
    */
   const hasAnyRole = (...roles: OrganizationRole[]): boolean => {
-    if (isSuperAdmin) return true;
-    return activeMember?.role !== undefined && roles.includes(activeMember.role);
+    if (isAdmin) return true;
+    return activeMember?.role !== undefined && roles.includes(activeMember.role as OrganizationRole);
   };
 
   return {
     // User info
     user,
-    isSuperAdmin,
+    isAdmin,
 
-    // Hotel context
-    activeHotel,
+    // Organization context
+    activeOrganization,
     activeMember,
     role: activeMember?.role ?? null,
 

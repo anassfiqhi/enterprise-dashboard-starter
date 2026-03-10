@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { Reservation } from '@repo/shared';
 import { useBookingMetrics } from '@/hooks/useBookingMetrics';
 import { useReservations } from '@/hooks/useReservations';
@@ -20,6 +20,9 @@ import {
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { ArrowRight, Calendar, Building2, CalendarDays, Plus } from 'lucide-react';
+import { useRole } from '@/hooks/useRole';
+import { authClient } from '@/lib/auth-client';
+import { useRouter } from 'next/navigation';
 
 function formatDate(dateStr: string | undefined): string {
     if (!dateStr) return '-';
@@ -38,12 +41,27 @@ function formatCurrency(amount: number, currency: string): string {
 }
 
 export default function Home() {
+    const { data: role, isLoading: roleLoading, error: roleError } = useRole();
     const { data: metrics, isLoading: metricsLoading } = useBookingMetrics();
     const { data: reservationsData, isLoading: reservationsLoading } = useReservations();
     const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
+    const router = useRouter();
 
     const recentReservations = reservationsData?.data?.slice(0, 5) || [];
 
+    useEffect(() => {
+        authClient.organization.getActiveMember().then((res) => {
+            console.log(res);
+            if (res.error?.code === 'NO_ACTIVE_ORGANIZATION') {
+                console.log('NO_ACTIVE_ORGANIZATION');
+                router.push('/select-org');
+            }
+        }).catch((err) => {
+            console.log(err);
+            // router.push('/select-org');
+            // router.refresh();
+        });
+    }, []);
     return (
         <div className="flex flex-1 flex-col">
             <div className="@container/main flex flex-1 flex-col gap-2">
@@ -54,6 +72,9 @@ export default function Home() {
                             <h1 className="text-2xl font-bold">Dashboard</h1>
                             <p className="text-sm text-muted-foreground">
                                 Booking engine overview and key metrics
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                                Role: {role}
                             </p>
                         </div>
                         <div className="flex items-center gap-2">

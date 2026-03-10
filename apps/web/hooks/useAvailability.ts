@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/lib/store';
+import { authClient } from '@/lib/auth-client';
 import type { RoomAvailability, ActivitySlotAvailability, ResponseEnvelope } from '@repo/shared';
 import { config } from '@/lib/config';
 
@@ -8,19 +9,25 @@ type AvailabilityData = RoomAvailability[] | ActivitySlotAvailability[];
 
 /**
  * TanStack Query hook for availability data
- * Query key is derived from Redux UI state
+ * Automatically scopes to the current active hotel
  */
 export function useAvailability() {
-    const filters = useSelector((state: RootState) => state.availabilityFilters);
+    const { viewType, startDate, endDate } = useSelector(
+        (state: RootState) => state.filters.availability
+    );
+    const { data: activeOrg } = authClient.useActiveOrganization();
+    const hotelId = activeOrg?.id;
 
     return useQuery({
-        queryKey: ['availability', filters] as const,
+        queryKey: ['availability', hotelId, { viewType, startDate, endDate }] as const,
         queryFn: async () => {
+            if (!hotelId) throw new Error('No hotel selected');
+
             const params = new URLSearchParams();
-            if (filters.hotelId) params.append('hotelId', filters.hotelId);
-            params.append('startDate', filters.startDate);
-            params.append('endDate', filters.endDate);
-            params.append('viewType', filters.viewType);
+            params.append('hotelId', hotelId);
+            params.append('startDate', startDate);
+            params.append('endDate', endDate);
+            params.append('viewType', viewType);
 
             const response = await fetch(
                 `${config.apiUrl}/api/v1/availability?${params.toString()}`,
@@ -45,6 +52,6 @@ export function useAvailability() {
                 meta: envelope.meta,
             };
         },
-        enabled: !!filters.hotelId,
+        enabled: !!hotelId,
     });
 }

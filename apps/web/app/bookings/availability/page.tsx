@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/lib/store';
-import { setHotelId, setViewType, navigateMonth } from '@/lib/features/ui/availabilityFiltersSlice';
+import { setViewType, navigateMonth } from '@/lib/reducers/filters/availabilitySlice';
+import { authClient } from '@/lib/auth-client';
 import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { AvailabilityCalendar } from '@/components/bookings/AvailabilityCalendar';
@@ -15,16 +15,10 @@ export const dynamic = 'force-dynamic';
 export default function AvailabilityPage() {
     const dispatch = useDispatch();
     const { viewType, startDate, endDate } = useSelector(
-        (state: RootState) => state.availabilityFilters
+        (state: RootState) => state.filters.availability
     );
-    const activeHotel = useSelector((state: RootState) => state.session.activeHotel);
-
-    // Sync hotelId from session to availability filters
-    useEffect(() => {
-        if (activeHotel?.id) {
-            dispatch(setHotelId(activeHotel.id));
-        }
-    }, [activeHotel?.id, dispatch]);
+    const { data: activeOrg } = authClient.useActiveOrganization();
+    const activeHotel = activeOrg;
 
     const formatMonthRange = () => {
         const start = new Date(startDate);

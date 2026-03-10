@@ -35,7 +35,7 @@ function isRoomAvailability(item: RoomAvailability | ActivitySlotAvailability): 
 }
 
 export function AvailabilityCalendar() {
-    const { viewType } = useSelector((state: RootState) => state.availabilityFilters);
+    const { viewType } = useSelector((state: RootState) => state.filters.availability);
     const { data, isLoading, isError, error } = useAvailability();
 
     const { dates, itemNames, itemIds, availabilityMap } = useMemo(() => {

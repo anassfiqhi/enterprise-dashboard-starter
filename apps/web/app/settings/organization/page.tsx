@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSelector, useDispatch } from "react-redux";
-import { RootState } from "@/lib/store";
+
 import { authClient } from "@/lib/auth-client";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useQueryClient } from "@tanstack/react-query";
@@ -19,16 +18,15 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { clearSession } from "@/lib/features/ui/sessionSlice";
+
 import { Building2, AlertTriangle } from "lucide-react";
 
 export default function OrganizationPage() {
-    const dispatch = useDispatch();
+
     const router = useRouter();
     const queryClient = useQueryClient();
-    const activeHotel = useSelector(
-        (state: RootState) => state.session.activeHotel
-    );
+    const { data: activeOrg } = authClient.useActiveOrganization();
+    const activeHotel = activeOrg;
     const { can } = usePermissions();
 
     const [name, setName] = useState("");
@@ -94,7 +92,7 @@ export default function OrganizationPage() {
 
             toast.success("Organization deleted");
             // Clear session and redirect
-            dispatch(clearSession());
+
             queryClient.clear();
             router.push("/");
         } catch (error) {
@@ -193,8 +191,8 @@ export default function OrganizationPage() {
                             {isDeleting
                                 ? "Deleting..."
                                 : deleteConfirm
-                                ? "Click again to confirm deletion"
-                                : "Delete Organization"}
+                                    ? "Click again to confirm deletion"
+                                    : "Delete Organization"}
                         </Button>
                     </CardContent>
                 </Card>

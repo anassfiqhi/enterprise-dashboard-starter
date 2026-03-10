@@ -6,13 +6,10 @@ import { RootState } from '@/lib/store';
 import {
     setSearch,
     setStatus,
-    setHotelId,
-    setDateRange,
     setSort,
     resetFilters,
-} from '@/lib/features/ui/reservationsFiltersSlice';
+} from '@/lib/reducers/filters/reservationsSlice';
 import { useDebounce } from '@/hooks/useDebounce';
-import { useHotels } from '@/hooks/useHotels';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
@@ -22,14 +19,13 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { Search, X, CalendarIcon } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 
 export function ReservationsToolbar() {
     const dispatch = useDispatch();
-    const { search, status, hotelId, checkInFrom, checkInTo, sort } = useSelector(
-        (state: RootState) => state.reservationsFilters
+    const { search, status, checkInFrom, checkInTo, sort } = useSelector(
+        (state: RootState) => state.filters.reservations
     );
-    const { data: hotels } = useHotels();
 
     const [searchInput, setSearchInput] = useState(search);
     const debouncedSearch = useDebounce(searchInput, 500);
@@ -54,24 +50,6 @@ export function ReservationsToolbar() {
                     className="pl-9"
                 />
             </div>
-
-            {/* Hotel Filter */}
-            <Select
-                value={hotelId || 'all'}
-                onValueChange={(value) => dispatch(setHotelId(value === 'all' ? '' : value))}
-            >
-                <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="All Hotels" />
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="all">All Hotels</SelectItem>
-                    {hotels?.map((hotel) => (
-                        <SelectItem key={hotel.id} value={hotel.id}>
-                            {hotel.name}
-                        </SelectItem>
-                    ))}
-                </SelectContent>
-            </Select>
 
             {/* Status Filter */}
             <Select

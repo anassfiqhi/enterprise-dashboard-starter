@@ -13,7 +13,7 @@ export function LayoutWrapper({ children }: LayoutWrapperProps) {
     const pathname = usePathname();
 
     // Don't show sidebar on login or accept-invitation pages
-    const isFullscreenPage = pathname === '/login' || pathname?.startsWith('/accept-invitation');
+    const isFullscreenPage = pathname === '/login' || pathname?.startsWith('/accept-invitation') || pathname === '/select-org';
 
     if (isFullscreenPage) {
         return <main className="min-h-svh w-full">{children}</main>;

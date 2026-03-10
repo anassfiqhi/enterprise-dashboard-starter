@@ -19,8 +19,7 @@ import {
   Tag,
   Users,
 } from "lucide-react"
-import { useSelector } from "react-redux"
-import type { RootState } from "@/lib/store"
+import { authClient } from "@/lib/auth-client"
 
 import { NavMain } from "@/components/nav-main"
 import { NavSecondary } from "@/components/nav-secondary"
@@ -37,8 +36,8 @@ import { SidebarOrgSwitcher } from "@/components/sidebar-org-switcher"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname()
-  const { can, isSuperAdmin, canViewAuditLogs, canViewAnalytics } = usePermissions()
-  const session = useSelector((state: RootState) => state.session)
+  const { can, isAdmin, canViewAuditLogs, canViewAnalytics } = usePermissions()
+  const { data: session } = authClient.useSession()
   const collapsibleMode = useCollapsibleMode()
 
   // Build navigation items based on permissions
@@ -50,13 +49,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       isActive: boolean
       items?: { title: string; url: string; isActive: boolean }[]
     }[] = [
-      {
-        title: "Dashboard",
-        url: "/",
-        icon: LayoutDashboardIcon,
-        isActive: pathname === "/",
-      },
-    ]
+        {
+          title: "Dashboard",
+          url: "/",
+          icon: LayoutDashboardIcon,
+          isActive: pathname === "/",
+        },
+      ]
 
     // Bookings section (Reservations)
     if (can("reservations", "read")) {
@@ -190,7 +189,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     }
 
     // System (Super Admin only) - manage all hotels
-    if (isSuperAdmin) {
+    if (isAdmin) {
       items.push({
         title: "System",
         url: "/system",
@@ -212,7 +211,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     }
 
     return items
-  }, [pathname, can, isSuperAdmin, canViewAnalytics, canViewAuditLogs])
+  }, [pathname, can, isAdmin, canViewAnalytics, canViewAuditLogs])
 
   const navSecondary = [
     {
@@ -236,11 +235,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   ]
 
   // User data from session
-  const user = {
-    name: session.user?.name || "User",
-    email: session.user?.email || "",
-    avatar: session.user?.id ? `/avatars/${session.user.id}.jpg` : "/avatars/default.jpg",
-  }
+  const user = session?.user
 
   return (
     <Sidebar collapsible={collapsibleMode} {...props}>
@@ -252,7 +247,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavSecondary items={navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={user} />
+        {user && <NavUser user={user} />}
       </SidebarFooter>
     </Sidebar>
   )

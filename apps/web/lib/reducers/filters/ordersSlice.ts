@@ -20,8 +20,8 @@ const initialState: OrdersFiltersState = {
  * Redux slice for Orders UI filters (SPEC Section 8.2)
  * UI state only - no server data
  */
-const ordersFiltersSlice = createSlice({
-    name: 'ui/ordersFilters',
+const ordersSlice = createSlice({
+    name: 'filters/orders',
     initialState,
     reducers: {
         setPage: (state, action: PayloadAction<number>) => {
@@ -49,6 +49,6 @@ const ordersFiltersSlice = createSlice({
 });
 
 export const { setPage, setPageSize, setSearch, setStatus, setSort, resetFilters } =
-    ordersFiltersSlice.actions;
+    ordersSlice.actions;
 
-export default ordersFiltersSlice.reducer;
+export default ordersSlice.reducer;

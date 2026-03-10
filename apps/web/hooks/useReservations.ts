@@ -1,25 +1,30 @@
 import { useQuery } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/lib/store';
+import { authClient } from '@/lib/auth-client';
 import type { Reservation, ResponseEnvelope } from '@repo/shared';
 import { config } from '@/lib/config';
 
 /**
  * TanStack Query hook for reservations
- * Query key is derived from Redux UI state
+ * Automatically scopes to the current active hotel
  */
 export function useReservations() {
-    const filters = useSelector((state: RootState) => state.reservationsFilters);
+    const filters = useSelector((state: RootState) => state.filters.reservations);
+    const { data: activeOrg } = authClient.useActiveOrganization();
+    const hotelId = activeOrg?.id;
 
     return useQuery({
-        queryKey: ['reservations', 'list', filters] as const,
+        queryKey: ['reservations', 'list', hotelId, filters] as const,
         queryFn: async () => {
+            if (!hotelId) throw new Error('No hotel selected');
+
             const params = new URLSearchParams();
+            params.append('hotelId', hotelId);
             params.append('page', String(filters.page));
             params.append('pageSize', String(filters.pageSize));
             if (filters.search) params.append('search', filters.search);
             if (filters.status) params.append('status', filters.status);
-            if (filters.hotelId) params.append('hotelId', filters.hotelId);
             if (filters.checkInFrom) params.append('checkInFrom', filters.checkInFrom);
             if (filters.checkInTo) params.append('checkInTo', filters.checkInTo);
             if (filters.sort) params.append('sort', filters.sort);
@@ -47,5 +52,6 @@ export function useReservations() {
                 meta: envelope.meta,
             };
         },
+        enabled: !!hotelId,
     });
 }

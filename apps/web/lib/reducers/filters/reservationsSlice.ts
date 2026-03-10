@@ -6,7 +6,6 @@ export interface ReservationsFiltersState {
     pageSize: number;
     search: string;
     status: ReservationStatus | '';
-    hotelId: string;
     checkInFrom: string;
     checkInTo: string;
     sort: string;
@@ -17,7 +16,6 @@ const initialState: ReservationsFiltersState = {
     pageSize: 10,
     search: '',
     status: '',
-    hotelId: '',
     checkInFrom: '',
     checkInTo: '',
     sort: '-createdAt',
@@ -27,8 +25,8 @@ const initialState: ReservationsFiltersState = {
  * Redux slice for Reservations UI filters
  * UI state only - no server data
  */
-const reservationsFiltersSlice = createSlice({
-    name: 'ui/reservationsFilters',
+const reservationsSlice = createSlice({
+    name: 'filters/reservations',
     initialState,
     reducers: {
         setPage: (state, action: PayloadAction<number>) => {
@@ -44,10 +42,6 @@ const reservationsFiltersSlice = createSlice({
         },
         setStatus: (state, action: PayloadAction<ReservationsFiltersState['status']>) => {
             state.status = action.payload;
-            state.page = 1;
-        },
-        setHotelId: (state, action: PayloadAction<string>) => {
-            state.hotelId = action.payload;
             state.page = 1;
         },
         setCheckInFrom: (state, action: PayloadAction<string>) => {
@@ -77,12 +71,11 @@ export const {
     setPageSize,
     setSearch,
     setStatus,
-    setHotelId,
     setCheckInFrom,
     setCheckInTo,
     setDateRange,
     setSort,
     resetFilters,
-} = reservationsFiltersSlice.actions;
+} = reservationsSlice.actions;
 
-export default reservationsFiltersSlice.reducer;
+export default reservationsSlice.reducer;

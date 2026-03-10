@@ -3,11 +3,11 @@
 import Link from 'next/link';
 import { UserNav } from './UserNav';
 import { OrganizationSelector } from './OrganizationSelector';
-import { useSelector } from 'react-redux';
-import { RootState } from '@/lib/store';
+import { useSession } from '@/hooks/useSession';
 
 export function Header() {
-    const user = useSelector((state: RootState) => state.session.user);
+    const { data: session } = useSession();
+    const user = session?.user ?? null;
 
     return (
         <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">

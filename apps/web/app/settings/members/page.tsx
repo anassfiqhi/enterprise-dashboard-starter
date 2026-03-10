@@ -27,6 +27,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { RoleBadge } from "@/components/ui/role-badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -201,17 +202,7 @@ function MembersTab() {
                                         </SelectContent>
                                     </Select>
                                 ) : (
-                                    <Badge
-                                        variant={
-                                            isOwner
-                                                ? "default"
-                                                : member.role === "admin"
-                                                ? "secondary"
-                                                : "outline"
-                                        }
-                                    >
-                                        {member.role}
-                                    </Badge>
+                                    <RoleBadge role={member.role} />
                                 )}
                             </TableCell>
                             {canDeleteMembers && (
@@ -364,9 +355,8 @@ function InvitationsTab() {
                     <CardDescription>
                         {pendingInvitations.length === 0
                             ? "No pending invitations"
-                            : `${pendingInvitations.length} pending invitation${
-                                  pendingInvitations.length === 1 ? "" : "s"
-                              }`}
+                            : `${pendingInvitations.length} pending invitation${pendingInvitations.length === 1 ? "" : "s"
+                            }`}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -393,15 +383,7 @@ function InvitationsTab() {
                                             {invitation.email}
                                         </TableCell>
                                         <TableCell>
-                                            <Badge
-                                                variant={
-                                                    invitation.role === "admin"
-                                                        ? "secondary"
-                                                        : "outline"
-                                                }
-                                            >
-                                                {invitation.role}
-                                            </Badge>
+                                            <RoleBadge role={invitation.role} />
                                         </TableCell>
                                         <TableCell className="text-muted-foreground">
                                             <div className="flex items-center gap-1">

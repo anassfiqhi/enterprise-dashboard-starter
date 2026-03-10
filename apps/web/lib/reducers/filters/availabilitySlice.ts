@@ -1,7 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 export interface AvailabilityFiltersState {
-    hotelId: string;
     viewType: 'rooms' | 'activities';
     startDate: string;
     endDate: string;
@@ -11,7 +10,6 @@ const today = new Date();
 const thirtyDaysLater = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
 
 const initialState: AvailabilityFiltersState = {
-    hotelId: '',
     viewType: 'rooms',
     startDate: today.toISOString().split('T')[0],
     endDate: thirtyDaysLater.toISOString().split('T')[0],
@@ -21,13 +19,10 @@ const initialState: AvailabilityFiltersState = {
  * Redux slice for Availability calendar UI filters
  * UI state only - no server data
  */
-const availabilityFiltersSlice = createSlice({
-    name: 'ui/availabilityFilters',
+const availabilitySlice = createSlice({
+    name: 'filters/availability',
     initialState,
     reducers: {
-        setHotelId: (state, action: PayloadAction<string>) => {
-            state.hotelId = action.payload;
-        },
         setViewType: (state, action: PayloadAction<'rooms' | 'activities'>) => {
             state.viewType = action.payload;
         },
@@ -59,13 +54,12 @@ const availabilityFiltersSlice = createSlice({
 });
 
 export const {
-    setHotelId,
     setViewType,
     setStartDate,
     setEndDate,
     setDateRange,
     navigateMonth,
     resetFilters,
-} = availabilityFiltersSlice.actions;
+} = availabilitySlice.actions;
 
-export default availabilityFiltersSlice.reducer;
+export default availabilitySlice.reducer;

@@ -2,10 +2,10 @@ import React, { ReactElement } from 'react';
 import { render, RenderOptions } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Provider } from 'react-redux';
-import { configureStore, PreloadedState } from '@reduxjs/toolkit';
-import ordersFiltersReducer from '@/lib/features/ui/ordersFiltersSlice';
-import sessionReducer from '@/lib/features/ui/sessionSlice';
-import tablePreferencesReducer from '@/lib/features/ui/tablePreferencesSlice';
+import { configureStore } from '@reduxjs/toolkit';
+import authReducer from '@/lib/features/auth/authSlice';
+import { filtersReducer } from '@/lib/features/filters';
+import { preferencesReducer } from '@/lib/features/preferences';
 import type { RootState } from '@/lib/store';
 
 // Create a fresh QueryClient for each test
@@ -25,12 +25,12 @@ function createTestQueryClient() {
 }
 
 // Create a fresh Redux store for each test
-function createTestStore(preloadedState?: PreloadedState<RootState>) {
+function createTestStore(preloadedState?: Partial<RootState>) {
   return configureStore({
     reducer: {
-      ordersFilters: ordersFiltersReducer,
-      session: sessionReducer,
-      tablePreferences: tablePreferencesReducer,
+      auth: authReducer,
+      filters: filtersReducer,
+      preferences: preferencesReducer,
     },
     preloadedState,
   });
@@ -39,7 +39,7 @@ function createTestStore(preloadedState?: PreloadedState<RootState>) {
 type TestStore = ReturnType<typeof createTestStore>;
 
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
-  preloadedState?: PreloadedState<RootState>;
+  preloadedState?: Partial<RootState>;
   store?: TestStore;
   queryClient?: QueryClient;
 }
@@ -80,7 +80,7 @@ export function createQueryWrapper() {
 }
 
 // Helper to create a Redux wrapper for testing hooks
-export function createReduxWrapper(preloadedState?: PreloadedState<RootState>) {
+export function createReduxWrapper(preloadedState?: Partial<RootState>) {
   const store = createTestStore(preloadedState);
   const Wrapper = ({ children }: { children: React.ReactNode }) => (
     <Provider store={store}>{children}</Provider>
@@ -89,7 +89,7 @@ export function createReduxWrapper(preloadedState?: PreloadedState<RootState>) {
 }
 
 // Helper to create both Redux and Query wrapper
-export function createCombinedWrapper(preloadedState?: PreloadedState<RootState>) {
+export function createCombinedWrapper(preloadedState?: Partial<RootState>) {
   const store = createTestStore(preloadedState);
   const queryClient = createTestQueryClient();
   const Wrapper = ({ children }: { children: React.ReactNode }) => (

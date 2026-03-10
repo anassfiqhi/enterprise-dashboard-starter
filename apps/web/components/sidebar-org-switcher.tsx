@@ -2,12 +2,13 @@
 
 import * as React from "react"
 import { useState } from "react"
-import { useSelector } from "react-redux"
 import { useRouter } from "next/navigation"
+import { useDispatch } from "react-redux"
 import { ChevronsUpDown, Plus, Building2 } from "lucide-react"
 
-import { RootState } from "@/lib/store"
 import { authClient } from "@/lib/auth-client"
+import { resetFilters as resetReservationsFilters } from "@/lib/reducers/filters/reservationsSlice"
+import { resetFilters as resetAvailabilityFilters } from "@/lib/reducers/filters/availabilitySlice"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,9 +34,24 @@ interface Organization {
 
 export function SidebarOrgSwitcher() {
   const router = useRouter()
+  const dispatch = useDispatch()
   const { isMobile, setOpenMobile } = useSidebar()
-  const activeHotel = useSelector((state: RootState) => state.session.activeHotel)
-  const hotels = useSelector((state: RootState) => state.session.hotels)
+  const { data: activeOrg } = authClient.useActiveOrganization()
+  const { data: organizations } = authClient.useListOrganizations()
+
+  const activeHotel = activeOrg ? {
+    id: activeOrg.id,
+    name: activeOrg.name,
+    slug: activeOrg.slug,
+    logo: activeOrg.logo
+  } : null
+
+  const hotels = organizations?.map(org => ({
+    id: org.id,
+    name: org.name,
+    slug: org.slug,
+    logo: org.logo
+  })) ?? []
   const [isLoading, setIsLoading] = useState(false)
 
   const handleHotelChange = async (hotel: Organization) => {
@@ -46,6 +62,8 @@ export function SidebarOrgSwitcher() {
       await authClient.organization.setActive({
         organizationId: hotel.id,
       })
+      dispatch(resetReservationsFilters())
+      dispatch(resetAvailabilityFilters())
       toast.success(`Switched to ${hotel.name}`)
       if (isMobile) {
         setOpenMobile(false)

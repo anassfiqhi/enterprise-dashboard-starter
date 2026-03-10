@@ -1,7 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { useSelector } from 'react-redux';
-import type { Guest, ResponseEnvelope } from '@repo/shared';
-import type { RootState } from '@/lib/store';
+import { authClient } from '@/lib/auth-client';
 import { config } from '@/lib/config';
 
 export interface GuestWithStats extends Guest {
@@ -33,7 +31,8 @@ export interface GuestsFilters {
  */
 export function useGuests(filters: GuestsFilters = {}) {
     const { search = '', page = 1, pageSize = 20 } = filters;
-    const hotelId = useSelector((state: RootState) => state.session.activeHotel?.id);
+    const { data: activeOrg } = authClient.useActiveOrganization();
+    const hotelId = activeOrg?.id;
 
     return useQuery({
         queryKey: ['guests', hotelId, { search, page, pageSize }] as const,
