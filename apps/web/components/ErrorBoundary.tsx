@@ -54,7 +54,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
                             {this.state.error && (
                                 <div className="rounded-lg bg-muted p-4 text-sm font-mono text-muted-foreground">
                                     <p className="font-semibold text-foreground mb-2">Error details:</p>
-                                    <p className="break-words">{this.state.error.message}</p>
+                                    <p className="wrap-break-word">{this.state.error.message}</p>
                                 </div>
                             )}
                         </CardContent>
