@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { authClient } from '@/lib/auth-client';
-import { admin, staff } from '@repo/shared';
+import { manager, staff } from '@repo/shared';
 import type { OrganizationRole, OrganizationPermissions } from '@repo/shared';
 
 /**
@@ -16,15 +16,15 @@ export function usePermissions() {
   const { data: activeOrganization } = authClient.useActiveOrganization();
 
   const user = session?.user ?? null;
-  const isAdmin = user?.isAdmin ?? false;
+  const isAdmin = user?.role === 'admin';
 
   // Get permissions based on active member role
   const permissions = useMemo((): OrganizationPermissions | null => {
     if (!activeMember) return null;
 
     switch (activeMember.role) {
-      case 'admin':
-        return admin.statements as OrganizationPermissions;
+      case 'manager':
+        return manager.statements as OrganizationPermissions;
       case 'staff':
         return staff.statements as OrganizationPermissions;
       default:
