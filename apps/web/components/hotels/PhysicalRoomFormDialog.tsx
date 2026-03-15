@@ -55,21 +55,24 @@ export function PhysicalRoomFormDialog({
     });
 
     useEffect(() => {
-        if (room) {
-            setFormData({
-                code: room.code,
-                floor: room.floor,
-                status: room.status,
-                notes: room.notes || '',
-            });
-        } else {
-            setFormData({
-                code: '',
-                floor: undefined,
-                status: 'AVAILABLE',
-                notes: '',
-            });
-        }
+        const timer = setTimeout(() => {
+            if (room) {
+                setFormData({
+                    code: room.code,
+                    floor: room.floor,
+                    status: room.status,
+                    notes: room.notes || '',
+                });
+            } else {
+                setFormData({
+                    code: '',
+                    floor: undefined,
+                    status: 'AVAILABLE',
+                    notes: '',
+                });
+            }
+        }, 0);
+        return () => clearTimeout(timer);
     }, [room, open]);
 
     const handleSubmit = async (e: React.FormEvent) => {

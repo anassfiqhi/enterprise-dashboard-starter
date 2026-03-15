@@ -1,6 +1,6 @@
 'use client';
 
-import { ShieldCheck, UserCog, User } from 'lucide-react';
+import { ShieldCheck, UserCog, User, type LucideIcon } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import {
@@ -32,7 +32,7 @@ export function getDisplayRole(role: string): DisplayRole {
 const roleConfigs: Record<DisplayRole, {
     label: string;
     description: string;
-    icon: any;
+    icon: LucideIcon;
     colors: string;
     iconBg: string;
 }> = {

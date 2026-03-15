@@ -8,5 +8,5 @@ import availabilityReducer from './availabilitySlice';
  */
 export const filtersReducer = combineReducers({
     reservations: reservationsReducer,
-    availability: availabilityReducer,
+    availability: availabilityReducer
 });

@@ -11,7 +11,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Separator } from '@/components/ui/separator';
 import {
     Table,
     TableBody,
@@ -229,10 +228,10 @@ export default function GuestDetailPage({ params }: PageProps) {
                                     <div className="text-2xl font-bold">
                                         {guest.stats.totalReservations > 0
                                             ? Math.round(
-                                                  (guest.stats.cancelledReservations /
-                                                      guest.stats.totalReservations) *
-                                                      100
-                                              )
+                                                (guest.stats.cancelledReservations /
+                                                    guest.stats.totalReservations) *
+                                                100
+                                            )
                                             : 0}
                                         %
                                     </div>

@@ -7,8 +7,7 @@ import {
     useCancelInvitation,
 } from "@/hooks/useInvitations";
 import { usePermissions } from "@/hooks/usePermissions";
-import { useSelector } from "react-redux";
-import { RootState } from "@/lib/store";
+import { useSession } from "@/hooks/useSession";
 import {
     Card,
     CardHeader,
@@ -26,7 +25,7 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
+
 import { RoleBadge } from "@/components/ui/role-badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -101,7 +100,8 @@ function MembersTab() {
     const removeMember = useRemoveMember();
     const [pendingRemove, setPendingRemove] = useState<string | null>(null);
 
-    const currentUserId = useSelector((state: RootState) => state.session.user?.id);
+    const { data: session } = useSession();
+    const currentUserId = session?.user?.id;
 
     const canUpdateMembers = can("member", "update");
     const canDeleteMembers = can("member", "delete");
@@ -154,7 +154,7 @@ function MembersTab() {
             </TableHeader>
             <TableBody>
                 {members.map((member) => {
-                    const isOwner = member.role === "owner";
+                    const isOwner = (member.role as string) === "owner";
                     const isCurrentUser = member.userId === currentUserId;
 
                     return (
@@ -247,7 +247,7 @@ function InvitationsTab() {
     const cancelInvitation = useCancelInvitation();
 
     const [email, setEmail] = useState("");
-    const [role, setRole] = useState<"member" | "admin" | "owner">("member");
+    const [role, setRole] = useState<"staff" | "manager" | "admin" | "owner">("staff");
     const [pendingCancel, setPendingCancel] = useState<string | null>(null);
 
     const canInvite = can("invitation", "create");
@@ -273,7 +273,7 @@ function InvitationsTab() {
             {
                 onSuccess: () => {
                     setEmail("");
-                    setRole("member");
+                    setRole("staff");
                 },
             }
         );
@@ -328,13 +328,14 @@ function InvitationsTab() {
                                 className="flex-1"
                                 required
                             />
-                            <Select value={role} onValueChange={(v) => setRole(v as "member" | "admin" | "owner")}>
+                            <Select value={role} onValueChange={(v) => setRole(v as "staff" | "manager" | "admin" | "owner")}>
                                 <SelectTrigger className="w-[140px]">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="admin">Admin</SelectItem>
-                                    <SelectItem value="member">Member</SelectItem>
+                                    <SelectItem value="manager">Manager</SelectItem>
+                                    <SelectItem value="staff">Staff</SelectItem>
                                 </SelectContent>
                             </Select>
                             <Button

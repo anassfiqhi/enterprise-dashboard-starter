@@ -1,10 +1,10 @@
 "use client"
 
 import Link from "next/link"
-import { ChevronRightIcon, MailIcon, PlusCircleIcon, type LucideIcon } from "lucide-react"
+import { ChevronRightIcon, PlusCircleIcon, type LucideIcon } from "lucide-react"
 import * as Collapsible from "@radix-ui/react-collapsible"
 
-import { Button } from "@/components/ui/button"
+
 import {
   SidebarGroup,
   SidebarGroupContent,

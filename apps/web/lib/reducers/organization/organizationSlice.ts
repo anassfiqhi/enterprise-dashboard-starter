@@ -13,7 +13,7 @@ export interface Organization {
     slug: string;
     createdAt: Date;
     logo?: string | null | undefined;
-    metadata?: any;
+    metadata?: Record<string, unknown>;
     members: {
         id: string;
         organizationId: string;

@@ -55,7 +55,7 @@ export function RevenueChart({ data }: RevenueChartProps) {
                 <ChartTooltip
                     content={
                         <ChartTooltipContent
-                            formatter={(value, name) => (
+                            formatter={(value) => (
                                 <span className="font-mono">
                                     ${Number(value).toLocaleString()}
                                 </span>

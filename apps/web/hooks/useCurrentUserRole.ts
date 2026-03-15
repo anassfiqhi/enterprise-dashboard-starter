@@ -12,6 +12,6 @@ export function useCurrentUserRole(): 'super_admin' | 'admin' | 'staff' | null {
 
     const user = session?.user;
 
-    if (user?.isAdmin) return 'super_admin';
+    if ((user as Record<string, unknown>)?.isAdmin) return 'super_admin';
     return (activeMember?.role as 'admin' | 'staff' | null) ?? null;
 }

@@ -42,7 +42,7 @@ function formatCurrency(amount: number, currency: string): string {
 
 export default function Home() {
     // const { data: role, isLoading: roleLoading, error: roleError } = useRole();
-    const { role, isLoading: roleLoading, error: roleError } = usePermissions();
+    const { role, isAdmin, isLoading: roleLoading } = usePermissions();
     const { data: metrics, isLoading: metricsLoading } = useBookingMetrics();
     const { data: reservationsData, isLoading: reservationsLoading } = useReservations();
     const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
@@ -62,7 +62,7 @@ export default function Home() {
             // router.push('/select-org');
             // router.refresh();
         });
-    }, []);
+    }, [router]);
     return (
         <div className="flex flex-1 flex-col">
             <div className="@container/main flex flex-1 flex-col gap-2">
@@ -75,7 +75,7 @@ export default function Home() {
                                 Booking engine overview and key metrics
                             </p>
                             <p className="text-sm text-muted-foreground">
-                                Role: {role}
+                                {roleLoading ? 'Loading...' : isAdmin ? 'Role: Admin' : `Role: ${role}`}
                             </p>
                         </div>
                         <div className="flex items-center gap-2">

@@ -258,7 +258,7 @@ function ExpandedUserRow({
     user,
     isCurrentUser,
 }: {
-    user: { id: string; isAdmin?: boolean };
+    user: { id: string; isAdmin?: boolean | null };
     isCurrentUser: boolean;
 }) {
     const toggleSuperAdmin = useToggleSuperAdmin();
@@ -415,7 +415,7 @@ export default function SystemUsersPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {users.map((user: any) => {
+                                {users.map((user: { id: string; name?: string | null; email: string; isAdmin?: boolean | null; banned?: boolean | null; createdAt: string | Date }) => {
                                     const isExpanded = expandedUser === user.id;
                                     const isCurrentUser = user.id === currentUserId;
 

@@ -61,31 +61,34 @@ export function HotelFormDialog({ open, onOpenChange, hotel }: HotelFormDialogPr
     });
 
     useEffect(() => {
-        if (hotel) {
-            setFormData({
-                name: hotel.name,
-                timezone: hotel.timezone,
-                address: hotel.address || {
-                    street: '',
-                    city: '',
-                    state: '',
-                    country: '',
-                    postalCode: '',
-                },
-            });
-        } else {
-            setFormData({
-                name: '',
-                timezone: 'America/New_York',
-                address: {
-                    street: '',
-                    city: '',
-                    state: '',
-                    country: '',
-                    postalCode: '',
-                },
-            });
-        }
+        const timer = setTimeout(() => {
+            if (hotel) {
+                setFormData({
+                    name: hotel.name,
+                    timezone: hotel.timezone,
+                    address: hotel.address || {
+                        street: '',
+                        city: '',
+                        state: '',
+                        country: '',
+                        postalCode: '',
+                    },
+                });
+            } else {
+                setFormData({
+                    name: '',
+                    timezone: 'America/New_York',
+                    address: {
+                        street: '',
+                        city: '',
+                        state: '',
+                        country: '',
+                        postalCode: '',
+                    },
+                });
+            }
+        }, 0);
+        return () => clearTimeout(timer);
     }, [hotel, open]);
 
     const handleSubmit = async (e: React.FormEvent) => {

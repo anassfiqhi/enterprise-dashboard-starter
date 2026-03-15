@@ -246,7 +246,7 @@ export default function HotelDetailPage() {
                 <Building2 className="h-12 w-12 text-muted-foreground mb-4" />
                 <h3 className="text-lg font-medium">Hotel not found</h3>
                 <p className="text-sm text-muted-foreground mb-4">
-                    The hotel you're looking for doesn't exist.
+                    The hotel you&apos;re looking for doesn&apos;t exist.
                 </p>
                 <Button asChild>
                     <Link href="/hotels">
@@ -261,8 +261,8 @@ export default function HotelDetailPage() {
     const address = hotel.address;
     const locationString = address
         ? [address.street, address.city, address.state, address.country, address.postalCode]
-              .filter(Boolean)
-              .join(', ')
+            .filter(Boolean)
+            .join(', ')
         : 'No address';
 
     return (

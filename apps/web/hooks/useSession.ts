@@ -18,7 +18,7 @@ export function useSession() {
 
   // Use Better Auth's native hook
   const sessionQuery = authClient.useSession();
-  const { data, isPending, isRefetching, error } = sessionQuery;
+  const { isPending, isRefetching } = sessionQuery;
 
   // Track initialization completion
   useEffect(() => {

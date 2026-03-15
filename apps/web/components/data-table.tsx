@@ -478,6 +478,7 @@ export function DataTable({
     [data]
   )
 
+
   const table = useReactTable({
     data,
     columns,

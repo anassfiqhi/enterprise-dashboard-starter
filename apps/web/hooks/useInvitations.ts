@@ -39,10 +39,10 @@ export function useInviteMember() {
     const organizationId = activeOrg?.id;
 
     return useMutation({
-        mutationFn: async ({ email, role }: { email: string; role: "admin" | "staff" | ("admin" | "staff")[] }) => {
+        mutationFn: async ({ email, role }: { email: string; role: string }) => {
             const response = await authClient.organization.inviteMember({
                 email,
-                role,
+                role: role as "manager" | "staff",
                 organizationId: organizationId || undefined,
             });
             if (response.error) {

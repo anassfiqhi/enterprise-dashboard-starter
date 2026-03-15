@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { authClient } from '@/lib/auth-client';
 import { config } from '@/lib/config';
+import type { Guest, ResponseEnvelope } from '@repo/shared';
 
 export interface GuestWithStats extends Guest {
     reservationCount: number;
@@ -59,8 +60,9 @@ export function useGuests(filters: GuestsFilters = {}) {
 
             const envelope: GuestListResponse = await response.json();
 
-            if ((envelope as any).error) {
-                throw new Error((envelope as any).error.message);
+            const env = envelope as unknown as Record<string, unknown>;
+            if (env.error) {
+                throw new Error((env.error as { message: string }).message);
             }
 
             return {

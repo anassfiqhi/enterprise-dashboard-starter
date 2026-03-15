@@ -51,29 +51,32 @@ export function GuestFormDialog({ open, onOpenChange, guest }: GuestFormDialogPr
     });
 
     useEffect(() => {
-        if (guest) {
-            setFormData({
-                firstName: guest.firstName,
-                lastName: guest.lastName,
-                email: guest.email || '',
-                phone: guest.phone || '',
-                nationality: guest.nationality || '',
-                idType: (guest.idType as IdType) || undefined,
-                idNumber: guest.idNumber || '',
-                notes: guest.notes || '',
-            });
-        } else {
-            setFormData({
-                firstName: '',
-                lastName: '',
-                email: '',
-                phone: '',
-                nationality: '',
-                idType: undefined,
-                idNumber: '',
-                notes: '',
-            });
-        }
+        const timer = setTimeout(() => {
+            if (guest) {
+                setFormData({
+                    firstName: guest.firstName,
+                    lastName: guest.lastName,
+                    email: guest.email || '',
+                    phone: guest.phone || '',
+                    nationality: guest.nationality || '',
+                    idType: (guest.idType as IdType) || undefined,
+                    idNumber: guest.idNumber || '',
+                    notes: guest.notes || '',
+                });
+            } else {
+                setFormData({
+                    firstName: '',
+                    lastName: '',
+                    email: '',
+                    phone: '',
+                    nationality: '',
+                    idType: undefined,
+                    idNumber: '',
+                    notes: '',
+                });
+            }
+        }, 0);
+        return () => clearTimeout(timer);
     }, [guest, open]);
 
     const handleSubmit = async (e: React.FormEvent) => {

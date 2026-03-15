@@ -1,7 +1,8 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import type { OrderEvent, Order } from '@repo/shared';
-import { OrderEventSchema } from '@repo/shared';
+import type { SSEEvent, Order } from '@repo/shared';
+
+export type OrderEvent = SSEEvent<Partial<Order>>;
 import { config } from '@/lib/config';
 
 /**
@@ -15,7 +16,7 @@ export function useSSE(url: string, onEvent?: (event: OrderEvent) => void) {
     const reconnectAttempts = useRef(0);
     const lastEventId = useRef<string>('0');
 
-    const connect = useCallback(() => {
+    const connect = useCallback(function doConnect() {
         // Skip if not in browser (SSR)
         if (typeof window === 'undefined') {
             return;
@@ -53,15 +54,12 @@ export function useSSE(url: string, onEvent?: (event: OrderEvent) => void) {
 
             try {
                 const parsed = JSON.parse(e.data);
-                // Validate event with Zod (SPEC - type-safe event parsing)
-                const validationResult = OrderEventSchema.safeParse(parsed);
-
-                if (!validationResult.success) {
-                    console.error('SSE event validation failed:', validationResult.error);
+                if (typeof parsed !== 'object' || !parsed.type) {
+                    console.error('SSE event validation failed: Invalid format');
                     return;
                 }
 
-                const event: OrderEvent = validationResult.data as OrderEvent;
+                const event = parsed as OrderEvent;
                 onEvent?.(event);
             } catch (err) {
                 console.error('Failed to parse SSE event:', err);
@@ -80,7 +78,8 @@ export function useSSE(url: string, onEvent?: (event: OrderEvent) => void) {
             console.log(`Reconnecting in ${backoffMs}ms (attempt ${reconnectAttempts.current})...`);
 
             reconnectTimeoutRef.current = setTimeout(() => {
-                connect();
+
+                doConnect();
             }, backoffMs);
         };
 

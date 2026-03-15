@@ -4,7 +4,6 @@ import * as React from "react"
 import { usePathname } from "next/navigation"
 import {
   BedDouble,
-  Building2,
   CalendarCheck2,
   ClipboardList,
   DollarSign,
@@ -36,7 +35,7 @@ import { SidebarOrgSwitcher } from "@/components/sidebar-org-switcher"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname()
-  const { can, isAdmin, canViewAuditLogs, canViewAnalytics } = usePermissions()
+  const { can, isAdmin } = usePermissions()
   const { data: session } = authClient.useSession()
   const collapsibleMode = useCollapsibleMode()
 
@@ -169,7 +168,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     }
 
     // Analytics
-    if (canViewAnalytics) {
+    if (can("analytics", "read")) {
       items.push({
         title: "Analytics",
         url: "/analytics",
@@ -179,7 +178,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     }
 
     // Audit Logs
-    if (canViewAuditLogs) {
+    if (can("auditLogs", "read")) {
       items.push({
         title: "Audit Logs",
         url: "/audit-logs",
@@ -211,7 +210,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     }
 
     return items
-  }, [pathname, can, isAdmin, canViewAnalytics, canViewAuditLogs])
+  }, [pathname, can, isAdmin])
 
   const navSecondary = [
     {

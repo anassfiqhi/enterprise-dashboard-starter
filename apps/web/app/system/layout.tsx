@@ -13,7 +13,7 @@ export default function SystemLayout({
     const router = useRouter();
 
     useEffect(() => {
-        if (!isPending && !session?.user?.isAdmin) {
+        if (!isPending && session?.user?.role !== "admin") {
             router.replace("/");
         }
     }, [isPending, session, router]);
@@ -22,7 +22,7 @@ export default function SystemLayout({
         return null;
     }
 
-    if (!session?.user?.isAdmin) {
+    if (session?.user?.role !== "admin") {
         return null;
     }
 

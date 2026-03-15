@@ -109,6 +109,10 @@ export const GuestSchema = z.object({
     lastName: z.string(),
     email: z.string().email(),
     phone: z.string().optional(),
+    nationality: z.string().optional(),
+    idType: z.string().optional(),
+    idNumber: z.string().optional(),
+    notes: z.string().optional(),
 });
 
 export type Guest = z.infer<typeof GuestSchema>;

@@ -21,9 +21,13 @@ function LoginForm() {
     const redirectTo = searchParams.get('redirect') || '/';
 
     // Clear error when user starts typing
+    // Clear error when user starts typing
     useEffect(() => {
-        if (error) setError(null);
-    }, [email, password]);
+        if (error) {
+            const timer = setTimeout(() => setError(null), 0);
+            return () => clearTimeout(timer);
+        }
+    }, [email, password, error]);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -45,7 +49,7 @@ function LoginForm() {
                     setIsLoading(false);
                 }
             });
-        } catch (err) {
+        } catch {
             setError('An unexpected error occurred. Please try again.');
             setIsLoading(false);
         }
@@ -61,7 +65,7 @@ function LoginForm() {
                 password,
                 name: email.split('@')[0] // Use email prefix as name
             }, {
-                onSuccess: async (context) => {
+                onSuccess: async () => {
                     // After signup, create an organization and set it as active
                     try {
                         const orgName = `${email.split('@')[0]}'s Organization`;
@@ -98,7 +102,7 @@ function LoginForm() {
                     setIsLoading(false);
                 }
             });
-        } catch (err) {
+        } catch {
             setError('An unexpected error occurred during sign up.');
             setIsLoading(false);
         }

@@ -41,23 +41,26 @@ export function RoomTypeFormDialog({
     });
 
     useEffect(() => {
-        if (roomType) {
-            setFormData({
-                name: roomType.name,
-                capacity: roomType.capacity,
-                description: roomType.description || '',
-                basePrice: roomType.basePrice,
-                currency: roomType.currency,
-            });
-        } else {
-            setFormData({
-                name: '',
-                capacity: 2,
-                description: '',
-                basePrice: 100,
-                currency: 'USD',
-            });
-        }
+        const timer = setTimeout(() => {
+            if (roomType) {
+                setFormData({
+                    name: roomType.name,
+                    capacity: roomType.capacity,
+                    description: roomType.description || '',
+                    basePrice: roomType.basePrice,
+                    currency: roomType.currency,
+                });
+            } else {
+                setFormData({
+                    name: '',
+                    capacity: 2,
+                    description: '',
+                    basePrice: 100,
+                    currency: 'USD',
+                });
+            }
+        }, 0);
+        return () => clearTimeout(timer);
     }, [roomType, open]);
 
     const handleSubmit = async (e: React.FormEvent) => {

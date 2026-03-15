@@ -23,7 +23,7 @@ export function useMembers() {
             if (response.error) {
                 throw new Error(response.error.message || "Failed to fetch members");
             }
-            return response.data || [];
+            return response.data?.members || [];
         },
         enabled: !!organizationId,
     });

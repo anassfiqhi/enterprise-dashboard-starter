@@ -2,7 +2,7 @@
 
 import type { ReservationStatus } from '@repo/shared';
 import { Badge } from '@/components/ui/badge';
-import { Clock, CheckCircle2, XCircle, LoaderIcon } from 'lucide-react';
+import { CheckCircle2, XCircle, LoaderIcon } from 'lucide-react';
 
 interface ReservationStatusBadgeProps {
     status: ReservationStatus;

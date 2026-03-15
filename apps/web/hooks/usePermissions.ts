@@ -33,7 +33,7 @@ export function usePermissions() {
       default:
         return null;
     }
-  }, [activeMember?.role]);
+  }, [activeMember]);
 
   /**
    * Check if user has a specific permission for a resource

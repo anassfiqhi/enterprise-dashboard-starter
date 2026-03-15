@@ -23,7 +23,7 @@ import { Search, X } from 'lucide-react';
 
 export function ReservationsToolbar() {
     const dispatch = useDispatch();
-    const { search, status, checkInFrom, checkInTo, sort } = useSelector(
+    const { search, status, sort } = useSelector(
         (state: RootState) => state.filters.reservations
     );
 

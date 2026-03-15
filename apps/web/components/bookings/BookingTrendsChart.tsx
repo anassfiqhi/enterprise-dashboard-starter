@@ -6,8 +6,6 @@ import {
     ChartContainer,
     ChartTooltip,
     ChartTooltipContent,
-    ChartLegend,
-    ChartLegendContent,
     type ChartConfig,
 } from '@/components/ui/chart';
 
@@ -63,7 +61,7 @@ export function BookingTrendsChart({ data }: BookingTrendsChartProps) {
                 <ChartTooltip
                     content={
                         <ChartTooltipContent
-                            formatter={(value, name, item) => (
+                            formatter={(value) => (
                                 <span className="font-mono">{Number(value)} bookings</span>
                             )}
                         />

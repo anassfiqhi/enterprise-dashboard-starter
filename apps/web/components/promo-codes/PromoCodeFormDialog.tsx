@@ -66,35 +66,38 @@ export function PromoCodeFormDialog({
     });
 
     useEffect(() => {
-        if (promoCode) {
-            setFormData({
-                code: promoCode.code,
-                discountType: promoCode.discountType,
-                discountValue: promoCode.discountValue,
-                currency: promoCode.currency || 'USD',
-                minBookingAmount: promoCode.minBookingAmount,
-                maxDiscountAmount: promoCode.maxDiscountAmount,
-                validFrom: promoCode.validFrom || '',
-                validTo: promoCode.validTo || '',
-                maxUses: promoCode.maxUses,
-                maxUsesPerGuest: promoCode.maxUsesPerGuest,
-                isActive: promoCode.isActive,
-            });
-        } else {
-            setFormData({
-                code: '',
-                discountType: 'PERCENTAGE',
-                discountValue: 10,
-                currency: 'USD',
-                minBookingAmount: undefined,
-                maxDiscountAmount: undefined,
-                validFrom: '',
-                validTo: '',
-                maxUses: undefined,
-                maxUsesPerGuest: undefined,
-                isActive: true,
-            });
-        }
+        const timer = setTimeout(() => {
+            if (promoCode) {
+                setFormData({
+                    code: promoCode.code,
+                    discountType: promoCode.discountType,
+                    discountValue: promoCode.discountValue,
+                    currency: promoCode.currency || 'USD',
+                    minBookingAmount: promoCode.minBookingAmount,
+                    maxDiscountAmount: promoCode.maxDiscountAmount,
+                    validFrom: promoCode.validFrom || '',
+                    validTo: promoCode.validTo || '',
+                    maxUses: promoCode.maxUses,
+                    maxUsesPerGuest: promoCode.maxUsesPerGuest,
+                    isActive: promoCode.isActive,
+                });
+            } else {
+                setFormData({
+                    code: '',
+                    discountType: 'PERCENTAGE',
+                    discountValue: 10,
+                    currency: 'USD',
+                    minBookingAmount: undefined,
+                    maxDiscountAmount: undefined,
+                    validFrom: '',
+                    validTo: '',
+                    maxUses: undefined,
+                    maxUsesPerGuest: undefined,
+                    isActive: true,
+                });
+            }
+        }, 0);
+        return () => clearTimeout(timer);
     }, [promoCode, open]);
 
     const handleSubmit = async (e: React.FormEvent) => {

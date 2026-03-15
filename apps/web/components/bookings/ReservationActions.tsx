@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import type { Reservation, ReservationStatus } from '@repo/shared';
+import type { Reservation } from '@repo/shared';
 import {
     useCancelReservation,
     useRefundReservation,
@@ -45,7 +45,7 @@ export function ReservationActions({ reservation }: ReservationActionsProps) {
             await updateStatus.mutateAsync({ id: reservation.id, status: 'CONFIRMED' });
             toast.success('Reservation confirmed');
         } catch (error) {
-            toast.error('Failed to confirm reservation');
+            toast.error(`Failed to confirm reservation ${reservation.id} ${error}`);
         }
     };
 
@@ -55,7 +55,7 @@ export function ReservationActions({ reservation }: ReservationActionsProps) {
             toast.success('Reservation cancelled');
             setShowCancelDialog(false);
         } catch (error) {
-            toast.error('Failed to cancel reservation');
+            toast.error(`Failed to cancel reservation ${reservation.id} ${error}`);
         }
     };
 
@@ -65,7 +65,7 @@ export function ReservationActions({ reservation }: ReservationActionsProps) {
             toast.success('Refund processed');
             setShowRefundDialog(false);
         } catch (error) {
-            toast.error('Failed to process refund');
+            toast.error(`Failed to process refund ${reservation.id} ${error}`);
         }
     };
 

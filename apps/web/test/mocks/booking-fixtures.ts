@@ -23,9 +23,7 @@ import type {
 // Helper Functions
 // ============================================================================
 
-function randomDate(start: Date, end: Date): Date {
-    return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
-}
+
 
 function formatDate(date: Date): string {
     return date.toISOString().split('T')[0];

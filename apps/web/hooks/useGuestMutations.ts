@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { authClient } from '@/lib/auth-client';
 import { config } from '@/lib/config';
 import { toast } from 'sonner';
+import type { ResponseEnvelope, Guest } from '@repo/shared';
 
 export type IdType = 'passport' | 'drivers_license' | 'national_id';
 

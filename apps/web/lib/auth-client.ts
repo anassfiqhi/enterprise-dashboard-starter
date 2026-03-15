@@ -1,5 +1,5 @@
 import { createAuthClient } from "better-auth/react"
-import { adminClient, inferAdditionalFields, inferOrgAdditionalFields, organizationClient, jwtClient } from "better-auth/client/plugins"
+import { adminClient, inferOrgAdditionalFields, organizationClient, jwtClient } from "better-auth/client/plugins"
 import type { AccessControl } from "better-auth/plugins/access"
 import { config } from "./config"
 import { ac, manager, staff } from "@repo/shared"

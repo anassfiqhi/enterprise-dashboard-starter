@@ -30,7 +30,7 @@ export function UserNav({ user }: UserNavProps) {
     // Better Auth doesn't expose activeMember directly in one hook easily without iteration
     // For now we'll just skip the activeMember role display or fetch it properly if critical
     const { data: activeMember } = authClient.useActiveMember(); // simplified for now to avoid complex hook logic in this refactor
-    const { data: session } = authClient.useSession();
+
     const isAdmin = user?.role === 'admin';
 
     const handleLogout = async () => {

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useTransition } from 'react';
-import { Building2, ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 type Organization = {
@@ -14,7 +14,7 @@ type Organization = {
     slug: string;
     createdAt: Date;
     logo?: string | null | undefined;
-    metadata?: any;
+    metadata?: Record<string, unknown>;
 }
 type OrganizationError = {
     code?: string | undefined;
@@ -92,7 +92,7 @@ export default function SelectOrgPage() {
                 <CardContent className="space-y-4">
                     {organizations?.length === 0 ? (
                         <div className="text-center py-6 space-y-4">
-                            <p className="text-muted-foreground">You don't have any organizations yet.</p>
+                            <p className="text-muted-foreground">You don&apos;t have any organizations yet.</p>
                             {/* Optionally add a create organization button here if the flow supports it */}
                         </div>
                     ) : (

@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import type { Guest } from '@repo/shared';
 import { useGuests, type GuestWithStats } from '@/hooks/useGuests';
 import { useGuestMutations } from '@/hooks/useGuestMutations';
 import { GuestCard, GuestFormDialog } from '@/components/guests';

@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { authClient } from '@/lib/auth-client';
 import { config } from '@/lib/config';
 import { toast } from 'sonner';
+import type { PromoCode, DiscountType } from '@repo/shared';
 
 // Query options for promo codes
 export interface PromoCodesQueryOptions {

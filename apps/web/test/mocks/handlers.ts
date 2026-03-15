@@ -62,7 +62,7 @@ export const handlers = [
   // Auth sign-up endpoint
   http.post(`${API_URL}/api/auth/sign-up/email`, async ({ request }) => {
     await delay(100);
-    const { email, password, name } = await request.json() as { email: string; password: string; name: string };
+    const { email, name } = await request.json() as { email: string; password: string; name: string };
     return HttpResponse.json({
       user: { id: 'new_user', email, name },
       session: { id: 'sess_new', expiresAt: new Date(Date.now() + 86400000).toISOString() },
@@ -83,7 +83,7 @@ export const handlers = [
     if (search) {
       filteredHotels = filteredHotels.filter(
         (h) => h.name.toLowerCase().includes(search.toLowerCase()) ||
-               h.address?.city?.toLowerCase().includes(search.toLowerCase())
+          h.address?.city?.toLowerCase().includes(search.toLowerCase())
       );
     }
 
@@ -371,9 +371,9 @@ export const handlers = [
     if (search) {
       filteredReservations = filteredReservations.filter(
         (r) => r.id.toLowerCase().includes(search.toLowerCase()) ||
-               r.guest?.firstName?.toLowerCase().includes(search.toLowerCase()) ||
-               r.guest?.lastName?.toLowerCase().includes(search.toLowerCase()) ||
-               r.guest?.email?.toLowerCase().includes(search.toLowerCase())
+          r.guest?.firstName?.toLowerCase().includes(search.toLowerCase()) ||
+          r.guest?.lastName?.toLowerCase().includes(search.toLowerCase()) ||
+          r.guest?.email?.toLowerCase().includes(search.toLowerCase())
       );
     }
 
@@ -469,9 +469,8 @@ export const handlers = [
   }),
 
   // Cancel reservation endpoint
-  http.post(`${API_URL}/api/v1/reservations/:id/cancel`, async ({ params, request }) => {
+  http.post(`${API_URL}/api/v1/reservations/:id/cancel`, async ({ params }) => {
     await delay(100);
-    const body = await request.json() as { reason?: string };
     const reservationIndex = mockReservations.findIndex((r) => r.id === params.id);
     if (reservationIndex === -1) {
       return HttpResponse.json(

@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { format, differenceInDays, addDays } from 'date-fns';
+import { format, differenceInDays } from 'date-fns';
 import type { DateRange } from 'react-day-picker';
-import type { Guest, Hotel, RoomType, ActivityType } from '@repo/shared';
+import type { Hotel, RoomType, ActivityType } from '@repo/shared';
 import {
     Dialog,
     DialogContent,
@@ -24,7 +24,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -34,7 +34,7 @@ import { useGuests, type GuestWithStats } from '@/hooks/useGuests';
 import { useReservationMutations } from '@/hooks/useReservationMutations';
 import { cn } from '@/lib/utils';
 import {
-    CalendarIcon,
+
     User,
     Hotel as HotelIcon,
     Bed,
@@ -263,8 +263,8 @@ export function NewReservationDialog({ open, onOpenChange }: NewReservationDialo
                                     index < currentStepIndex
                                         ? 'bg-primary text-primary-foreground'
                                         : index === currentStepIndex
-                                        ? 'bg-primary text-primary-foreground'
-                                        : 'bg-muted text-muted-foreground'
+                                            ? 'bg-primary text-primary-foreground'
+                                            : 'bg-muted text-muted-foreground'
                                 )}
                             >
                                 {index < currentStepIndex ? (
@@ -391,7 +391,7 @@ export function NewReservationDialog({ open, onOpenChange }: NewReservationDialo
                                                     className={cn(
                                                         'cursor-pointer transition-colors hover:bg-accent',
                                                         form.roomTypeId === rt.id &&
-                                                            'border-primary bg-accent'
+                                                        'border-primary bg-accent'
                                                     )}
                                                     onClick={() => handleRoomTypeSelect(rt.id)}
                                                 >
@@ -430,7 +430,7 @@ export function NewReservationDialog({ open, onOpenChange }: NewReservationDialo
                                                     className={cn(
                                                         'cursor-pointer transition-colors hover:bg-accent',
                                                         form.activityTypeId === at.id &&
-                                                            'border-primary bg-accent'
+                                                        'border-primary bg-accent'
                                                     )}
                                                     onClick={() => handleActivityTypeSelect(at.id)}
                                                 >

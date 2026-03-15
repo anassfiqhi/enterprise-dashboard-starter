@@ -81,37 +81,40 @@ export function PricingRuleFormDialog({
     });
 
     useEffect(() => {
-        if (rule) {
-            setFormData({
-                name: rule.name,
-                amountType: rule.amountType,
-                amount: rule.amount,
-                currency: rule.currency,
-                validFrom: rule.validFrom || '',
-                validTo: rule.validTo || '',
-                minNights: rule.minNights,
-                maxNights: rule.maxNights,
-                daysOfWeek: rule.daysOfWeek || [],
-                channel: rule.channel || '',
-                priority: rule.priority,
-                isActive: rule.isActive,
-            });
-        } else {
-            setFormData({
-                name: '',
-                amountType: 'DELTA_PERCENT',
-                amount: 10,
-                currency: 'USD',
-                validFrom: '',
-                validTo: '',
-                minNights: undefined,
-                maxNights: undefined,
-                daysOfWeek: [],
-                channel: '',
-                priority: 10,
-                isActive: true,
-            });
-        }
+        const timer = setTimeout(() => {
+            if (rule) {
+                setFormData({
+                    name: rule.name,
+                    amountType: rule.amountType,
+                    amount: rule.amount,
+                    currency: rule.currency,
+                    validFrom: rule.validFrom || '',
+                    validTo: rule.validTo || '',
+                    minNights: rule.minNights,
+                    maxNights: rule.maxNights,
+                    daysOfWeek: rule.daysOfWeek || [],
+                    channel: rule.channel || '',
+                    priority: rule.priority,
+                    isActive: rule.isActive,
+                });
+            } else {
+                setFormData({
+                    name: '',
+                    amountType: 'DELTA_PERCENT',
+                    amount: 10,
+                    currency: 'USD',
+                    validFrom: '',
+                    validTo: '',
+                    minNights: undefined,
+                    maxNights: undefined,
+                    daysOfWeek: [],
+                    channel: '',
+                    priority: 10,
+                    isActive: true,
+                });
+            }
+        }, 0);
+        return () => clearTimeout(timer);
     }, [rule, open]);
 
     const handleDayToggle = (day: number) => {
@@ -201,8 +204,8 @@ export function PricingRuleFormDialog({
                                     {formData.amountType === 'DELTA_PERCENT'
                                         ? 'Percentage'
                                         : formData.amountType === 'OVERRIDE'
-                                        ? 'Price'
-                                        : 'Amount'}{' '}
+                                            ? 'Price'
+                                            : 'Amount'}{' '}
                                     *
                                 </Label>
                                 <Input
@@ -219,8 +222,8 @@ export function PricingRuleFormDialog({
                                     {formData.amountType === 'DELTA_PERCENT'
                                         ? 'Use negative for discounts (e.g., -10 for 10% off)'
                                         : formData.amountType === 'DELTA_FIXED'
-                                        ? 'Use negative for discounts (e.g., -20 for $20 off)'
-                                        : 'Fixed price override'}
+                                            ? 'Use negative for discounts (e.g., -20 for $20 off)'
+                                            : 'Fixed price override'}
                                 </p>
                             </div>
                         </div>

@@ -42,7 +42,7 @@ const ordersSlice = createSlice({
         setSort: (state, action: PayloadAction<string>) => {
             state.sort = action.payload;
         },
-        resetFilters: (state) => {
+        resetFilters: () => {
             return initialState;
         },
     },

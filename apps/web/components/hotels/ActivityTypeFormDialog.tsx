@@ -42,25 +42,28 @@ export function ActivityTypeFormDialog({
     });
 
     useEffect(() => {
-        if (activityType) {
-            setFormData({
-                name: activityType.name,
-                capacityPerSlot: activityType.capacityPerSlot,
-                description: activityType.description || '',
-                duration: activityType.duration,
-                basePrice: activityType.basePrice,
-                currency: activityType.currency,
-            });
-        } else {
-            setFormData({
-                name: '',
-                capacityPerSlot: 10,
-                description: '',
-                duration: 60,
-                basePrice: 50,
-                currency: 'USD',
-            });
-        }
+        const timer = setTimeout(() => {
+            if (activityType) {
+                setFormData({
+                    name: activityType.name,
+                    capacityPerSlot: activityType.capacityPerSlot,
+                    description: activityType.description || '',
+                    duration: activityType.duration,
+                    basePrice: activityType.basePrice,
+                    currency: activityType.currency,
+                });
+            } else {
+                setFormData({
+                    name: '',
+                    capacityPerSlot: 10,
+                    description: '',
+                    duration: 60,
+                    basePrice: 50,
+                    currency: 'USD',
+                });
+            }
+        }, 0);
+        return () => clearTimeout(timer);
     }, [activityType, open]);
 
     const handleSubmit = async (e: React.FormEvent) => {

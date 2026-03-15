@@ -15,7 +15,7 @@ export interface Organization {
     slug: string;
     createdAt: Date;
     logo?: string | null;
-    metadata?: any;
+    metadata?: Record<string, unknown>;
     // Custom fields from auth.ts
     timezone?: string;
     checkInTime?: string;
