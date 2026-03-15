@@ -11,9 +11,12 @@ import type { OrganizationRole, OrganizationPermissions } from '@repo/shared';
  */
 export function usePermissions() {
   // Use Better Auth hooks
-  const { data: session } = authClient.useSession();
-  const { data: activeMember } = authClient.useActiveMember();
-  const { data: activeOrganization } = authClient.useActiveOrganization();
+  const { data: session, isPending: isSessionPending, error: sessionError } = authClient.useSession();
+  const { data: activeMember, isPending: isActiveMemberPending, error: activeMemberError } = authClient.useActiveMember();
+  const { data: activeOrganization, isPending: isActiveOrganizationPending, error: activeOrganizationError } = authClient.useActiveOrganization();
+
+  const isLoading = isSessionPending || isActiveMemberPending || isActiveOrganizationPending;
+  const error = sessionError || activeMemberError || activeOrganizationError || null;
 
   const user = session?.user ?? null;
   const isAdmin = user?.role === 'admin';
@@ -81,6 +84,9 @@ export function usePermissions() {
   };
 
   return {
+    isLoading,
+    error,
+
     // User info
     user,
     isAdmin,
@@ -97,22 +103,5 @@ export function usePermissions() {
     canAny,
     hasRole,
     hasAnyRole,
-
-    // Convenience helpers for common permission checks
-    canManageHotel: can('hotel', 'update'),
-    canManageRoomTypes: can('roomTypes', 'create'),
-    canManageRooms: can('rooms', 'create'),
-    canManageActivities: can('activityTypes', 'create'),
-    canManageInventory: can('inventory', 'update'),
-    canManagePricing: can('pricingRules', 'create'),
-    canManagePromoCodes: can('promoCodes', 'create'),
-    canManageGuests: can('guests', 'create'),
-    canCreateReservations: can('reservations', 'create'),
-    canCancelReservations: can('reservations', 'cancel'),
-    canCheckInOut: can('reservations', 'checkin'),
-    canViewAnalytics: can('analytics', 'read'),
-    canViewAuditLogs: can('auditLogs', 'read'),
-    canManageMembers: can('member', 'create'),
-    canManageInvitations: can('invitation', 'create'),
   };
 }

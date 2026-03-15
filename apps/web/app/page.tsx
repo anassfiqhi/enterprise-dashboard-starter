@@ -20,9 +20,9 @@ import {
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { ArrowRight, Calendar, Building2, CalendarDays, Plus } from 'lucide-react';
-import { useRole } from '@/hooks/useRole';
 import { authClient } from '@/lib/auth-client';
 import { useRouter } from 'next/navigation';
+import { usePermissions } from '@/hooks/usePermissions';
 
 function formatDate(dateStr: string | undefined): string {
     if (!dateStr) return '-';
@@ -41,7 +41,8 @@ function formatCurrency(amount: number, currency: string): string {
 }
 
 export default function Home() {
-    const { data: role, isLoading: roleLoading, error: roleError } = useRole();
+    // const { data: role, isLoading: roleLoading, error: roleError } = useRole();
+    const { role, isLoading: roleLoading, error: roleError } = usePermissions();
     const { data: metrics, isLoading: metricsLoading } = useBookingMetrics();
     const { data: reservationsData, isLoading: reservationsLoading } = useReservations();
     const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
