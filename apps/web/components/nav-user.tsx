@@ -32,7 +32,28 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
+import { Skeleton } from "@/components/ui/skeleton"
 import { User } from "@/lib/auth-client"
+
+export function NavUserSkeleton() {
+  return (
+    <SidebarMenu>
+      <SidebarMenuItem>
+        <SidebarMenuButton size="lg" className={cn("pointer-events-none", "border border-gray-500/20 bg-gradient-to-r from-gray-500/5 to-transparent")}>
+          <Skeleton className="h-8 w-8 rounded-lg" />
+          <div className="grid flex-1 gap-1 text-left text-sm leading-tight">
+            <div className="flex items-center gap-1.5">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-4 w-10 rounded-full" />
+            </div>
+            <Skeleton className="h-3 w-32" />
+          </div>
+          <Skeleton className="ml-auto h-4 w-4" />
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+    </SidebarMenu>
+  )
+}
 
 export function NavUser({
   user,
@@ -41,7 +62,7 @@ export function NavUser({
 }) {
   const router = useRouter()
   const { isMobile } = useSidebar()
-  const { data: activeMember } = authClient.useActiveMember();
+  const { data: activeMember, isPending: isMemberPending } = authClient.useActiveMember();
   const isAdmin = user.role === 'admin'
 
   // Get initials from name
@@ -51,6 +72,15 @@ export function NavUser({
     .join("")
     .toUpperCase()
     .slice(0, 2)
+
+  const getRoleBorderClasses = () => {
+    if (isAdmin) return 'border border-blue-500/20 bg-gradient-to-r from-blue-500/5 to-transparent'
+    if (activeMember?.role === 'owner' || activeMember?.role === 'manager')
+      return 'border border-emerald-500/20 bg-gradient-to-r from-emerald-500/5 to-transparent'
+    if (activeMember?.role === 'staff')
+      return 'border border-amber-500/20 bg-gradient-to-r from-amber-500/5 to-transparent'
+    return 'border border-gray-500/20 bg-gradient-to-r from-gray-500/5 to-transparent'
+  }
 
   const handleSignOut = async () => {
     await authClient.signOut()
@@ -64,7 +94,10 @@ export function NavUser({
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
-              className={`data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground ${isAdmin ? 'border border-blue-500/20 bg-gradient-to-r from-blue-500/5 to-transparent' : activeMember?.role === 'owner' || activeMember?.role === 'manager' ? 'border border-emerald-500/20 bg-gradient-to-r from-emerald-500/5 to-transparent' : 'border border-amber-500/20 bg-gradient-to-r from-amber-500/5 to-transparent'}`}
+              className={cn(
+                'data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground',
+                getRoleBorderClasses()
+              )}
             >
               <Avatar className="h-8 w-8 rounded-lg grayscale">
                 <AvatarImage src={user.image ? user.image : undefined} alt={user.name} />
@@ -74,7 +107,8 @@ export function NavUser({
                 <div className="flex items-center gap-1.5">
                   <span className="truncate font-medium">{user.name}</span>
                   {isAdmin && <RoleBadge role="Admin" size="sm" showTooltip={false} />}
-                  {!isAdmin && activeMember?.role && (
+                  {!isAdmin && isMemberPending && <Skeleton className="h-4 w-10 rounded-full" />}
+                  {!isAdmin && !isMemberPending && activeMember?.role && (
                     <RoleBadge role={activeMember.role} size="sm" showTooltip={false} />
                   )}
                 </div>
@@ -101,7 +135,8 @@ export function NavUser({
                   <div className="flex items-center gap-1.5">
                     <span className="truncate font-medium">{user.name}</span>
                     {isAdmin && <RoleBadge role="Admin" size="sm" showTooltip={false} />}
-                    {!isAdmin && activeMember?.role && (
+                    {!isAdmin && isMemberPending && <Skeleton className="h-4 w-10 rounded-full" />}
+                    {!isAdmin && !isMemberPending && activeMember?.role && (
                       <RoleBadge role={activeMember.role} size="sm" showTooltip={false} />
                     )}
                   </div>
