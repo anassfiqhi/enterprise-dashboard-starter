@@ -3,12 +3,12 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 export interface OrganizationState {
     organizations: Organization[];
-    selectedOrganization: string | null;
+    activeOrganization: string | null;
 }
 
 const initialState: OrganizationState = {
     organizations: [],
-    selectedOrganization: null
+    activeOrganization: null
 };
 
 /**
@@ -23,7 +23,7 @@ const organizationSlice = createSlice({
             state.organizations = action.payload;
         },
         setSelectedOrganization: (state, action: PayloadAction<string>) => {
-            state.selectedOrganization = action.payload;
+            state.activeOrganization = action.payload;
         },
     },
 });

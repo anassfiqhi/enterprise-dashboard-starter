@@ -1,3 +1,4 @@
+import { Session, User } from '@/lib/auth-client';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 /**
@@ -6,11 +7,13 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
  * This slice only tracks app initialization state
  */
 export interface AuthState {
-    isInitializing: boolean;
+    session: Session['session'] | null;
+    user: User | null;
 }
 
 const initialState: AuthState = {
-    isInitializing: true,
+    session: null,
+    user: null,
 };
 
 /**
@@ -26,18 +29,18 @@ const authSlice = createSlice({
     name: 'auth',
     initialState,
     reducers: {
-        setInitializing: (state, action: PayloadAction<boolean>) => {
-            state.isInitializing = action.payload;
+        setSession: (state, action: PayloadAction<Session['session']>) => {
+            state.session = action.payload;
         },
-        completeInitialization: (state) => {
-            state.isInitializing = false;
+        setUser: (state, action: PayloadAction<User>) => {
+            state.user = action.payload;
         },
     },
 });
 
 export const {
-    setInitializing,
-    completeInitialization,
+    setSession,
+    setUser,
 } = authSlice.actions;
 
 export default authSlice.reducer;

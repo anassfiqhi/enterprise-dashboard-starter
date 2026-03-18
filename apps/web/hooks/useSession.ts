@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import { completeInitialization } from '@/lib/reducers/auth/authSlice';
+import { setUser, setSession } from '@/lib/reducers/auth/authSlice';
 import { authClient } from '@/lib/auth-client';
 
 /**
@@ -22,8 +22,9 @@ export function useSession() {
 
   // Track initialization completion
   useEffect(() => {
-    if (!isPending && !isRefetching) {
-      dispatch(completeInitialization());
+    if (!isPending && !isRefetching && sessionQuery.data) {
+      // dispatch(setUser(sessionQuery.data.user));
+      // dispatch(setSession(sessionQuery.data.session));
     }
   }, [isPending, isRefetching, dispatch]);
 
