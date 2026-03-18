@@ -26,7 +26,7 @@ export function useSession() {
       // dispatch(setUser(sessionQuery.data.user));
       // dispatch(setSession(sessionQuery.data.session));
     }
-  }, [isPending, isRefetching, dispatch]);
+  }, [isPending, isRefetching, dispatch, sessionQuery.data]);
 
   return sessionQuery;
 }
