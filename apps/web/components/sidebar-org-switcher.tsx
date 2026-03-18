@@ -24,6 +24,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import { toast } from "sonner"
+import { usePermissions } from "@/hooks/usePermissions"
 
 interface Organization {
   id: string
@@ -38,6 +39,7 @@ export function SidebarOrgSwitcher() {
   const { isMobile, setOpenMobile } = useSidebar()
   const { data: activeOrg } = authClient.useActiveOrganization()
   const { data: organizations } = authClient.useListOrganizations()
+  const { isAdmin } = usePermissions()
 
   const activeHotel = activeOrg ? {
     id: activeOrg.id,
@@ -147,12 +149,12 @@ export function SidebarOrgSwitcher() {
               </DropdownMenuItem>
             ))}
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="gap-2 p-2 cursor-pointer">
+            {isAdmin && <DropdownMenuItem className="gap-2 p-2 cursor-pointer">
               <div className="flex size-6 items-center justify-center rounded-md border bg-background">
                 <Plus className="size-4" />
               </div>
               <span className="text-muted-foreground">Add hotel</span>
-            </DropdownMenuItem>
+            </DropdownMenuItem>}
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>

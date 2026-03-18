@@ -2,6 +2,8 @@ import { configureStore } from '@reduxjs/toolkit';
 
 import { filtersReducer } from './reducers/filters';
 import { preferencesReducer } from './reducers/preferences';
+import { authReducer } from './reducers/auth';
+import { organizationReducer } from './reducers/organization';
 
 /**
  * Redux store configured with domain-based organization
@@ -10,6 +12,8 @@ import { preferencesReducer } from './reducers/preferences';
  */
 export const store = configureStore({
     reducer: {
+        auth: authReducer,
+        organization: organizationReducer,
         filters: filtersReducer,
         preferences: preferencesReducer,
     },
