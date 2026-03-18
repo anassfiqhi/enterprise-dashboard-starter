@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import { setUser, setSession } from '@/lib/reducers/auth/authSlice';
 import { authClient } from '@/lib/auth-client';
 
 /**
