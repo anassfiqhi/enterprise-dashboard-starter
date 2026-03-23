@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { authClient } from './lib/auth-client';
 import { getSessionCookie } from "better-auth/cookies";
+import { logger } from './lib/logger';
 
 // Routes that don't require authentication
 const publicRoutes = ['/login'];
@@ -26,19 +27,19 @@ export async function proxy(request: NextRequest) {
     // const sessionCookie = request.cookies.get('better-auth.session_token');
     // Cookie-based optimistic check (recommended approach)
     const sessionCookie = getSessionCookie(request);
-    console.log('sessionCookie------', sessionCookie);
+    logger.info({ sessionCookie }, 'proxy: sessionCookie');
     const session = await authClient.getSession({
         fetchOptions: {
             headers: request.headers,
         },
     });
-    console.log('session------', session);
+    logger.info({ session: session.data }, 'proxy: session');
     const orgs = await authClient.organization.list({
         fetchOptions: {
             headers: request.headers,
         },
     });
-    console.log('orgs------', orgs);
+    logger.info({ orgs: orgs.data }, 'proxy: orgs');
     // If no session and trying to access protected route, redirect to login
     if (!sessionCookie) {
         const loginUrl = new URL('/login', request.url);
@@ -58,7 +59,7 @@ export async function proxy(request: NextRequest) {
         },
     })
     if (pathname !== '/select-org' && pathname !== '/login' && activeMember.error?.code === 'NO_ACTIVE_ORGANIZATION') {
-        console.log('NO_ACTIVE_ORGANIZATION');
+        logger.warn({ pathname }, 'proxy: NO_ACTIVE_ORGANIZATION, redirecting to /select-org');
         const selectOrgUrl = new URL('/select-org', request.url);
         // Preserve the original URL for redirect after login
         selectOrgUrl.searchParams.set('redirect', pathname);
