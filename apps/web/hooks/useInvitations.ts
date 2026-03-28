@@ -1,89 +1,146 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { authClient } from "@/lib/auth-client";
-import { toast } from "sonner";
+import { useEffect, useRef, useCallback } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import type { RootState, AppDispatch } from '@/lib/store';
+import { authClient } from '@/lib/auth-client';
+import {
+    FETCH_INVITATIONS,
+    INVITE_MEMBER,
+    CANCEL_INVITATION,
+} from '@/lib/sagas/invitations/invitationsSaga';
+import { invitationsActions } from '@/lib/reducers/invitations/invitationsSlice';
 
 /**
- * TanStack Query hook for organization invitations
+ * Redux Saga hook for organization invitations
  * Automatically scopes to the current active organization
  */
 export function useInvitations() {
+    const dispatch = useDispatch<AppDispatch>();
     const { data: activeOrg } = authClient.useActiveOrganization();
     const organizationId = activeOrg?.id;
 
-    return useQuery({
-        queryKey: ["invitations", organizationId],
-        queryFn: async () => {
-            if (!organizationId) return [];
-            const response = await authClient.organization.listInvitations({
-                query: {
-                    organizationId,
-                },
-            });
-            if (response.error) {
-                throw new Error(response.error.message || "Failed to fetch invitations");
+    const { data, status, error } = useSelector(
+        (state: RootState) => state.invitations.list
+    );
+
+    const prevParams = useRef<string>('');
+
+    useEffect(() => {
+        if (!organizationId) return;
+        const paramsKey = organizationId;
+        if (paramsKey === prevParams.current) return;
+        prevParams.current = paramsKey;
+        dispatch({
+            type: FETCH_INVITATIONS,
+            payload: { organizationId },
+        });
+    }, [dispatch, organizationId]);
+
+    return {
+        data,
+        isLoading: status === 'loading',
+        isPending: status === 'loading',
+        isError: status === 'failed',
+        isSuccess: status === 'succeeded',
+        error: error ? new Error(error) : null,
+        refetch: () => {
+            if (organizationId) {
+                dispatch({
+                    type: FETCH_INVITATIONS,
+                    payload: { organizationId },
+                });
             }
-            return response.data || [];
         },
-        enabled: !!organizationId,
-    });
+    };
 }
 
 /**
- * Mutation hook for inviting a new member to the organization
+ * Redux Saga mutation hook for inviting a new member
  */
 export function useInviteMember() {
-    const queryClient = useQueryClient();
+    const dispatch = useDispatch<AppDispatch>();
     const { data: activeOrg } = authClient.useActiveOrganization();
     const organizationId = activeOrg?.id;
 
-    return useMutation({
-        mutationFn: async ({ email, role }: { email: string; role: string }) => {
-            const response = await authClient.organization.inviteMember({
-                email,
-                role: role as "manager" | "staff",
-                organizationId: organizationId || undefined,
-            });
-            if (response.error) {
-                throw new Error(response.error.message || "Failed to send invitation");
-            }
-            return response.data;
-        },
-        onSuccess: () => {
-            toast.success("Invitation sent successfully");
-            queryClient.invalidateQueries({ queryKey: ["invitations", organizationId] });
-        },
-        onError: (error: Error) => {
-            toast.error(error.message || "Failed to send invitation");
-        },
-    });
+    const inviteStatus = useSelector(
+        (state: RootState) => state.invitations.inviteStatus
+    );
+
+    return {
+        mutate: useCallback(
+            ({ email, role }: { email: string; role: string }) => {
+                if (!organizationId) return;
+                dispatch({
+                    type: INVITE_MEMBER,
+                    payload: { organizationId, email, role },
+                });
+            },
+            [dispatch, organizationId]
+        ),
+        mutateAsync: useCallback(
+            ({ email, role }: { email: string; role: string }): Promise<unknown> => {
+                return new Promise((resolve, reject) => {
+                    if (!organizationId) {
+                        reject(new Error('No active organization'));
+                        return;
+                    }
+                    dispatch({
+                        type: INVITE_MEMBER,
+                        payload: { organizationId, email, role, resolve, reject },
+                    });
+                });
+            },
+            [dispatch, organizationId]
+        ),
+        isPending: inviteStatus === 'loading',
+        isError: inviteStatus === 'failed',
+        isSuccess: inviteStatus === 'succeeded',
+        reset: () => dispatch(invitationsActions.resetMutationStatus()),
+    };
 }
 
 /**
- * Mutation hook for cancelling a pending invitation
+ * Redux Saga mutation hook for cancelling a pending invitation
  */
 export function useCancelInvitation() {
-    const queryClient = useQueryClient();
+    const dispatch = useDispatch<AppDispatch>();
     const { data: activeOrg } = authClient.useActiveOrganization();
     const organizationId = activeOrg?.id;
 
-    return useMutation({
-        mutationFn: async ({ invitationId }: { invitationId: string }) => {
-            const response = await authClient.organization.cancelInvitation({
-                invitationId,
-            });
-            if (response.error) {
-                throw new Error(response.error.message || "Failed to cancel invitation");
-            }
-            return response.data;
-        },
-        onSuccess: () => {
-            toast.success("Invitation cancelled");
-            queryClient.invalidateQueries({ queryKey: ["invitations", organizationId] });
-        },
-        onError: (error: Error) => {
-            toast.error(error.message || "Failed to cancel invitation");
-        },
-    });
+    const cancelStatus = useSelector(
+        (state: RootState) => state.invitations.cancelStatus
+    );
+
+    return {
+        mutate: useCallback(
+            ({ invitationId }: { invitationId: string }) => {
+                if (!organizationId) return;
+                dispatch({
+                    type: CANCEL_INVITATION,
+                    payload: { organizationId, invitationId },
+                });
+            },
+            [dispatch, organizationId]
+        ),
+        mutateAsync: useCallback(
+            ({ invitationId }: { invitationId: string }): Promise<unknown> => {
+                return new Promise((resolve, reject) => {
+                    if (!organizationId) {
+                        reject(new Error('No active organization'));
+                        return;
+                    }
+                    dispatch({
+                        type: CANCEL_INVITATION,
+                        payload: { organizationId, invitationId, resolve, reject },
+                    });
+                });
+            },
+            [dispatch, organizationId]
+        ),
+        isPending: cancelStatus === 'loading',
+        isError: cancelStatus === 'failed',
+        isSuccess: cancelStatus === 'succeeded',
+        reset: () => dispatch(invitationsActions.resetMutationStatus()),
+    };
 }
