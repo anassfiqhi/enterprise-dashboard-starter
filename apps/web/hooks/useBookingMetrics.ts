@@ -1,44 +1,41 @@
-import { useQuery } from '@tanstack/react-query';
+import { useEffect, useRef } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import type { RootState, AppDispatch } from '@/lib/store';
 import { authClient } from '@/lib/auth-client';
-import type { BookingMetrics, ResponseEnvelope } from '@repo/shared';
-import { config } from '@/lib/config';
+import { FETCH_BOOKING_METRICS } from '@/lib/sagas/metrics/metricsSaga';
 
 /**
- * TanStack Query hook for booking metrics
+ * Redux Saga hook for booking metrics
  * Automatically scopes to the current active hotel
  */
 export function useBookingMetrics() {
+    const dispatch = useDispatch<AppDispatch>();
     const { data: activeOrg } = authClient.useActiveOrganization();
     const hotelId = activeOrg?.id;
 
-    return useQuery({
-        queryKey: ['booking-metrics', hotelId] as const,
-        queryFn: async () => {
-            if (!hotelId) throw new Error('No hotel selected');
+    const { data, status, error } = useSelector(
+        (state: RootState) => state.metrics.booking
+    );
 
-            const params = new URLSearchParams();
-            params.append('hotelId', hotelId);
+    const prevHotelId = useRef<string | undefined>(undefined);
 
-            const response = await fetch(
-                `${config.apiUrl}/api/v1/booking-metrics?${params.toString()}`,
-                {
-                    credentials: 'include',
-                }
-            );
+    useEffect(() => {
+        if (!hotelId || hotelId === prevHotelId.current) return;
+        prevHotelId.current = hotelId;
+        dispatch({ type: FETCH_BOOKING_METRICS, payload: { hotelId } });
+    }, [dispatch, hotelId]);
 
-            if (!response.ok) {
-                const errorData: ResponseEnvelope<null> = await response.json();
-                throw new Error(errorData.error?.message || 'Failed to fetch booking metrics');
+    return {
+        data,
+        isLoading: status === 'loading',
+        isPending: status === 'loading',
+        isError: status === 'failed',
+        isSuccess: status === 'succeeded',
+        error: error ? new Error(error) : null,
+        refetch: () => {
+            if (hotelId) {
+                dispatch({ type: FETCH_BOOKING_METRICS, payload: { hotelId } });
             }
-
-            const envelope: ResponseEnvelope<BookingMetrics> = await response.json();
-
-            if (envelope.error) {
-                throw new Error(envelope.error.message);
-            }
-
-            return envelope.data;
         },
-        enabled: !!hotelId,
-    });
+    };
 }
