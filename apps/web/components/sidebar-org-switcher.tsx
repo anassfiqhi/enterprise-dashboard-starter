@@ -1,6 +1,5 @@
 "use client"
 
-import * as React from "react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useDispatch } from "react-redux"
@@ -24,6 +23,8 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import { toast } from "sonner"
+import { Badge } from "@/components/ui/badge"
+import { Skeleton } from "@/components/ui/skeleton"
 import { usePermissions } from "@/hooks/usePermissions"
 
 interface Organization {
@@ -37,8 +38,8 @@ export function SidebarOrgSwitcher() {
   const router = useRouter()
   const dispatch = useDispatch()
   const { isMobile, setOpenMobile } = useSidebar()
-  const { data: activeOrg } = authClient.useActiveOrganization()
-  const { data: organizations } = authClient.useListOrganizations()
+  const { data: activeOrg, isPending: isPendingActiveOrg } = authClient.useActiveOrganization()
+  const { data: organizations, isPending: isPendingOrganizations } = authClient.useListOrganizations()
   const { isAdmin } = usePermissions()
 
   const activeHotel = activeOrg ? {
@@ -54,19 +55,27 @@ export function SidebarOrgSwitcher() {
     slug: org.slug,
     logo: org.logo
   })) ?? []
-  const [isLoading, setIsLoading] = useState(false)
+  const [switchingToId, setSwitchingToId] = useState<string | null>(null)
+
+  // Derived: switching is done when activeOrg catches up to the target
+  const isSwitching = switchingToId !== null && activeOrg?.id !== switchingToId
+  console.log("switchingToId !== null", switchingToId !== null)
+  console.log("activeOrg?.id !== switchingToId", activeOrg?.id !== switchingToId)
+  console.log("isSwitching", isSwitching)
+  console.log("switchingToId", switchingToId)
+  console.log("activeOrg", activeOrg)
 
   const handleHotelChange = async (hotel: Organization) => {
     if (hotel.id === activeHotel?.id) return
 
-    setIsLoading(true)
     try {
       await authClient.organization.setActive({
         organizationId: hotel.id,
       })
+      setSwitchingToId(hotel.id)
+      toast.success(`Switched to ${hotel.name}`)
       dispatch(resetReservationsFilters())
       dispatch(resetAvailabilityFilters())
-      toast.success(`Switched to ${hotel.name}`)
       if (isMobile) {
         setOpenMobile(false)
       }
@@ -74,25 +83,19 @@ export function SidebarOrgSwitcher() {
     } catch (error) {
       console.error("Failed to switch hotel:", error)
       toast.error("Failed to switch hotel")
-    } finally {
-      setIsLoading(false)
+      setSwitchingToId(null)
     }
   }
 
-  if (!activeHotel) {
+  if (!activeHotel || isSwitching || isPendingActiveOrg) {
     return (
       <SidebarMenu>
         <SidebarMenuItem>
-          <SidebarMenuButton
-            size="lg"
-            className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-          >
-            <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-              <Building2 className="size-4" />
-            </div>
-            <div className="grid flex-1 text-left text-sm leading-tight">
-              <span className="truncate font-medium">Enterprise</span>
-              <span className="truncate text-xs text-muted-foreground">Dashboard</span>
+          <SidebarMenuButton size="lg" disabled>
+            <Skeleton className="size-8 rounded-lg" />
+            <div className="grid flex-1 gap-1">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-3 w-16" />
             </div>
           </SidebarMenuButton>
         </SidebarMenuItem>
@@ -108,7 +111,7 @@ export function SidebarOrgSwitcher() {
             <SidebarMenuButton
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-              disabled={isLoading}
+              disabled={isSwitching}
             >
               <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                 <Building2 className="size-4" />
@@ -144,7 +147,7 @@ export function SidebarOrgSwitcher() {
                 </div>
                 <span className="truncate">{hotel.name}</span>
                 {hotel.id === activeHotel.id && (
-                  <span className="ml-auto text-xs text-muted-foreground">Active</span>
+                  <Badge variant="secondary" className="ml-auto">Active</Badge>
                 )}
               </DropdownMenuItem>
             ))}
