@@ -59,11 +59,6 @@ export function SidebarOrgSwitcher() {
 
   // Derived: switching is done when activeOrg catches up to the target
   const isSwitching = switchingToId !== null && activeOrg?.id !== switchingToId
-  console.log("switchingToId !== null", switchingToId !== null)
-  console.log("activeOrg?.id !== switchingToId", activeOrg?.id !== switchingToId)
-  console.log("isSwitching", isSwitching)
-  console.log("switchingToId", switchingToId)
-  console.log("activeOrg", activeOrg)
 
   const handleHotelChange = async (hotel: Organization) => {
     if (hotel.id === activeHotel?.id) return
@@ -151,7 +146,7 @@ export function SidebarOrgSwitcher() {
                 )}
               </DropdownMenuItem>
             ))}
-            <DropdownMenuSeparator />
+            {isAdmin && <DropdownMenuSeparator />}
             {isAdmin && <DropdownMenuItem className="gap-2 p-2 cursor-pointer">
               <div className="flex size-6 items-center justify-center rounded-md border bg-background">
                 <Plus className="size-4" />
