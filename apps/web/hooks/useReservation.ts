@@ -1,40 +1,39 @@
-import { useQuery } from '@tanstack/react-query';
-import type { Reservation, Payment, ResponseEnvelope } from '@repo/shared';
-import { config } from '@/lib/config';
+import { useEffect, useRef } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import type { RootState, AppDispatch } from '@/lib/store';
+import { FETCH_RESERVATION } from '@/lib/sagas/reservations/reservationsSaga';
 
-interface ReservationWithPayments extends Reservation {
-    payments?: Payment[];
-}
+export type { ReservationWithPayments } from '@/lib/reducers/reservations/reservationsDataSlice';
 
 /**
- * TanStack Query hook for single reservation
+ * Redux Saga hook for single reservation with payments
  */
 export function useReservation(id: string | null) {
-    return useQuery({
-        queryKey: ['reservations', 'detail', id] as const,
-        queryFn: async () => {
-            if (!id) throw new Error('Reservation ID is required');
+    const dispatch = useDispatch<AppDispatch>();
 
-            const response = await fetch(
-                `${config.apiUrl}/api/v1/reservations/${id}`,
-                {
-                    credentials: 'include',
-                }
-            );
+    const { data, status, error } = useSelector(
+        (state: RootState) => state.reservationsData.detail,
+    );
 
-            if (!response.ok) {
-                const errorData: ResponseEnvelope<null> = await response.json();
-                throw new Error(errorData.error?.message || 'Failed to fetch reservation');
+    const prevId = useRef<string | null>(undefined);
+
+    useEffect(() => {
+        if (!id || id === prevId.current) return;
+        prevId.current = id;
+        dispatch({ type: FETCH_RESERVATION, payload: { id } });
+    }, [dispatch, id]);
+
+    return {
+        data,
+        isLoading: status === 'loading',
+        isPending: status === 'loading',
+        isError: status === 'failed',
+        isSuccess: status === 'succeeded',
+        error: error ? new Error(error) : null,
+        refetch: () => {
+            if (id) {
+                dispatch({ type: FETCH_RESERVATION, payload: { id } });
             }
-
-            const envelope: ResponseEnvelope<ReservationWithPayments> = await response.json();
-
-            if (envelope.error) {
-                throw new Error(envelope.error.message);
-            }
-
-            return envelope.data;
         },
-        enabled: !!id,
-    });
+    };
 }

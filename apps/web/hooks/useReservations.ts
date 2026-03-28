@@ -1,57 +1,71 @@
-import { useQuery } from '@tanstack/react-query';
-import { useSelector } from 'react-redux';
-import { RootState } from '@/lib/store';
+import { useEffect, useRef } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import type { RootState, AppDispatch } from '@/lib/store';
 import { authClient } from '@/lib/auth-client';
-import type { Reservation, ResponseEnvelope } from '@repo/shared';
-import { config } from '@/lib/config';
+import { FETCH_RESERVATIONS } from '@/lib/sagas/reservations/reservationsSaga';
 
 /**
- * TanStack Query hook for reservations
+ * Redux Saga hook for reservations list with filters
  * Automatically scopes to the current active hotel
  */
 export function useReservations() {
+    const dispatch = useDispatch<AppDispatch>();
     const filters = useSelector((state: RootState) => state.filters.reservations);
     const { data: activeOrg } = authClient.useActiveOrganization();
     const hotelId = activeOrg?.id;
 
-    return useQuery({
-        queryKey: ['reservations', 'list', hotelId, filters] as const,
-        queryFn: async () => {
-            if (!hotelId) throw new Error('No hotel selected');
+    const { data: listData, status, error } = useSelector(
+        (state: RootState) => state.reservationsData.list,
+    );
 
-            const params = new URLSearchParams();
-            params.append('hotelId', hotelId);
-            params.append('page', String(filters.page));
-            params.append('pageSize', String(filters.pageSize));
-            if (filters.search) params.append('search', filters.search);
-            if (filters.status) params.append('status', filters.status);
-            if (filters.checkInFrom) params.append('checkInFrom', filters.checkInFrom);
-            if (filters.checkInTo) params.append('checkInTo', filters.checkInTo);
-            if (filters.sort) params.append('sort', filters.sort);
+    const prevParams = useRef<string>('');
 
-            const response = await fetch(
-                `${config.apiUrl}/api/v1/reservations?${params.toString()}`,
-                {
-                    credentials: 'include',
-                }
-            );
+    useEffect(() => {
+        if (!hotelId) return;
+        const paramsKey = JSON.stringify({ hotelId, ...filters });
+        if (paramsKey === prevParams.current) return;
+        prevParams.current = paramsKey;
+        dispatch({
+            type: FETCH_RESERVATIONS,
+            payload: {
+                hotelId,
+                page: filters.page,
+                pageSize: filters.pageSize,
+                search: filters.search,
+                status: filters.status,
+                checkInFrom: filters.checkInFrom,
+                checkInTo: filters.checkInTo,
+                sort: filters.sort,
+            },
+        });
+    }, [dispatch, hotelId, filters]);
 
-            if (!response.ok) {
-                const errorData: ResponseEnvelope<null> = await response.json();
-                throw new Error(errorData.error?.message || 'Failed to fetch reservations');
-            }
-
-            const envelope: ResponseEnvelope<Reservation[]> = await response.json();
-
-            if (envelope.error) {
-                throw new Error(envelope.error.message);
-            }
-
-            return {
-                data: envelope.data || [],
-                meta: envelope.meta,
-            };
+    return {
+        data: {
+            data: listData.items,
+            meta: listData.meta,
         },
-        enabled: !!hotelId,
-    });
+        isLoading: status === 'loading',
+        isPending: status === 'loading',
+        isError: status === 'failed',
+        isSuccess: status === 'succeeded',
+        error: error ? new Error(error) : null,
+        refetch: () => {
+            if (hotelId) {
+                dispatch({
+                    type: FETCH_RESERVATIONS,
+                    payload: {
+                        hotelId,
+                        page: filters.page,
+                        pageSize: filters.pageSize,
+                        search: filters.search,
+                        status: filters.status,
+                        checkInFrom: filters.checkInFrom,
+                        checkInTo: filters.checkInTo,
+                        sort: filters.sort,
+                    },
+                });
+            }
+        },
+    };
 }
