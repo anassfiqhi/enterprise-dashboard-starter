@@ -1,51 +1,39 @@
-import { useQuery } from '@tanstack/react-query';
-import type { Guest, Reservation, ResponseEnvelope } from '@repo/shared';
-import { config } from '@/lib/config';
+import { useEffect, useRef } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import type { RootState, AppDispatch } from '@/lib/store';
+import { FETCH_GUEST } from '@/lib/sagas/guests/guestsSaga';
 
-export interface GuestStats {
-    totalReservations: number;
-    confirmedReservations: number;
-    cancelledReservations: number;
-    totalSpent: number;
-    averageSpent: number;
-}
-
-export interface GuestDetail extends Guest {
-    reservations: Reservation[];
-    stats: GuestStats;
-}
+export type { GuestDetail, GuestStats } from '@/lib/reducers/guests/guestsSlice';
 
 /**
- * TanStack Query hook for single guest with reservation history
+ * Redux Saga hook for single guest with reservation history
  */
 export function useGuest(guestId: string | undefined) {
-    return useQuery({
-        queryKey: ['guest', guestId] as const,
-        queryFn: async () => {
-            if (!guestId) {
-                throw new Error('Guest ID is required');
+    const dispatch = useDispatch<AppDispatch>();
+
+    const { data, status, error } = useSelector(
+        (state: RootState) => state.guests.detail
+    );
+
+    const prevGuestId = useRef<string | undefined>(undefined);
+
+    useEffect(() => {
+        if (!guestId || guestId === prevGuestId.current) return;
+        prevGuestId.current = guestId;
+        dispatch({ type: FETCH_GUEST, payload: { guestId } });
+    }, [dispatch, guestId]);
+
+    return {
+        data,
+        isLoading: status === 'loading',
+        isPending: status === 'loading',
+        isError: status === 'failed',
+        isSuccess: status === 'succeeded',
+        error: error ? new Error(error) : null,
+        refetch: () => {
+            if (guestId) {
+                dispatch({ type: FETCH_GUEST, payload: { guestId } });
             }
-
-            const response = await fetch(
-                `${config.apiUrl}/api/v1/guests/${guestId}`,
-                {
-                    credentials: 'include',
-                }
-            );
-
-            if (!response.ok) {
-                const errorData: ResponseEnvelope<null> = await response.json();
-                throw new Error(errorData.error?.message || 'Failed to fetch guest');
-            }
-
-            const envelope: ResponseEnvelope<GuestDetail> = await response.json();
-
-            if (envelope.error) {
-                throw new Error(envelope.error.message);
-            }
-
-            return envelope.data!;
         },
-        enabled: !!guestId,
-    });
+    };
 }

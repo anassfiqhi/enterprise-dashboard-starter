@@ -1,24 +1,10 @@
-import { useQuery } from '@tanstack/react-query';
+import { useEffect, useRef } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import type { RootState, AppDispatch } from '@/lib/store';
 import { authClient } from '@/lib/auth-client';
-import { config } from '@/lib/config';
-import type { Guest, ResponseEnvelope } from '@repo/shared';
+import { FETCH_GUESTS } from '@/lib/sagas/guests/guestsSaga';
 
-export interface GuestWithStats extends Guest {
-    reservationCount: number;
-    totalSpent: number;
-    lastStay?: string;
-}
-
-interface GuestListResponse {
-    data: GuestWithStats[];
-    meta: {
-        requestId: string;
-        total: number;
-        page: number;
-        pageSize: number;
-        totalPages: number;
-    };
-}
+export type { GuestWithStats } from '@/lib/reducers/guests/guestsSlice';
 
 export interface GuestsFilters {
     search?: string;
@@ -27,49 +13,49 @@ export interface GuestsFilters {
 }
 
 /**
- * TanStack Query hook for guests list with search and pagination
+ * Redux Saga hook for guests list with search and pagination
  * Automatically scopes to the current active hotel
  */
 export function useGuests(filters: GuestsFilters = {}) {
     const { search = '', page = 1, pageSize = 20 } = filters;
+    const dispatch = useDispatch<AppDispatch>();
     const { data: activeOrg } = authClient.useActiveOrganization();
     const hotelId = activeOrg?.id;
 
-    return useQuery({
-        queryKey: ['guests', hotelId, { search, page, pageSize }] as const,
-        queryFn: async () => {
-            if (!hotelId) throw new Error('No hotel selected');
+    const { data: listData, status, error } = useSelector(
+        (state: RootState) => state.guests.list
+    );
 
-            const params = new URLSearchParams();
-            params.append('hotelId', hotelId);
-            params.append('page', String(page));
-            params.append('pageSize', String(pageSize));
-            if (search) params.append('search', search);
+    const prevParams = useRef<string>('');
 
-            const response = await fetch(
-                `${config.apiUrl}/api/v1/guests?${params.toString()}`,
-                {
-                    credentials: 'include',
-                }
-            );
+    useEffect(() => {
+        if (!hotelId) return;
+        const paramsKey = JSON.stringify({ hotelId, search, page, pageSize });
+        if (paramsKey === prevParams.current) return;
+        prevParams.current = paramsKey;
+        dispatch({
+            type: FETCH_GUESTS,
+            payload: { hotelId, search, page, pageSize },
+        });
+    }, [dispatch, hotelId, search, page, pageSize]);
 
-            if (!response.ok) {
-                const errorData: ResponseEnvelope<null> = await response.json();
-                throw new Error(errorData.error?.message || 'Failed to fetch guests');
-            }
-
-            const envelope: GuestListResponse = await response.json();
-
-            const env = envelope as unknown as Record<string, unknown>;
-            if (env.error) {
-                throw new Error((env.error as { message: string }).message);
-            }
-
-            return {
-                data: envelope.data || [],
-                meta: envelope.meta,
-            };
+    return {
+        data: {
+            data: listData.items,
+            meta: listData.meta,
         },
-        enabled: !!hotelId,
-    });
+        isLoading: status === 'loading',
+        isPending: status === 'loading',
+        isError: status === 'failed',
+        isSuccess: status === 'succeeded',
+        error: error ? new Error(error) : null,
+        refetch: () => {
+            if (hotelId) {
+                dispatch({
+                    type: FETCH_GUESTS,
+                    payload: { hotelId, search, page, pageSize },
+                });
+            }
+        },
+    };
 }
