@@ -1,5 +1,5 @@
 import type { SessionData, Metrics } from '@repo/shared';
-import type { MutablePermissions } from '@/lib/reducers/auth/authSlice';
+import type { MutablePermissions } from '@/lib/types/permissions';
 
 // Admin session with full permissions
 export const mockAdminSession: SessionData = {
@@ -79,7 +79,7 @@ export const mockMemberSession: SessionData = {
   ],
   activeMember: {
     id: 'member_2',
-    role: 'member',
+    role: 'staff',
   },
   permissions: {
     hotel: ['read'],

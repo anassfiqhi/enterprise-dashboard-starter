@@ -1,9 +1,12 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useDispatch } from 'react-redux';
+import type { AppDispatch } from '@/lib/store';
 import type { SSEEvent, Order } from '@repo/shared';
+import { reservationsDataActions } from '@/lib/reducers/reservations/reservationsDataSlice';
+import { FETCH_RESERVATIONS } from '@/lib/sagas/reservations/reservationsSaga';
+import { config } from '@/lib/config';
 
 export type OrderEvent = SSEEvent<Partial<Order>>;
-import { config } from '@/lib/config';
 
 /**
  * Generic SSE hook (SPEC Section 7.3)
@@ -106,33 +109,30 @@ export function useSSE(url: string, onEvent?: (event: OrderEvent) => void) {
 }
 
 /**
- * Hook that connects to SSE and patches TanStack Query cache on events
+ * Hook that connects to SSE and patches Redux store on events
  * (SPEC Section 7.3)
  */
 export function useOrderStream() {
-    const queryClient = useQueryClient();
+    const dispatch = useDispatch<AppDispatch>();
 
     const handleEvent = useCallback(
         (event: OrderEvent) => {
             if (event.type === 'order.updated') {
                 console.log('Order updated via SSE:', event);
 
-                // Patch detail cache if it exists
-                queryClient.setQueryData<Order>(['orders', 'detail', event.id], (old) => {
-                    if (old) {
-                        return { ...old, ...event.patch };
-                    }
-                    return old;
-                });
+                // Patch detail and list in Redux store
+                dispatch(
+                    reservationsDataActions.patchReservationDetail({
+                        id: event.id,
+                        patch: event.patch,
+                    }),
+                );
 
-                // Invalidate list queries to refetch with updated data
-                // (SPEC: "patch relevant list caches carefully OR invalidate selectively")
-                queryClient.invalidateQueries({
-                    queryKey: ['orders', 'list'],
-                });
+                // Also re-fetch the list to ensure full consistency
+                dispatch({ type: FETCH_RESERVATIONS, payload: {} });
             }
         },
-        [queryClient]
+        [dispatch]
     );
 
     return useSSE(config.sseUrl, handleEvent);
