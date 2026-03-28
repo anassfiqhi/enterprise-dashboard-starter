@@ -1,32 +1,38 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { config } from "@/lib/config";
-
-interface AdminOrganization {
-    id: string;
-    name: string;
-    slug: string;
-}
+import { useEffect, useRef } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import type { RootState, AppDispatch } from '@/lib/store';
+import { FETCH_ADMIN_ORGANIZATIONS } from '@/lib/sagas/admin/adminSaga';
 
 /**
- * List all organizations (super admin only)
+ * Redux Saga hook for listing all organizations (super admin only)
  * Used for "add to org" dropdown
  */
 export function useAdminOrganizations() {
-    return useQuery({
-        queryKey: ["admin-organizations"],
-        queryFn: async () => {
-            const response = await fetch(
-                `${config.apiUrl}/api/v1/admin/organizations`,
-                { credentials: "include" }
-            );
-            if (!response.ok) {
-                const err = await response.json();
-                throw new Error(err.error?.message || "Failed to fetch organizations");
-            }
-            const envelope = await response.json();
-            return envelope.data.organizations as AdminOrganization[];
+    const dispatch = useDispatch<AppDispatch>();
+
+    const { data, status, error } = useSelector(
+        (state: RootState) => state.admin.organizations
+    );
+
+    const hasFetched = useRef(false);
+
+    useEffect(() => {
+        if (hasFetched.current) return;
+        hasFetched.current = true;
+        dispatch({ type: FETCH_ADMIN_ORGANIZATIONS });
+    }, [dispatch]);
+
+    return {
+        data,
+        isLoading: status === 'loading',
+        isPending: status === 'loading',
+        isError: status === 'failed',
+        isSuccess: status === 'succeeded',
+        error: error ? new Error(error) : null,
+        refetch: () => {
+            dispatch({ type: FETCH_ADMIN_ORGANIZATIONS });
         },
-    });
+    };
 }

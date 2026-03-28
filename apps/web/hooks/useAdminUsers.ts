@@ -1,9 +1,20 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { authClient } from "@/lib/auth-client";
-import { config } from "@/lib/config";
-import { toast } from "sonner";
+import { useEffect, useRef, useCallback } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import type { RootState, AppDispatch } from '@/lib/store';
+import {
+    FETCH_ADMIN_USERS,
+    FETCH_ADMIN_USER,
+    TOGGLE_SUPER_ADMIN,
+    FETCH_USER_MEMBERSHIPS,
+    ADD_USER_TO_ORG,
+    UPDATE_ADMIN_MEMBER_ROLE,
+    REMOVE_USER_FROM_ORG,
+} from '@/lib/sagas/admin/adminSaga';
+import { adminActions } from '@/lib/reducers/admin/adminSlice';
+
+export type { Membership } from '@/lib/reducers/admin/adminSlice';
 
 interface AdminUsersFilters {
     search?: string;
@@ -12,224 +23,310 @@ interface AdminUsersFilters {
 }
 
 /**
- * List all users via Better Auth admin plugin
+ * Redux Saga hook for listing all users (super admin)
  */
 export function useAdminUsers(filters: AdminUsersFilters = {}) {
     const { search, limit = 20, offset = 0 } = filters;
+    const dispatch = useDispatch<AppDispatch>();
 
-    return useQuery({
-        queryKey: ["admin-users", { search, limit, offset }],
-        queryFn: async () => {
-            const query: Record<string, string | number> = { limit, offset };
-            if (search) {
-                query.searchValue = search;
-                query.searchField = "email";
-            }
-            const response = await authClient.admin.listUsers({ query });
-            if (response.error) {
-                throw new Error(response.error.message || "Failed to list users");
-            }
-            return response.data;
+    const { data, status, error } = useSelector(
+        (state: RootState) => state.admin.users
+    );
+
+    const prevParams = useRef<string>('');
+
+    useEffect(() => {
+        const paramsKey = JSON.stringify({ search, limit, offset });
+        if (paramsKey === prevParams.current) return;
+        prevParams.current = paramsKey;
+        dispatch({
+            type: FETCH_ADMIN_USERS,
+            payload: { search, limit, offset },
+        });
+    }, [dispatch, search, limit, offset]);
+
+    return {
+        data,
+        isLoading: status === 'loading',
+        isPending: status === 'loading',
+        isError: status === 'failed',
+        isSuccess: status === 'succeeded',
+        error: error ? new Error(error) : null,
+        refetch: () => {
+            dispatch({
+                type: FETCH_ADMIN_USERS,
+                payload: { search, limit, offset },
+            });
         },
-    });
+    };
 }
 
 /**
- * Toggle super admin status for a user
+ * Redux Saga hook for fetching a single user (super admin)
+ */
+export function useAdminUser(userId: string | null) {
+    const dispatch = useDispatch<AppDispatch>();
+
+    const { data, status, error } = useSelector(
+        (state: RootState) => state.admin.user
+    );
+
+    const prevParams = useRef<string>('');
+
+    useEffect(() => {
+        if (!userId) return;
+        if (userId === prevParams.current) return;
+        prevParams.current = userId;
+        dispatch({
+            type: FETCH_ADMIN_USER,
+            payload: { userId },
+        });
+    }, [dispatch, userId]);
+
+    return {
+        data,
+        isLoading: status === 'loading',
+        isPending: status === 'loading',
+        isError: status === 'failed',
+        isSuccess: status === 'succeeded',
+        error: error ? new Error(error) : null,
+        refetch: () => {
+            if (userId) {
+                dispatch({
+                    type: FETCH_ADMIN_USER,
+                    payload: { userId },
+                });
+            }
+        },
+    };
+}
+
+/**
+ * Redux Saga mutation hook to toggle super admin status
  */
 export function useToggleSuperAdmin() {
-    const queryClient = useQueryClient();
+    const dispatch = useDispatch<AppDispatch>();
 
-    return useMutation({
-        mutationFn: async ({
-            userId,
-            isAdmin,
-        }: {
-            userId: string;
-            isAdmin: boolean;
-        }) => {
-            // Set isAdmin field
-            const updateRes = await authClient.admin.updateUser({
-                userId,
-                data: { isAdmin },
-            });
-            if (updateRes.error) {
-                throw new Error(updateRes.error.message || "Failed to update user");
-            }
+    const toggleStatus = useSelector(
+        (state: RootState) => state.admin.toggleSuperAdminStatus
+    );
 
-            // Set role to "admin" or "user" based on super admin status
-            const roleRes = await authClient.admin.setRole({
-                userId,
-                role: isAdmin ? "admin" : "user",
-            });
-            if (roleRes.error) {
-                throw new Error(roleRes.error.message || "Failed to set role");
-            }
-
-            return updateRes.data;
-        },
-        onSuccess: (_, { isAdmin }) => {
-            toast.success(
-                isAdmin ? "Super Admin access granted" : "Super Admin access revoked"
-            );
-            queryClient.invalidateQueries({ queryKey: ["admin-users"] });
-        },
-        onError: (error: Error) => {
-            toast.error(error.message || "Failed to update super admin status");
-        },
-    });
-}
-
-// ─── Membership hooks (custom routes) ────────────────────────────
-
-interface Membership {
-    id: string;
-    role: string;
-    createdAt: string;
-    organizationId: string;
-    organizationName: string;
-    organizationSlug: string;
+    return {
+        mutate: useCallback(
+            ({ userId, isAdmin }: { userId: string; isAdmin: boolean }) => {
+                dispatch({
+                    type: TOGGLE_SUPER_ADMIN,
+                    payload: { userId, isAdmin },
+                });
+            },
+            [dispatch]
+        ),
+        mutateAsync: useCallback(
+            ({ userId, isAdmin }: { userId: string; isAdmin: boolean }): Promise<unknown> => {
+                return new Promise((resolve, reject) => {
+                    dispatch({
+                        type: TOGGLE_SUPER_ADMIN,
+                        payload: { userId, isAdmin, resolve, reject },
+                    });
+                });
+            },
+            [dispatch]
+        ),
+        isPending: toggleStatus === 'loading',
+        isError: toggleStatus === 'failed',
+        isSuccess: toggleStatus === 'succeeded',
+        reset: () => dispatch(adminActions.resetMutationStatus()),
+    };
 }
 
 /**
- * Get all org memberships for a specific user
+ * Redux Saga hook for fetching a user's org memberships
  */
 export function useUserMemberships(userId: string | null) {
-    return useQuery({
-        queryKey: ["admin-user-memberships", userId],
-        queryFn: async () => {
-            const response = await fetch(
-                `${config.apiUrl}/api/v1/admin/users/${userId}/memberships`,
-                { credentials: "include" }
-            );
-            if (!response.ok) {
-                const err = await response.json();
-                throw new Error(err.error?.message || "Failed to fetch memberships");
+    const dispatch = useDispatch<AppDispatch>();
+
+    const { data, status, error } = useSelector(
+        (state: RootState) => state.admin.memberships
+    );
+
+    const prevParams = useRef<string>('');
+
+    useEffect(() => {
+        if (!userId) return;
+        if (userId === prevParams.current) return;
+        prevParams.current = userId;
+        dispatch({
+            type: FETCH_USER_MEMBERSHIPS,
+            payload: { userId },
+        });
+    }, [dispatch, userId]);
+
+    return {
+        data,
+        isLoading: status === 'loading',
+        isPending: status === 'loading',
+        isError: status === 'failed',
+        isSuccess: status === 'succeeded',
+        error: error ? new Error(error) : null,
+        refetch: () => {
+            if (userId) {
+                dispatch({
+                    type: FETCH_USER_MEMBERSHIPS,
+                    payload: { userId },
+                });
             }
-            const envelope = await response.json();
-            return envelope.data.memberships as Membership[];
         },
-        enabled: !!userId,
-    });
+    };
 }
 
 /**
- * Add a user to an organization
+ * Redux Saga mutation hook to add a user to an organization
  */
 export function useAddUserToOrg() {
-    const queryClient = useQueryClient();
+    const dispatch = useDispatch<AppDispatch>();
 
-    return useMutation({
-        mutationFn: async ({
-            userId,
-            organizationId,
-            role,
-        }: {
-            userId: string;
-            organizationId: string;
-            role: "admin" | "staff";
-        }) => {
-            const response = await fetch(
-                `${config.apiUrl}/api/v1/admin/users/${userId}/memberships`,
-                {
-                    method: "POST",
-                    credentials: "include",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ organizationId, role }),
-                }
-            );
-            if (!response.ok) {
-                const err = await response.json();
-                throw new Error(err.error?.message || "Failed to add user to organization");
-            }
-            return response.json();
-        },
-        onSuccess: (_, { userId }) => {
-            toast.success("User added to organization");
-            queryClient.invalidateQueries({ queryKey: ["admin-user-memberships", userId] });
-            queryClient.invalidateQueries({ queryKey: ["admin-users"] });
-        },
-        onError: (error: Error) => {
-            toast.error(error.message);
-        },
-    });
+    const addStatus = useSelector(
+        (state: RootState) => state.admin.addToOrgStatus
+    );
+
+    return {
+        mutate: useCallback(
+            ({
+                userId,
+                organizationId,
+                role,
+            }: {
+                userId: string;
+                organizationId: string;
+                role: 'admin' | 'staff';
+            }) => {
+                dispatch({
+                    type: ADD_USER_TO_ORG,
+                    payload: { userId, organizationId, role },
+                });
+            },
+            [dispatch]
+        ),
+        mutateAsync: useCallback(
+            ({
+                userId,
+                organizationId,
+                role,
+            }: {
+                userId: string;
+                organizationId: string;
+                role: 'admin' | 'staff';
+            }): Promise<unknown> => {
+                return new Promise((resolve, reject) => {
+                    dispatch({
+                        type: ADD_USER_TO_ORG,
+                        payload: { userId, organizationId, role, resolve, reject },
+                    });
+                });
+            },
+            [dispatch]
+        ),
+        isPending: addStatus === 'loading',
+        isError: addStatus === 'failed',
+        isSuccess: addStatus === 'succeeded',
+        reset: () => dispatch(adminActions.resetMutationStatus()),
+    };
 }
 
 /**
- * Update a user's role in an organization
+ * Redux Saga mutation hook to update a user's role in an organization
  */
 export function useUpdateMemberRole() {
-    const queryClient = useQueryClient();
+    const dispatch = useDispatch<AppDispatch>();
 
-    return useMutation({
-        mutationFn: async ({
-            userId,
-            membershipId,
-            role,
-        }: {
-            userId: string;
-            membershipId: string;
-            role: "admin" | "staff";
-        }) => {
-            const response = await fetch(
-                `${config.apiUrl}/api/v1/admin/users/${userId}/memberships/${membershipId}`,
-                {
-                    method: "PATCH",
-                    credentials: "include",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ role }),
-                }
-            );
-            if (!response.ok) {
-                const err = await response.json();
-                throw new Error(err.error?.message || "Failed to update role");
-            }
-            return response.json();
-        },
-        onSuccess: (_, { userId }) => {
-            toast.success("Member role updated");
-            queryClient.invalidateQueries({ queryKey: ["admin-user-memberships", userId] });
-        },
-        onError: (error: Error) => {
-            toast.error(error.message);
-        },
-    });
+    const updateStatus = useSelector(
+        (state: RootState) => state.admin.updateRoleStatus
+    );
+
+    return {
+        mutate: useCallback(
+            ({
+                userId,
+                membershipId,
+                role,
+            }: {
+                userId: string;
+                membershipId: string;
+                role: 'admin' | 'staff';
+            }) => {
+                dispatch({
+                    type: UPDATE_ADMIN_MEMBER_ROLE,
+                    payload: { userId, membershipId, role },
+                });
+            },
+            [dispatch]
+        ),
+        mutateAsync: useCallback(
+            ({
+                userId,
+                membershipId,
+                role,
+            }: {
+                userId: string;
+                membershipId: string;
+                role: 'admin' | 'staff';
+            }): Promise<unknown> => {
+                return new Promise((resolve, reject) => {
+                    dispatch({
+                        type: UPDATE_ADMIN_MEMBER_ROLE,
+                        payload: { userId, membershipId, role, resolve, reject },
+                    });
+                });
+            },
+            [dispatch]
+        ),
+        isPending: updateStatus === 'loading',
+        isError: updateStatus === 'failed',
+        isSuccess: updateStatus === 'succeeded',
+        reset: () => dispatch(adminActions.resetMutationStatus()),
+    };
 }
 
 /**
- * Remove a user from an organization
+ * Redux Saga mutation hook to remove a user from an organization
  */
 export function useRemoveUserFromOrg() {
-    const queryClient = useQueryClient();
+    const dispatch = useDispatch<AppDispatch>();
 
-    return useMutation({
-        mutationFn: async ({
-            userId,
-            membershipId,
-        }: {
-            userId: string;
-            membershipId: string;
-        }) => {
-            const response = await fetch(
-                `${config.apiUrl}/api/v1/admin/users/${userId}/memberships/${membershipId}`,
-                {
-                    method: "DELETE",
-                    credentials: "include",
-                }
-            );
-            if (!response.ok) {
-                const err = await response.json();
-                throw new Error(err.error?.message || "Failed to remove from organization");
-            }
-            return response.json();
-        },
-        onSuccess: (_, { userId }) => {
-            toast.success("User removed from organization");
-            queryClient.invalidateQueries({ queryKey: ["admin-user-memberships", userId] });
-            queryClient.invalidateQueries({ queryKey: ["admin-users"] });
-        },
-        onError: (error: Error) => {
-            toast.error(error.message);
-        },
-    });
+    const removeStatus = useSelector(
+        (state: RootState) => state.admin.removeFromOrgStatus
+    );
+
+    return {
+        mutate: useCallback(
+            ({ userId, membershipId }: { userId: string; membershipId: string }) => {
+                dispatch({
+                    type: REMOVE_USER_FROM_ORG,
+                    payload: { userId, membershipId },
+                });
+            },
+            [dispatch]
+        ),
+        mutateAsync: useCallback(
+            ({
+                userId,
+                membershipId,
+            }: {
+                userId: string;
+                membershipId: string;
+            }): Promise<unknown> => {
+                return new Promise((resolve, reject) => {
+                    dispatch({
+                        type: REMOVE_USER_FROM_ORG,
+                        payload: { userId, membershipId, resolve, reject },
+                    });
+                });
+            },
+            [dispatch]
+        ),
+        isPending: removeStatus === 'loading',
+        isError: removeStatus === 'failed',
+        isSuccess: removeStatus === 'succeeded',
+        reset: () => dispatch(adminActions.resetMutationStatus()),
+    };
 }
