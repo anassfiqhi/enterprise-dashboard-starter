@@ -183,16 +183,11 @@ function AddToOrgDialog({
 
     const handleSubmit = () => {
         if (!orgId) return;
-        addToOrg.mutate(
-            { userId, organizationId: orgId, role },
-            {
-                onSuccess: () => {
-                    onOpenChange(false);
-                    setOrgId("");
-                    setRole("staff");
-                },
-            }
-        );
+        addToOrg.mutateAsync({ userId, organizationId: orgId, role }).then(() => {
+            onOpenChange(false);
+            setOrgId("");
+            setRole("staff");
+        });
     };
 
     return (

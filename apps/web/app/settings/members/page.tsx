@@ -42,18 +42,37 @@ import { useState } from "react";
 
 function MembersLoadingSkeleton() {
     return (
-        <div className="space-y-4">
-            {[1, 2, 3].map((i) => (
-                <div key={i} className="flex items-center gap-4">
-                    <Skeleton className="h-10 w-10 rounded-full" />
-                    <div className="flex-1 space-y-2">
-                        <Skeleton className="h-4 w-32" />
-                        <Skeleton className="h-3 w-48" />
-                    </div>
-                    <Skeleton className="h-8 w-24" />
-                </div>
-            ))}
-        </div>
+        <Table>
+            <TableHeader>
+                <TableRow>
+                    <TableHead>Member</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Role</TableHead>
+                    <TableHead className="w-[100px]">Actions</TableHead>
+                </TableRow>
+            </TableHeader>
+            <TableBody>
+                {[1, 2, 3].map((i) => (
+                    <TableRow key={i}>
+                        <TableCell>
+                            <div className="flex items-center gap-3">
+                                <Skeleton className="h-8 w-8 rounded-full" />
+                                <Skeleton className="h-4 w-24" />
+                            </div>
+                        </TableCell>
+                        <TableCell>
+                            <Skeleton className="h-4 w-40" />
+                        </TableCell>
+                        <TableCell>
+                            <Skeleton className="h-5 w-16 rounded-full" />
+                        </TableCell>
+                        <TableCell>
+                            <Skeleton className="h-8 w-8" />
+                        </TableCell>
+                    </TableRow>
+                ))}
+            </TableBody>
+        </Table>
     );
 }
 
@@ -120,11 +139,8 @@ function MembersTab() {
 
     const handleRemoveMember = (memberId: string, memberIdOrEmail: string) => {
         if (pendingRemove === memberId) {
-            removeMember.mutate(
-                { memberIdOrEmail },
-                {
-                    onSettled: () => setPendingRemove(null),
-                }
+            removeMember.mutateAsync({ memberIdOrEmail }).finally(() =>
+                setPendingRemove(null)
             );
         } else {
             setPendingRemove(memberId);
@@ -154,7 +170,7 @@ function MembersTab() {
             </TableHeader>
             <TableBody>
                 {members.map((member) => {
-                    const isOwner = (member.role as string) === "owner";
+                    // const isOwner = member.role === "owner";
                     const isCurrentUser = member.userId === currentUserId;
 
                     return (
@@ -182,7 +198,7 @@ function MembersTab() {
                                 {member.user?.email}
                             </TableCell>
                             <TableCell>
-                                {canUpdateMembers && !isOwner && !isCurrentUser ? (
+                                {/* {canUpdateMembers && !isOwner && !isCurrentUser ? (
                                     <Select
                                         value={member.role}
                                         onValueChange={(role) =>
@@ -198,16 +214,17 @@ function MembersTab() {
                                         </SelectTrigger>
                                         <SelectContent>
                                             <SelectItem value="admin">Admin</SelectItem>
-                                            <SelectItem value="member">Member</SelectItem>
+                                            <SelectItem value="staff">Staff</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 ) : (
-                                    <RoleBadge role={member.role} />
-                                )}
+                                    <RoleBadge role={isAdmin ? "admin" : member.role === "manager" ? "manager" : "staff"} />
+                                )} */}
+                                <RoleBadge role={member.user.role === "admin" ? "admin" : member.role === "manager" ? "manager" : "staff"} />
                             </TableCell>
                             {canDeleteMembers && (
                                 <TableCell>
-                                    {!isOwner && !isCurrentUser && (
+                                    {!isCurrentUser && (
                                         <Button
                                             variant={
                                                 pendingRemove === member.id
@@ -268,24 +285,16 @@ function InvitationsTab() {
     const handleInvite = (e: React.FormEvent) => {
         e.preventDefault();
         if (!email) return;
-        inviteMember.mutate(
-            { email, role },
-            {
-                onSuccess: () => {
-                    setEmail("");
-                    setRole("staff");
-                },
-            }
-        );
+        inviteMember.mutateAsync({ email, role }).then(() => {
+            setEmail("");
+            setRole("staff");
+        });
     };
 
     const handleCancel = (invitationId: string) => {
         if (pendingCancel === invitationId) {
-            cancelInvitation.mutate(
-                { invitationId },
-                {
-                    onSettled: () => setPendingCancel(null),
-                }
+            cancelInvitation.mutateAsync({ invitationId }).finally(() =>
+                setPendingCancel(null)
             );
         } else {
             setPendingCancel(invitationId);

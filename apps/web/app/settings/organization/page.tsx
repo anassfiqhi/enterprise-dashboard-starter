@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 
 import { authClient } from "@/lib/auth-client";
 import { usePermissions } from "@/hooks/usePermissions";
-import { useQueryClient } from "@tanstack/react-query";
+import { useDispatch } from "react-redux";
+import { RESET_ALL_SERVER_STATE } from "@/lib/store";
 import {
     Card,
     CardHeader,
@@ -24,7 +25,7 @@ import { Building2, AlertTriangle } from "lucide-react";
 export default function OrganizationPage() {
 
     const router = useRouter();
-    const queryClient = useQueryClient();
+    const dispatch = useDispatch();
     const { data: activeOrg } = authClient.useActiveOrganization();
     const activeHotel = activeOrg;
     const { can } = usePermissions();
@@ -60,8 +61,8 @@ export default function OrganizationPage() {
             }
 
             toast.success("Organization updated successfully");
-            // Invalidate session to refresh organization data
-            queryClient.invalidateQueries({ queryKey: ["session"] });
+            // Reset server state to refresh organization data
+            dispatch({ type: RESET_ALL_SERVER_STATE });
         } catch (error) {
             toast.error(
                 error instanceof Error ? error.message : "Failed to update organization"
@@ -91,9 +92,8 @@ export default function OrganizationPage() {
             }
 
             toast.success("Organization deleted");
-            // Clear session and redirect
-
-            queryClient.clear();
+            // Clear server state and redirect
+            dispatch({ type: RESET_ALL_SERVER_STATE });
             router.push("/");
         } catch (error) {
             toast.error(
@@ -177,16 +177,15 @@ export default function OrganizationPage() {
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <Alert variant="destructive">
-                            <AlertDescription>
-                                Deleting this organization will permanently remove all members,
-                                invitations, and associated data. This action cannot be undone.
-                            </AlertDescription>
-                        </Alert>
+                        <p className="text-sm text-destructive">
+                            Deleting this organization will permanently remove all members,
+                            invitations, and associated data. This action cannot be undone.
+                        </p>
                         <Button
                             variant="destructive"
                             onClick={handleDelete}
                             disabled={isDeleting}
+                            className="cursor-pointer text-white"
                         >
                             {isDeleting
                                 ? "Deleting..."

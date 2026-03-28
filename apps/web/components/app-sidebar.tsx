@@ -221,6 +221,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       url: "/settings/members",
       icon: SettingsIcon,
       isActive: pathname?.startsWith("/settings") ?? false,
+      items: [
+        {
+          title: "Members",
+          url: "/settings/members",
+          isActive: pathname === "/settings/members",
+        },
+        {
+          title: "Organization",
+          url: "/settings/organization",
+          isActive: pathname === "/settings/organization",
+        },
+      ],
     },
     {
       title: "Get Help",
