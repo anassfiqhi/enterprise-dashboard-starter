@@ -1,36 +1,36 @@
-import { useQuery } from '@tanstack/react-query';
-import type { Hotel, ResponseEnvelope } from '@repo/shared';
-import { config } from '@/lib/config';
+import { useEffect, useRef } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import type { RootState, AppDispatch } from '@/lib/store';
+import { FETCH_HOTELS } from '@/lib/sagas/hotels/hotelsSaga';
 
 /**
- * TanStack Query hook for hotels list
+ * Redux Saga hook for hotels list with optional search
  */
 export function useHotels(search?: string) {
-    return useQuery({
-        queryKey: ['hotels', { search }] as const,
-        queryFn: async () => {
-            const params = new URLSearchParams();
-            if (search) params.append('search', search);
+    const dispatch = useDispatch<AppDispatch>();
 
-            const response = await fetch(
-                `${config.apiUrl}/api/v1/hotels?${params.toString()}`,
-                {
-                    credentials: 'include',
-                }
-            );
+    const { data, status, error } = useSelector(
+        (state: RootState) => state.hotels.list
+    );
 
-            if (!response.ok) {
-                const errorData: ResponseEnvelope<null> = await response.json();
-                throw new Error(errorData.error?.message || 'Failed to fetch hotels');
-            }
+    const prevParams = useRef<string | undefined>(undefined);
 
-            const envelope: ResponseEnvelope<Hotel[]> = await response.json();
+    useEffect(() => {
+        const paramsKey = search ?? '';
+        if (paramsKey === prevParams.current) return;
+        prevParams.current = paramsKey;
+        dispatch({ type: FETCH_HOTELS, payload: { search } });
+    }, [dispatch, search]);
 
-            if (envelope.error) {
-                throw new Error(envelope.error.message);
-            }
-
-            return envelope.data || [];
+    return {
+        data,
+        isLoading: status === 'loading',
+        isPending: status === 'loading',
+        isError: status === 'failed',
+        isSuccess: status === 'succeeded',
+        error: error ? new Error(error) : null,
+        refetch: () => {
+            dispatch({ type: FETCH_HOTELS, payload: { search } });
         },
-    });
+    };
 }

@@ -1,43 +1,39 @@
-import { useQuery } from '@tanstack/react-query';
-import type { Hotel, RoomType, ActivityType, ResponseEnvelope } from '@repo/shared';
-import { config } from '@/lib/config';
+import { useEffect, useRef } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import type { RootState, AppDispatch } from '@/lib/store';
+import { FETCH_HOTEL } from '@/lib/sagas/hotels/hotelsSaga';
 
-export interface HotelDetail extends Hotel {
-    roomTypes: RoomType[];
-    activityTypes: ActivityType[];
-    totalRooms: number;
-    totalActivities: number;
-}
+export type { HotelDetail } from '@/lib/reducers/hotels/hotelsSlice';
 
 /**
- * TanStack Query hook for fetching a single hotel with room types and activities
+ * Redux Saga hook for single hotel with room types and activities
  */
 export function useHotel(hotelId: string | undefined) {
-    return useQuery({
-        queryKey: ['hotel', hotelId] as const,
-        queryFn: async () => {
-            if (!hotelId) throw new Error('Hotel ID is required');
+    const dispatch = useDispatch<AppDispatch>();
 
-            const response = await fetch(
-                `${config.apiUrl}/api/v1/hotels/${hotelId}`,
-                {
-                    credentials: 'include',
-                }
-            );
+    const { data, status, error } = useSelector(
+        (state: RootState) => state.hotels.detail
+    );
 
-            if (!response.ok) {
-                const errorData: ResponseEnvelope<null> = await response.json();
-                throw new Error(errorData.error?.message || 'Failed to fetch hotel');
+    const prevHotelId = useRef<string | undefined>(undefined);
+
+    useEffect(() => {
+        if (!hotelId || hotelId === prevHotelId.current) return;
+        prevHotelId.current = hotelId;
+        dispatch({ type: FETCH_HOTEL, payload: { hotelId } });
+    }, [dispatch, hotelId]);
+
+    return {
+        data,
+        isLoading: status === 'loading',
+        isPending: status === 'loading',
+        isError: status === 'failed',
+        isSuccess: status === 'succeeded',
+        error: error ? new Error(error) : null,
+        refetch: () => {
+            if (hotelId) {
+                dispatch({ type: FETCH_HOTEL, payload: { hotelId } });
             }
-
-            const envelope: ResponseEnvelope<HotelDetail> = await response.json();
-
-            if (envelope.error) {
-                throw new Error(envelope.error.message);
-            }
-
-            return envelope.data;
         },
-        enabled: !!hotelId,
-    });
+    };
 }

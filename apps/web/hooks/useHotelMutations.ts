@@ -1,7 +1,23 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { Hotel, RoomType, ActivityType, ResponseEnvelope } from '@repo/shared';
-import { config } from '@/lib/config';
-import { toast } from 'sonner';
+import { useCallback } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import type { RootState, AppDispatch } from '@/lib/store';
+import type { Hotel, RoomType, ActivityType } from '@repo/shared';
+import {
+    CREATE_HOTEL,
+    UPDATE_HOTEL,
+    DELETE_HOTEL,
+    CREATE_ROOM_TYPE,
+    UPDATE_ROOM_TYPE,
+    DELETE_ROOM_TYPE,
+    CREATE_ACTIVITY_TYPE,
+    UPDATE_ACTIVITY_TYPE,
+    DELETE_ACTIVITY_TYPE,
+} from '@/lib/sagas/hotels/hotelsSaga';
+import { hotelsActions } from '@/lib/reducers/hotels/hotelsSlice';
+
+// ============================================================================
+// Input Types
+// ============================================================================
 
 export interface CreateHotelInput {
     name: string;
@@ -48,257 +64,247 @@ export interface UpdateActivityTypeInput extends Partial<Omit<CreateActivityType
     hotelId: string;
 }
 
+// ============================================================================
+// Hook
+// ============================================================================
+
 /**
- * Hook for hotel CRUD mutations
+ * Redux Saga hook for hotel, room type, and activity type CRUD mutations
  */
 export function useHotelMutations() {
-    const queryClient = useQueryClient();
+    const dispatch = useDispatch<AppDispatch>();
 
-    const createHotel = useMutation({
-        mutationFn: async (input: CreateHotelInput) => {
-            const response = await fetch(`${config.apiUrl}/api/v1/hotels`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-                body: JSON.stringify(input),
-            });
+    const createHotelStatus = useSelector((state: RootState) => state.hotels.createHotelStatus);
+    const updateHotelStatus = useSelector((state: RootState) => state.hotels.updateHotelStatus);
+    const deleteHotelStatus = useSelector((state: RootState) => state.hotels.deleteHotelStatus);
+    const createRoomTypeStatus = useSelector((state: RootState) => state.hotels.createRoomTypeStatus);
+    const updateRoomTypeStatus = useSelector((state: RootState) => state.hotels.updateRoomTypeStatus);
+    const deleteRoomTypeStatus = useSelector((state: RootState) => state.hotels.deleteRoomTypeStatus);
+    const createActivityTypeStatus = useSelector((state: RootState) => state.hotels.createActivityTypeStatus);
+    const updateActivityTypeStatus = useSelector((state: RootState) => state.hotels.updateActivityTypeStatus);
+    const deleteActivityTypeStatus = useSelector((state: RootState) => state.hotels.deleteActivityTypeStatus);
 
-            if (!response.ok) {
-                const errorData: ResponseEnvelope<null> = await response.json();
-                throw new Error(errorData.error?.message || 'Failed to create hotel');
-            }
+    // ----- Hotel CRUD -----
 
-            const envelope: ResponseEnvelope<Hotel> = await response.json();
-            return envelope.data!;
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['hotels'] });
-            toast.success('Hotel created successfully');
-        },
-        onError: (error: Error) => {
-            toast.error(error.message);
-        },
-    });
+    const createHotel = {
+        mutate: useCallback(
+            (input: CreateHotelInput) => {
+                dispatch({ type: CREATE_HOTEL, payload: { input } });
+            },
+            [dispatch]
+        ),
+        mutateAsync: useCallback(
+            (input: CreateHotelInput): Promise<Hotel> => {
+                return new Promise((resolve, reject) => {
+                    dispatch({
+                        type: CREATE_HOTEL,
+                        payload: { input, resolve, reject },
+                    });
+                });
+            },
+            [dispatch]
+        ),
+        isPending: createHotelStatus === 'loading',
+        isError: createHotelStatus === 'failed',
+        isSuccess: createHotelStatus === 'succeeded',
+        reset: () => dispatch(hotelsActions.resetMutationStatus()),
+    };
 
-    const updateHotel = useMutation({
-        mutationFn: async ({ id, ...input }: UpdateHotelInput) => {
-            const response = await fetch(`${config.apiUrl}/api/v1/hotels/${id}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-                body: JSON.stringify(input),
-            });
+    const updateHotel = {
+        mutate: useCallback(
+            ({ id, ...input }: UpdateHotelInput) => {
+                dispatch({ type: UPDATE_HOTEL, payload: { id, input } });
+            },
+            [dispatch]
+        ),
+        mutateAsync: useCallback(
+            ({ id, ...input }: UpdateHotelInput): Promise<Hotel> => {
+                return new Promise((resolve, reject) => {
+                    dispatch({
+                        type: UPDATE_HOTEL,
+                        payload: { id, input, resolve, reject },
+                    });
+                });
+            },
+            [dispatch]
+        ),
+        isPending: updateHotelStatus === 'loading',
+        isError: updateHotelStatus === 'failed',
+        isSuccess: updateHotelStatus === 'succeeded',
+        reset: () => dispatch(hotelsActions.resetMutationStatus()),
+    };
 
-            if (!response.ok) {
-                const errorData: ResponseEnvelope<null> = await response.json();
-                throw new Error(errorData.error?.message || 'Failed to update hotel');
-            }
+    const deleteHotel = {
+        mutate: useCallback(
+            (hotelId: string) => {
+                dispatch({ type: DELETE_HOTEL, payload: { hotelId } });
+            },
+            [dispatch]
+        ),
+        mutateAsync: useCallback(
+            (hotelId: string): Promise<string> => {
+                return new Promise((resolve, reject) => {
+                    dispatch({
+                        type: DELETE_HOTEL,
+                        payload: { hotelId, resolve, reject },
+                    });
+                });
+            },
+            [dispatch]
+        ),
+        isPending: deleteHotelStatus === 'loading',
+        isError: deleteHotelStatus === 'failed',
+        isSuccess: deleteHotelStatus === 'succeeded',
+        reset: () => dispatch(hotelsActions.resetMutationStatus()),
+    };
 
-            const envelope: ResponseEnvelope<Hotel> = await response.json();
-            return envelope.data!;
-        },
-        onSuccess: (_, variables) => {
-            queryClient.invalidateQueries({ queryKey: ['hotels'] });
-            queryClient.invalidateQueries({ queryKey: ['hotel', variables.id] });
-            toast.success('Hotel updated successfully');
-        },
-        onError: (error: Error) => {
-            toast.error(error.message);
-        },
-    });
+    // ----- Room Type CRUD -----
 
-    const deleteHotel = useMutation({
-        mutationFn: async (hotelId: string) => {
-            const response = await fetch(`${config.apiUrl}/api/v1/hotels/${hotelId}`, {
-                method: 'DELETE',
-                credentials: 'include',
-            });
+    const createRoomType = {
+        mutate: useCallback(
+            ({ hotelId, ...input }: CreateRoomTypeInput) => {
+                dispatch({ type: CREATE_ROOM_TYPE, payload: { hotelId, input } });
+            },
+            [dispatch]
+        ),
+        mutateAsync: useCallback(
+            ({ hotelId, ...input }: CreateRoomTypeInput): Promise<RoomType> => {
+                return new Promise((resolve, reject) => {
+                    dispatch({
+                        type: CREATE_ROOM_TYPE,
+                        payload: { hotelId, input, resolve, reject },
+                    });
+                });
+            },
+            [dispatch]
+        ),
+        isPending: createRoomTypeStatus === 'loading',
+        isError: createRoomTypeStatus === 'failed',
+        isSuccess: createRoomTypeStatus === 'succeeded',
+        reset: () => dispatch(hotelsActions.resetMutationStatus()),
+    };
 
-            if (!response.ok) {
-                const errorData: ResponseEnvelope<null> = await response.json();
-                throw new Error(errorData.error?.message || 'Failed to delete hotel');
-            }
+    const updateRoomType = {
+        mutate: useCallback(
+            ({ id, hotelId, ...input }: UpdateRoomTypeInput) => {
+                dispatch({ type: UPDATE_ROOM_TYPE, payload: { id, hotelId, input } });
+            },
+            [dispatch]
+        ),
+        mutateAsync: useCallback(
+            ({ id, hotelId, ...input }: UpdateRoomTypeInput): Promise<RoomType> => {
+                return new Promise((resolve, reject) => {
+                    dispatch({
+                        type: UPDATE_ROOM_TYPE,
+                        payload: { id, hotelId, input, resolve, reject },
+                    });
+                });
+            },
+            [dispatch]
+        ),
+        isPending: updateRoomTypeStatus === 'loading',
+        isError: updateRoomTypeStatus === 'failed',
+        isSuccess: updateRoomTypeStatus === 'succeeded',
+        reset: () => dispatch(hotelsActions.resetMutationStatus()),
+    };
 
-            return hotelId;
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['hotels'] });
-            toast.success('Hotel deleted successfully');
-        },
-        onError: (error: Error) => {
-            toast.error(error.message);
-        },
-    });
+    const deleteRoomType = {
+        mutate: useCallback(
+            ({ id, hotelId }: { id: string; hotelId: string }) => {
+                dispatch({ type: DELETE_ROOM_TYPE, payload: { id, hotelId } });
+            },
+            [dispatch]
+        ),
+        mutateAsync: useCallback(
+            ({ id, hotelId }: { id: string; hotelId: string }): Promise<{ id: string; hotelId: string }> => {
+                return new Promise((resolve, reject) => {
+                    dispatch({
+                        type: DELETE_ROOM_TYPE,
+                        payload: { id, hotelId, resolve, reject },
+                    });
+                });
+            },
+            [dispatch]
+        ),
+        isPending: deleteRoomTypeStatus === 'loading',
+        isError: deleteRoomTypeStatus === 'failed',
+        isSuccess: deleteRoomTypeStatus === 'succeeded',
+        reset: () => dispatch(hotelsActions.resetMutationStatus()),
+    };
 
-    // Room Type mutations
-    const createRoomType = useMutation({
-        mutationFn: async (input: CreateRoomTypeInput) => {
-            const response = await fetch(
-                `${config.apiUrl}/api/v1/hotels/${input.hotelId}/room-types`,
-                {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify(input),
-                }
-            );
+    // ----- Activity Type CRUD -----
 
-            if (!response.ok) {
-                const errorData: ResponseEnvelope<null> = await response.json();
-                throw new Error(errorData.error?.message || 'Failed to create room type');
-            }
+    const createActivityType = {
+        mutate: useCallback(
+            ({ hotelId, ...input }: CreateActivityTypeInput) => {
+                dispatch({ type: CREATE_ACTIVITY_TYPE, payload: { hotelId, input } });
+            },
+            [dispatch]
+        ),
+        mutateAsync: useCallback(
+            ({ hotelId, ...input }: CreateActivityTypeInput): Promise<ActivityType> => {
+                return new Promise((resolve, reject) => {
+                    dispatch({
+                        type: CREATE_ACTIVITY_TYPE,
+                        payload: { hotelId, input, resolve, reject },
+                    });
+                });
+            },
+            [dispatch]
+        ),
+        isPending: createActivityTypeStatus === 'loading',
+        isError: createActivityTypeStatus === 'failed',
+        isSuccess: createActivityTypeStatus === 'succeeded',
+        reset: () => dispatch(hotelsActions.resetMutationStatus()),
+    };
 
-            const envelope: ResponseEnvelope<RoomType> = await response.json();
-            return envelope.data!;
-        },
-        onSuccess: (_, variables) => {
-            queryClient.invalidateQueries({ queryKey: ['hotel', variables.hotelId] });
-            toast.success('Room type created successfully');
-        },
-        onError: (error: Error) => {
-            toast.error(error.message);
-        },
-    });
+    const updateActivityType = {
+        mutate: useCallback(
+            ({ id, hotelId, ...input }: UpdateActivityTypeInput) => {
+                dispatch({ type: UPDATE_ACTIVITY_TYPE, payload: { id, hotelId, input } });
+            },
+            [dispatch]
+        ),
+        mutateAsync: useCallback(
+            ({ id, hotelId, ...input }: UpdateActivityTypeInput): Promise<ActivityType> => {
+                return new Promise((resolve, reject) => {
+                    dispatch({
+                        type: UPDATE_ACTIVITY_TYPE,
+                        payload: { id, hotelId, input, resolve, reject },
+                    });
+                });
+            },
+            [dispatch]
+        ),
+        isPending: updateActivityTypeStatus === 'loading',
+        isError: updateActivityTypeStatus === 'failed',
+        isSuccess: updateActivityTypeStatus === 'succeeded',
+        reset: () => dispatch(hotelsActions.resetMutationStatus()),
+    };
 
-    const updateRoomType = useMutation({
-        mutationFn: async ({ id, hotelId, ...input }: UpdateRoomTypeInput) => {
-            const response = await fetch(
-                `${config.apiUrl}/api/v1/hotels/${hotelId}/room-types/${id}`,
-                {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify(input),
-                }
-            );
-
-            if (!response.ok) {
-                const errorData: ResponseEnvelope<null> = await response.json();
-                throw new Error(errorData.error?.message || 'Failed to update room type');
-            }
-
-            const envelope: ResponseEnvelope<RoomType> = await response.json();
-            return envelope.data!;
-        },
-        onSuccess: (_, variables) => {
-            queryClient.invalidateQueries({ queryKey: ['hotel', variables.hotelId] });
-            toast.success('Room type updated successfully');
-        },
-        onError: (error: Error) => {
-            toast.error(error.message);
-        },
-    });
-
-    const deleteRoomType = useMutation({
-        mutationFn: async ({ id, hotelId }: { id: string; hotelId: string }) => {
-            const response = await fetch(
-                `${config.apiUrl}/api/v1/hotels/${hotelId}/room-types/${id}`,
-                {
-                    method: 'DELETE',
-                    credentials: 'include',
-                }
-            );
-
-            if (!response.ok) {
-                const errorData: ResponseEnvelope<null> = await response.json();
-                throw new Error(errorData.error?.message || 'Failed to delete room type');
-            }
-
-            return { id, hotelId };
-        },
-        onSuccess: (_, variables) => {
-            queryClient.invalidateQueries({ queryKey: ['hotel', variables.hotelId] });
-            toast.success('Room type deleted successfully');
-        },
-        onError: (error: Error) => {
-            toast.error(error.message);
-        },
-    });
-
-    // Activity Type mutations
-    const createActivityType = useMutation({
-        mutationFn: async (input: CreateActivityTypeInput) => {
-            const response = await fetch(
-                `${config.apiUrl}/api/v1/hotels/${input.hotelId}/activity-types`,
-                {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify(input),
-                }
-            );
-
-            if (!response.ok) {
-                const errorData: ResponseEnvelope<null> = await response.json();
-                throw new Error(errorData.error?.message || 'Failed to create activity type');
-            }
-
-            const envelope: ResponseEnvelope<ActivityType> = await response.json();
-            return envelope.data!;
-        },
-        onSuccess: (_, variables) => {
-            queryClient.invalidateQueries({ queryKey: ['hotel', variables.hotelId] });
-            toast.success('Activity type created successfully');
-        },
-        onError: (error: Error) => {
-            toast.error(error.message);
-        },
-    });
-
-    const updateActivityType = useMutation({
-        mutationFn: async ({ id, hotelId, ...input }: UpdateActivityTypeInput) => {
-            const response = await fetch(
-                `${config.apiUrl}/api/v1/hotels/${hotelId}/activity-types/${id}`,
-                {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify(input),
-                }
-            );
-
-            if (!response.ok) {
-                const errorData: ResponseEnvelope<null> = await response.json();
-                throw new Error(errorData.error?.message || 'Failed to update activity type');
-            }
-
-            const envelope: ResponseEnvelope<ActivityType> = await response.json();
-            return envelope.data!;
-        },
-        onSuccess: (_, variables) => {
-            queryClient.invalidateQueries({ queryKey: ['hotel', variables.hotelId] });
-            toast.success('Activity type updated successfully');
-        },
-        onError: (error: Error) => {
-            toast.error(error.message);
-        },
-    });
-
-    const deleteActivityType = useMutation({
-        mutationFn: async ({ id, hotelId }: { id: string; hotelId: string }) => {
-            const response = await fetch(
-                `${config.apiUrl}/api/v1/hotels/${hotelId}/activity-types/${id}`,
-                {
-                    method: 'DELETE',
-                    credentials: 'include',
-                }
-            );
-
-            if (!response.ok) {
-                const errorData: ResponseEnvelope<null> = await response.json();
-                throw new Error(errorData.error?.message || 'Failed to delete activity type');
-            }
-
-            return { id, hotelId };
-        },
-        onSuccess: (_, variables) => {
-            queryClient.invalidateQueries({ queryKey: ['hotel', variables.hotelId] });
-            toast.success('Activity type deleted successfully');
-        },
-        onError: (error: Error) => {
-            toast.error(error.message);
-        },
-    });
+    const deleteActivityType = {
+        mutate: useCallback(
+            ({ id, hotelId }: { id: string; hotelId: string }) => {
+                dispatch({ type: DELETE_ACTIVITY_TYPE, payload: { id, hotelId } });
+            },
+            [dispatch]
+        ),
+        mutateAsync: useCallback(
+            ({ id, hotelId }: { id: string; hotelId: string }): Promise<{ id: string; hotelId: string }> => {
+                return new Promise((resolve, reject) => {
+                    dispatch({
+                        type: DELETE_ACTIVITY_TYPE,
+                        payload: { id, hotelId, resolve, reject },
+                    });
+                });
+            },
+            [dispatch]
+        ),
+        isPending: deleteActivityTypeStatus === 'loading',
+        isError: deleteActivityTypeStatus === 'failed',
+        isSuccess: deleteActivityTypeStatus === 'succeeded',
+        reset: () => dispatch(hotelsActions.resetMutationStatus()),
+    };
 
     return {
         createHotel,
