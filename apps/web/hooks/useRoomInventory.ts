@@ -1,77 +1,92 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import type { RoomInventory, InventoryUpdate } from '@repo/shared';
-import { toast } from 'sonner';
+import { useEffect, useRef, useCallback } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import type { RootState, AppDispatch } from '@/lib/store';
+import type { InventoryUpdate } from '@repo/shared';
+import { FETCH_INVENTORY, UPDATE_INVENTORY } from '@/lib/sagas/inventory/inventorySaga';
+import { inventoryActions } from '@/lib/reducers/inventory/inventorySlice';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+export interface BulkInventoryUpdateInput {
+    hotelId: string;
+    updates: InventoryUpdate[];
+}
 
-// Fetch room inventory for a hotel
 export function useRoomInventory(
     hotelId: string | undefined,
     startDate?: string,
     endDate?: string,
     roomTypeId?: string
 ) {
-    return useQuery({
-        queryKey: ['roomInventory', hotelId, startDate, endDate, roomTypeId] as const,
-        queryFn: async () => {
-            const params = new URLSearchParams();
-            if (startDate) params.append('startDate', startDate);
-            if (endDate) params.append('endDate', endDate);
-            if (roomTypeId) params.append('roomTypeId', roomTypeId);
+    const dispatch = useDispatch<AppDispatch>();
 
-            const response = await fetch(
-                `${API_URL}/api/v1/hotels/${hotelId}/inventory?${params.toString()}`
-            );
-            if (!response.ok) {
-                throw new Error('Failed to fetch room inventory');
+    const { data, status, error } = useSelector(
+        (state: RootState) => state.inventory.list
+    );
+
+    const prevParams = useRef<string>('');
+
+    useEffect(() => {
+        if (!hotelId) return;
+        const paramsKey = JSON.stringify({ hotelId, startDate, endDate, roomTypeId });
+        if (paramsKey === prevParams.current) return;
+        prevParams.current = paramsKey;
+        dispatch({
+            type: FETCH_INVENTORY,
+            payload: { hotelId, startDate, endDate, roomTypeId },
+        });
+    }, [dispatch, hotelId, startDate, endDate, roomTypeId]);
+
+    return {
+        data,
+        isLoading: status === 'loading',
+        isPending: status === 'loading',
+        isError: status === 'failed',
+        isSuccess: status === 'succeeded',
+        error: error ? new Error(error) : null,
+        refetch: () => {
+            if (hotelId) {
+                dispatch({
+                    type: FETCH_INVENTORY,
+                    payload: { hotelId, startDate, endDate, roomTypeId },
+                });
             }
-            const json = await response.json();
-            return json.data as RoomInventory[];
         },
-        enabled: !!hotelId,
-    });
-}
-
-// Input type for bulk inventory update
-export interface BulkInventoryUpdateInput {
-    hotelId: string;
-    updates: InventoryUpdate[];
+    };
 }
 
 export function useInventoryMutations() {
-    const queryClient = useQueryClient();
+    const dispatch = useDispatch<AppDispatch>();
+    const updateStatus = useSelector((state: RootState) => state.inventory.updateStatus);
 
-    const updateInventory = useMutation({
-        mutationFn: async (input: BulkInventoryUpdateInput) => {
-            const { hotelId, updates } = input;
-            const response = await fetch(
-                `${API_URL}/api/v1/hotels/${hotelId}/inventory`,
-                {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(updates),
-                }
-            );
-            if (!response.ok) {
-                throw new Error('Failed to update inventory');
-            }
-            const json = await response.json();
-            return {
-                data: json.data as RoomInventory[],
-                updatedCount: json.meta.updatedCount as number,
-            };
+    const mutateAsync = useCallback(
+        (input: BulkInventoryUpdateInput): Promise<unknown> => {
+            return new Promise((resolve, reject) => {
+                dispatch({
+                    type: UPDATE_INVENTORY,
+                    payload: { ...input, resolve, reject },
+                });
+            });
         },
-        onSuccess: (result, variables) => {
-            queryClient.invalidateQueries({ queryKey: ['roomInventory', variables.hotelId] });
-            queryClient.invalidateQueries({ queryKey: ['availability'] });
-            toast.success(`${result.updatedCount} inventory records updated`);
+        [dispatch]
+    );
+
+    const mutate = useCallback(
+        (input: BulkInventoryUpdateInput) => {
+            dispatch({
+                type: UPDATE_INVENTORY,
+                payload: input,
+            });
         },
-        onError: (error: Error) => {
-            toast.error(error.message);
-        },
-    });
+        [dispatch]
+    );
 
     return {
-        updateInventory,
+        updateInventory: {
+            mutate,
+            mutateAsync,
+            isPending: updateStatus === 'loading',
+            isError: updateStatus === 'failed',
+            isSuccess: updateStatus === 'succeeded',
+            reset: () => dispatch(inventoryActions.resetMutationStatus()),
+        },
     };
 }
