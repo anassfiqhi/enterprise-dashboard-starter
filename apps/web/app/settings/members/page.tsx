@@ -119,6 +119,8 @@ function MembersTab() {
     const removeMember = useRemoveMember();
     const [pendingRemove, setPendingRemove] = useState<string | null>(null);
 
+    console.log(members);
+
     const { data: session } = useSession();
     const currentUserId = session?.user?.id;
 
@@ -220,7 +222,7 @@ function MembersTab() {
                                 ) : (
                                     <RoleBadge role={isAdmin ? "admin" : member.role === "manager" ? "manager" : "staff"} />
                                 )} */}
-                                <RoleBadge role={member.user.role === "admin" ? "admin" : member.role === "manager" ? "manager" : "staff"} />
+                                <RoleBadge role={member.user?.role === "admin" ? "admin" : member.role === "manager" ? "manager" : "staff"} />
                             </TableCell>
                             {canDeleteMembers && (
                                 <TableCell>

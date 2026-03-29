@@ -53,12 +53,14 @@ async function fetchMembersList(organizationId: string): Promise<MemberWithUserW
             const user = await authClient.admin.getUser({
                 query: { id: member.userId },
             });
+            console.log(user);
             return {
                 ...member,
                 user: user.data as UserWithRole,
             };
         }),
     );
+    console.log(members);
     // better-auth returns Date objects for createdAt/updatedAt — serialize for Redux
     return JSON.parse(JSON.stringify(members)) as MemberWithUserWithRole[];
 }

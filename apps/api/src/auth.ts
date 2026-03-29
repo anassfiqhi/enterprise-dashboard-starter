@@ -48,6 +48,7 @@ export const auth = betterAuth({
         jwt(),
         adminPlugin({
             defaultRole: "user",
+            adminRoles: ["admin"],
         }),
         organization({
             ac: ac as AccessControl,

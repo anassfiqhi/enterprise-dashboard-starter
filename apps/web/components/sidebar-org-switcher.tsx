@@ -136,21 +136,29 @@ export function SidebarOrgSwitcher() {
             <DropdownMenuLabel className="text-xs text-muted-foreground">
               Hotels
             </DropdownMenuLabel>
-            {hotels.map((hotel) => (
-              <DropdownMenuItem
-                key={hotel.id}
-                onClick={() => handleHotelChange(hotel)}
-                className="gap-2 p-2 cursor-pointer"
-              >
-                <div className="flex size-6 items-center justify-center rounded-sm border">
-                  <Building2 className="size-4 shrink-0" />
+            {isPendingOrganizations ? (
+              Array.from({ length: 2 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-2 p-2">
+                  <Skeleton className="size-6 rounded-sm" />
+                  <Skeleton className="h-4 w-32" />
                 </div>
-                <span className="truncate">{hotel.name}</span>
-                {hotel.id === activeHotel.id && (
-                  <Badge variant="secondary" className="ml-auto">Active</Badge>
-                )}
-              </DropdownMenuItem>
-            ))}
+              ))
+            ) : (
+              hotels.map((hotel) => (
+                <DropdownMenuItem
+                  key={hotel.id}
+                  onClick={() => handleHotelChange(hotel)}
+                  className="gap-2 p-2 cursor-pointer"
+                >
+                  <div className="flex size-6 items-center justify-center rounded-sm border">
+                    <Building2 className="size-4 shrink-0" />
+                  </div>
+                  <span className="truncate">{hotel.name}</span>
+                  {hotel.id === activeHotel.id && (
+                    <Badge variant="secondary" className="ml-auto">Active</Badge>
+                  )}
+                </DropdownMenuItem>
+              )))}
             {isAdmin && <DropdownMenuSeparator />}
             {isAdmin && <DropdownMenuItem className="gap-2 p-2 cursor-pointer">
               <div className="flex size-6 items-center justify-center rounded-md border bg-background">

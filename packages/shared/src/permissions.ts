@@ -23,9 +23,6 @@ const statement = {
   // Guest & Reservations
   guests: ["read", "create", "update", "delete"],
   reservations: ["read", "create", "update", "cancel", "checkin", "checkout"],
-  // Team management
-  member: ["read", "create", "update", "delete"],
-  invitation: ["read", "create", "delete"],
   // Admin features
   analytics: ["read"],
   auditLogs: ["read"],
@@ -52,8 +49,6 @@ export const manager = ac.newRole({
   promoCodes: ["read", "create", "update", "delete"],
   guests: ["read", "create", "update", "delete"],
   reservations: ["read", "create", "update", "cancel", "checkin", "checkout"],
-  member: ["read", "create", "update", "delete"],
-  invitation: ["read", "create", "delete"],
   analytics: ["read"],
   auditLogs: ["read"],
 });
@@ -75,8 +70,6 @@ export const staff = ac.newRole({
   promoCodes: ["read"],
   guests: ["read", "create"], // Can view and create guests
   reservations: ["read", "create", "checkin", "checkout"], // No update, cancel
-  member: ["read"], // Can view team
-  invitation: [], // Staff cannot manage invitations
   analytics: [], // Staff cannot access analytics
   auditLogs: [], // Staff cannot access audit logs
 });
