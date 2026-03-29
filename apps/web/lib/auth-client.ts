@@ -2,18 +2,24 @@ import { createAuthClient } from "better-auth/react"
 import { adminClient, inferOrgAdditionalFields, organizationClient, jwtClient } from "better-auth/client/plugins"
 import type { AccessControl } from "better-auth/plugins/access"
 import { config } from "./config"
-import { ac, manager, staff } from "@repo/shared"
+import { organizationPluginAccessControl, managerRole, staffRole, adminPluginAccessControl, adminRole, userRole } from "@repo/shared"
 
 
 export const authClient = createAuthClient({
     baseURL: config.authUrl,
     plugins: [
-        adminClient(),
-        organizationClient({
-            ac: ac as AccessControl,
+        adminClient({
+            ac: adminPluginAccessControl as AccessControl,
             roles: {
-                manager,
-                staff,
+                admin: adminRole,
+                user: userRole,
+            },
+        }),
+        organizationClient({
+            ac: organizationPluginAccessControl as AccessControl,
+            roles: {
+                manager: managerRole,
+                staff: staffRole,
             },
             schema: inferOrgAdditionalFields({
                 organization: {

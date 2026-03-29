@@ -181,7 +181,7 @@ export type Metrics = z.infer<typeof MetricsSchema>;
 // Organization Access Control (Better Auth Plugin)
 // ============================================================================
 
-export { ac, manager, staff, statement } from './permissions';
+export { organizationPluginAccessControl, managerRole, staffRole, organizationPluginStatement, adminPluginAccessControl, adminRole, userRole, adminPluginStatement } from './permissions';
 
 // ============================================================================
 // Booking Types (from booking-engine integration)

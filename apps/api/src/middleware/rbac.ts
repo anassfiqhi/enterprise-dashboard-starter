@@ -1,6 +1,6 @@
 import type { Context, Next } from 'hono';
 import { auth, type User, type Session, type Member } from '../auth';
-import { createErrorEnvelope, manager, staff } from '@repo/shared';
+import { createErrorEnvelope, managerRole, staffRole } from '@repo/shared';
 
 export type AuthVariables = {
     user: User;
@@ -86,8 +86,8 @@ export function requirePermission(resourceAction: ResourceAction) {
 
         // Get role permissions based on user's role
         const rolePermissions = activeMember.role === 'manager'
-            ? manager.statements
-            : staff.statements;
+            ? managerRole.statements
+            : staffRole.statements;
 
 
         for (const [resource, actions] of Object.entries(resourceAction)) {

@@ -119,8 +119,6 @@ function MembersTab() {
     const removeMember = useRemoveMember();
     const [pendingRemove, setPendingRemove] = useState<string | null>(null);
 
-    console.log(members);
-
     const { data: session } = useSession();
     const currentUserId = session?.user?.id;
 
@@ -437,16 +435,10 @@ function InvitationsTab() {
 export default function MembersPage() {
     const { canAny } = usePermissions();
 
-    const canViewMembers = canAny([
-        { resource: "member", action: "update" },
-        { resource: "member", action: "delete" },
-    ]);
     const canViewInvitations = canAny([
         { resource: "invitation", action: "create" },
         { resource: "invitation", action: "delete" },
     ]);
-
-    const defaultTab = canViewMembers ? "members" : "invitations";
 
     return (
         <Card>
@@ -457,14 +449,12 @@ export default function MembersPage() {
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                <Tabs defaultValue={defaultTab}>
+                <Tabs defaultValue="members">
                     <TabsList>
-                        {canViewMembers && (
-                            <TabsTrigger value="members">
-                                <Users className="h-4 w-4 mr-2" />
-                                Members
-                            </TabsTrigger>
-                        )}
+                        <TabsTrigger value="members">
+                            <Users className="h-4 w-4 mr-2" />
+                            Members
+                        </TabsTrigger>
                         {canViewInvitations && (
                             <TabsTrigger value="invitations">
                                 <Mail className="h-4 w-4 mr-2" />
@@ -472,11 +462,9 @@ export default function MembersPage() {
                             </TabsTrigger>
                         )}
                     </TabsList>
-                    {canViewMembers && (
-                        <TabsContent value="members">
-                            <MembersTab />
-                        </TabsContent>
-                    )}
+                    <TabsContent value="members">
+                        <MembersTab />
+                    </TabsContent>
                     {canViewInvitations && (
                         <TabsContent value="invitations">
                             <InvitationsTab />

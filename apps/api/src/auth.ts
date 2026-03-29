@@ -1,10 +1,10 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { organization, admin as adminPlugin, bearer, jwt } from "better-auth/plugins";
+import { organization as organizationPlugin, admin as adminPlugin, bearer, jwt } from "better-auth/plugins";
 import type { AccessControl } from "better-auth/plugins/access";
 import { db } from "./db/index";
 import * as schema from "./db/schema";
-import { ac, manager, staff } from "@repo/shared";
+import { organizationPluginAccessControl, managerRole, staffRole, adminPluginAccessControl, adminRole, userRole } from "@repo/shared";
 import "dotenv/config";
 
 if (!process.env.DATABASE_URL) {
@@ -47,14 +47,18 @@ export const auth = betterAuth({
         bearer(),
         jwt(),
         adminPlugin({
-            defaultRole: "user",
-            adminRoles: ["admin"],
-        }),
-        organization({
-            ac: ac as AccessControl,
+            ac: adminPluginAccessControl as AccessControl,
             roles: {
-                manager,
-                staff,
+                admin: adminRole,
+                user: userRole,
+            },
+            defaultRole: "user",
+        }),
+        organizationPlugin({
+            ac: organizationPluginAccessControl as AccessControl,
+            roles: {
+                manager: managerRole,
+                staff: staffRole,
             },
             allowUserToCreateOrganization: async (user) => {
                 if (user.role === "admin") return true;

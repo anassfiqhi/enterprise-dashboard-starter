@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { authClient } from '@/lib/auth-client';
-import { manager, staff } from '@repo/shared';
+import { managerRole, staffRole } from '@repo/shared';
 import type { OrganizationRole, OrganizationPermissions } from '@repo/shared';
 
 /**
@@ -27,9 +27,9 @@ export function usePermissions() {
 
     switch (activeMember.role) {
       case 'manager':
-        return manager.statements as OrganizationPermissions;
+        return managerRole.statements as OrganizationPermissions;
       case 'staff':
-        return staff.statements as OrganizationPermissions;
+        return staffRole.statements as OrganizationPermissions;
       default:
         return null;
     }
