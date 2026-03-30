@@ -1,6 +1,6 @@
 import { createAccessControl } from "better-auth/plugins/access";
 import { defaultStatements as adminDefaultStatements, adminAc as adminAcAdminPlugin, userAc as userAcAdminPlugin } from "better-auth/plugins/admin/access";
-import { adminAc, memberAc } from "better-auth/plugins/organization/access";
+import { defaultStatements as organizationDefaultStatements, adminAc, memberAc } from "better-auth/plugins/organization/access";
 
 // =============================================================================
 // Admin Plugin Access Control (global user management)
@@ -41,6 +41,7 @@ export { adminPluginStatement };
  * - Staff: Limited operational access (front desk)
  */
 const organizationPluginStatement = {
+  ...organizationDefaultStatements,
   // Hotel configuration
   hotel: ["read", "update"],
   roomTypes: ["read", "create", "update", "delete"],
@@ -81,6 +82,11 @@ export const managerRole = organizationPluginAccessControl.newRole({
   reservations: ["read", "create", "update", "cancel", "checkin", "checkout"],
   analytics: ["read"],
   auditLogs: ["read"],
+  organization: [],
+  member: ["update"],
+  invitation: ["create", "cancel"],
+  team: ["update"],
+  ac: ["read"],
 });
 
 /**
@@ -102,6 +108,11 @@ export const staffRole = organizationPluginAccessControl.newRole({
   reservations: ["read", "create", "checkin", "checkout"], // No update, cancel
   analytics: [], // Staff cannot access analytics
   auditLogs: [], // Staff cannot access audit logs
+  organization: [],
+  member: [],
+  invitation: [],
+  team: [],
+  ac: [],
 });
 
 // Export organizationPluginStatement for client-side permission checking
