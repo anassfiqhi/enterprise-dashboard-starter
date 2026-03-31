@@ -4,6 +4,7 @@ import type { Hotel, RoomType, ActivityType } from '@repo/shared';
 import { toast } from 'sonner';
 import { hotelsActions } from '@/lib/reducers/hotels/hotelsSlice';
 import type { HotelDetail } from '@/lib/reducers/hotels/hotelsSlice';
+import { authClient } from '@/lib/auth-client';
 import { apiRequest } from '@/lib/api/apiClient';
 
 // ============================================================================
@@ -25,10 +26,6 @@ export const DELETE_ACTIVITY_TYPE = 'hotels/saga/deleteActivityType';
 // ============================================================================
 // Payload Interfaces
 // ============================================================================
-
-interface FetchHotelsPayload {
-    search?: string;
-}
 
 interface FetchHotelPayload {
     hotelId: string;
@@ -134,44 +131,105 @@ interface DeleteActivityTypePayload {
 }
 
 // ============================================================================
+// Helpers
+// ============================================================================
+
+function generateSlug(name: string): string {
+    return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+}
+
+function orgToHotel(org: Record<string, unknown>): Hotel {
+    let address: Hotel['address'] | undefined;
+    if (org.address && typeof org.address === 'string') {
+        try { address = JSON.parse(org.address); } catch { /* ignore */ }
+    }
+    return {
+        id: org.id as string,
+        name: org.name as string,
+        timezone: (org.timezone as string) || 'UTC',
+        address,
+    };
+}
+
+// ============================================================================
 // Async Functions (extracted to avoid TS yield type issues)
 // ============================================================================
 
-async function fetchHotelsList(search?: string): Promise<Hotel[]> {
-    const params: Record<string, string | number | undefined> = {};
-    if (search) {
-        params.search = search;
+async function fetchHotelsList(): Promise<Hotel[]> {
+    const response = await authClient.organization.list();
+    if (response.error) {
+        throw new Error(response.error.message || 'Failed to fetch hotels');
     }
-    return apiRequest<Hotel[]>('/api/v1/hotels', { params });
+    const hotels = (response.data ?? []).map(orgToHotel);
+    return JSON.parse(JSON.stringify(hotels)) as Hotel[];
 }
 
 async function fetchHotelDetail(hotelId: string): Promise<HotelDetail> {
-    return apiRequest<HotelDetail>(`/api/v1/hotels/${hotelId}`);
+    const response = await authClient.organization.getFullOrganization({
+        query: { organizationId: hotelId },
+    });
+    if (response.error) {
+        throw new Error(response.error.message || 'Failed to fetch hotel');
+    }
+    const org = response.data;
+    const hotel = orgToHotel(org as unknown as Record<string, unknown>);
+    const detail: HotelDetail = {
+        ...hotel,
+        roomTypes: [],
+        activityTypes: [],
+        totalRooms: 0,
+        totalActivities: 0,
+    };
+    return JSON.parse(JSON.stringify(detail)) as HotelDetail;
 }
 
 async function createHotelApi(
     input: CreateHotelPayload['input'],
 ): Promise<Hotel> {
-    return apiRequest<Hotel>('/api/v1/hotels', {
-        method: 'POST',
-        body: input,
+    const response = await authClient.organization.create({
+        name: input.name,
+        slug: generateSlug(input.name),
+        timezone: input.timezone,
+        checkInTime: '15:00',
+        checkOutTime: '11:00',
+        address: input.address ? JSON.stringify(input.address) : '',
+        phone: '',
+        contactEmail: '',
+        currency: 'USD',
     });
+    if (response.error) {
+        throw new Error(response.error.message || 'Failed to create hotel');
+    }
+    const hotel = orgToHotel(response.data as unknown as Record<string, unknown>);
+    return JSON.parse(JSON.stringify(hotel)) as Hotel;
 }
 
 async function updateHotelApi(
     id: string,
     input: UpdateHotelPayload['input'],
 ): Promise<Hotel> {
-    return apiRequest<Hotel>(`/api/v1/hotels/${id}`, {
-        method: 'PATCH',
-        body: input,
+    const data: Record<string, unknown> = {};
+    if (input.name !== undefined) data.name = input.name;
+    if (input.timezone !== undefined) data.timezone = input.timezone;
+    if (input.address !== undefined) data.address = JSON.stringify(input.address);
+    const response = await authClient.organization.update({
+        organizationId: id,
+        data: data as { name?: string },
     });
+    if (response.error) {
+        throw new Error(response.error.message || 'Failed to update hotel');
+    }
+    const hotel = orgToHotel(response.data as unknown as Record<string, unknown>);
+    return JSON.parse(JSON.stringify(hotel)) as Hotel;
 }
 
 async function deleteHotelApi(hotelId: string): Promise<void> {
-    return apiRequest<void>(`/api/v1/hotels/${hotelId}`, {
-        method: 'DELETE',
+    const response = await authClient.organization.delete({
+        organizationId: hotelId,
     });
+    if (response.error) {
+        throw new Error(response.error.message || 'Failed to delete hotel');
+    }
 }
 
 async function createRoomTypeApi(
@@ -238,11 +296,10 @@ async function deleteActivityTypeApi(
 // Workers
 // ============================================================================
 
-function* fetchHotelsWorker(action: PayloadAction<FetchHotelsPayload>) {
-    const { search } = action.payload;
+function* fetchHotelsWorker() {
     try {
         yield put(hotelsActions.fetchHotelsRequest());
-        const data: Hotel[] = yield call(fetchHotelsList, search);
+        const data: Hotel[] = yield call(fetchHotelsList);
         yield put(hotelsActions.fetchHotelsSuccess(data));
     } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Failed to fetch hotels';
