@@ -20,7 +20,7 @@ import {
 } from "lucide-react"
 import { authClient } from "@/lib/auth-client"
 
-import { NavMain } from "@/components/nav-main"
+import { NavMain, NavMainSkeleton } from "@/components/nav-main"
 import { NavSecondary } from "@/components/nav-secondary"
 import { NavUser, NavUserSkeleton } from "@/components/nav-user"
 import { useCollapsibleMode } from "@/hooks/use-collapsible-mode"
@@ -38,7 +38,7 @@ import { SidebarOrgSwitcher } from "@/components/sidebar-org-switcher"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname()
-  const { can, isAdmin } = usePermissions()
+  const { can, isAdmin, isLoading } = usePermissions()
   const { data: session } = authClient.useSession()
   const collapsibleMode = useCollapsibleMode()
 
@@ -257,7 +257,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarOrgSwitcher />
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={navMain} />
+        {isLoading ? <NavMainSkeleton /> : <NavMain items={navMain} />}
         <NavSecondary items={navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>

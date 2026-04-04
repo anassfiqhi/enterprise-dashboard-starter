@@ -15,6 +15,7 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar"
+import { Skeleton } from "@/components/ui/skeleton"
 
 interface NavItem {
   title: string
@@ -26,6 +27,57 @@ interface NavItem {
     url: string
     isActive?: boolean
   }[]
+}
+
+const SKELETON_ITEMS = [
+  { width: "w-20" },
+  { width: "w-16", indent: false },
+  { width: "w-24", indent: false },
+  { width: "w-28" },
+  { width: "w-20" },
+  { width: "w-24" },
+  { width: "w-16" },
+  { width: "w-16" },
+  { width: "w-16" },
+  { width: "w-16" },
+  { width: "w-16" },
+]
+
+export function NavMainSkeleton() {
+  return (
+    <SidebarGroup>
+      <SidebarGroupContent className="flex flex-col gap-2">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton disabled className="min-w-8 bg-primary/20">
+              <Skeleton className="h-4 w-4 rounded" />
+              <Skeleton className="h-4 w-24" />
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+        <SidebarMenu>
+          {SKELETON_ITEMS.map((item, i) => (
+            item.indent ? (
+              <SidebarMenuSub key={i}>
+                <SidebarMenuSubItem>
+                  <div className="flex items-center gap-2 px-2 py-1.5">
+                    <Skeleton className={`h-4 ${item.width}`} />
+                  </div>
+                </SidebarMenuSubItem>
+              </SidebarMenuSub>
+            ) : (
+              <SidebarMenuItem key={i}>
+                <SidebarMenuButton disabled>
+                  <Skeleton className="h-4 w-4 rounded" />
+                  <Skeleton className={`h-4 ${item.width}`} />
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )
+          ))}
+        </SidebarMenu>
+      </SidebarGroupContent>
+    </SidebarGroup>
+  )
 }
 
 export function NavMain({
