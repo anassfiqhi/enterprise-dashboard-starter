@@ -59,43 +59,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         },
       ]
 
-    // Bookings section (Reservations)
-    if (can("reservations", "read")) {
-      items.push({
-        title: "Bookings",
-        url: "/bookings",
-        icon: CalendarCheck2,
-        isActive: pathname?.startsWith("/bookings") ?? false,
-        items: [
-          {
-            title: "Reservations",
-            url: "/bookings",
-            isActive: pathname === "/bookings",
-          },
-          {
-            title: "Availability",
-            url: "/bookings/availability",
-            isActive: pathname === "/bookings/availability",
-          },
-          {
-            title: "Analytics",
-            url: "/bookings/analytics",
-            isActive: pathname === "/bookings/analytics",
-          },
-        ],
-      })
-    }
-
-    // Guests section
-    if (can("guests", "read")) {
-      items.push({
-        title: "Guests",
-        url: "/guests",
-        icon: Users,
-        isActive: pathname?.startsWith("/guests") ?? false,
-      })
-    }
-
     // Rooms section - room types and physical rooms
     if (can("roomTypes", "read")) {
       items.push({
@@ -140,6 +103,33 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       })
     }
 
+    // Bookings section (Reservations)
+    if (can("reservations", "read")) {
+      items.push({
+        title: "Bookings",
+        url: "/bookings",
+        icon: CalendarCheck2,
+        isActive: pathname?.startsWith("/bookings") ?? false,
+        items: [
+          {
+            title: "Reservations",
+            url: "/bookings",
+            isActive: pathname === "/bookings",
+          },
+          {
+            title: "Availability",
+            url: "/bookings/availability",
+            isActive: pathname === "/bookings/availability",
+          },
+          {
+            title: "Analytics",
+            url: "/bookings/analytics",
+            isActive: pathname === "/bookings/analytics",
+          },
+        ],
+      })
+    }
+
     // Inventory section
     if (can("inventory", "read")) {
       items.push({
@@ -147,6 +137,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         url: "/inventory",
         icon: Package,
         isActive: pathname?.startsWith("/inventory") ?? false,
+      })
+    }
+
+    // Guests section
+    if (can("guests", "read")) {
+      items.push({
+        title: "Guests",
+        url: "/guests",
+        icon: Users,
+        isActive: pathname?.startsWith("/guests") ?? false,
       })
     }
 
