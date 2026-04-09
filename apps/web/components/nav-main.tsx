@@ -30,17 +30,13 @@ interface NavItem {
 }
 
 const SKELETON_ITEMS = [
-  { width: "w-20" },
-  { width: "w-16", indent: false },
-  { width: "w-24", indent: false },
-  { width: "w-28" },
-  { width: "w-20" },
-  { width: "w-24" },
-  { width: "w-16" },
-  { width: "w-16" },
-  { width: "w-16" },
-  { width: "w-16" },
-  { width: "w-16" },
+  { indent: false },
+  { indent: false },
+  { indent: false },
+  { indent: false },
+  { indent: false },
+  { indent: false },
+  { indent: false },
 ]
 
 export function NavMainSkeleton() {
@@ -50,8 +46,8 @@ export function NavMainSkeleton() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton disabled className="min-w-8 bg-primary/20">
-              <Skeleton className="h-4 w-4 rounded" />
-              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-4 w-4 shrink-0 rounded" />
+              <Skeleton className="h-4 flex-1" />
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -60,16 +56,16 @@ export function NavMainSkeleton() {
             item.indent ? (
               <SidebarMenuSub key={i}>
                 <SidebarMenuSubItem>
-                  <div className="flex items-center gap-2 px-2 py-1.5">
-                    <Skeleton className={`h-4 ${item.width}`} />
-                  </div>
+                  <SidebarMenuSubButton aria-disabled>
+                    <Skeleton className="h-4 flex-1" />
+                  </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
               </SidebarMenuSub>
             ) : (
               <SidebarMenuItem key={i}>
                 <SidebarMenuButton disabled>
-                  <Skeleton className="h-4 w-4 rounded" />
-                  <Skeleton className={`h-4 ${item.width}`} />
+                  <Skeleton className="h-4 w-4 shrink-0 rounded" />
+                  <Skeleton className="h-4 flex-1" />
                 </SidebarMenuButton>
               </SidebarMenuItem>
             )
@@ -86,7 +82,7 @@ export function NavMain({
   items: NavItem[]
 }) {
   return (
-    <SidebarGroup>
+    <SidebarGroup className="animate-in fade-in duration-200">
       <SidebarGroupContent className="flex flex-col gap-2">
         <SidebarMenu>
           <SidebarMenuItem className="flex items-center gap-2">

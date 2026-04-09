@@ -4,43 +4,14 @@ import { authClient } from '@/lib/auth-client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState, useTransition } from 'react';
+import { useState } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-
-type Organization = {
-    id: string;
-    name: string;
-    slug: string;
-    createdAt: Date;
-    logo?: string | null | undefined;
-    metadata?: Record<string, unknown>;
-}
-type OrganizationError = {
-    code?: string | undefined;
-    message?: string | undefined;
-    status: number;
-    statusText: string;
-}
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function SelectOrgPage() {
-    const [organizations, setOrganizations] = useState<Organization[]>([]);
-    const [isPending, startTransition] = useTransition();
-    const [error, setError] = useState<OrganizationError | null>(null);
-
-    useEffect(() => {
-        startTransition(async () => {
-            const { data, error } = await authClient.organization.list();
-            console.log(data);
-            if (error) {
-                setError(error);
-            } else {
-                setOrganizations(data || []);
-            }
-        });
-    }, []);
-
     const router = useRouter();
+    const { data: organizations, isPending, error } = authClient.useListOrganizations();
     const [selectingOrgId, setSelectingOrgId] = useState<string | null>(null);
 
     const handleSelectOrg = async (orgId: string) => {
@@ -57,8 +28,15 @@ export default function SelectOrgPage() {
             <div className="flex items-center justify-center min-h-screen bg-muted/40">
                 <Card className="w-full max-w-md">
                     <CardHeader>
-                        <CardTitle>Loading organizations...</CardTitle>
+                        <CardTitle className="text-2xl">Select Organization</CardTitle>
+                        <CardDescription>
+                            Choose the organization you want to access
+                        </CardDescription>
                     </CardHeader>
+                    <CardContent className="space-y-2">
+                        <Skeleton className="h-16 w-full rounded-lg" />
+                        <Skeleton className="h-16 w-full rounded-lg" />
+                    </CardContent>
                 </Card>
             </div>
         );
@@ -90,18 +68,17 @@ export default function SelectOrgPage() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    {organizations?.length === 0 ? (
+                    {!organizations?.length ? (
                         <div className="text-center py-6 space-y-4">
                             <p className="text-muted-foreground">You don&apos;t have any organizations yet.</p>
-                            {/* Optionally add a create organization button here if the flow supports it */}
                         </div>
                     ) : (
                         <div className="grid gap-2">
-                            {organizations?.map((org) => (
+                            {organizations.map((org) => (
                                 <Button
                                     key={org.id}
                                     variant="outline"
-                                    className="h-auto p-4 flex items-center justify-between group hover:border-primary"
+                                    className="h-16 p-4 flex items-center justify-between group hover:border-primary"
                                     onClick={() => handleSelectOrg(org.id)}
                                     disabled={!!selectingOrgId}
                                 >

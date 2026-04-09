@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useDispatch } from "react-redux"
 import { ChevronsUpDown, Plus, Building2 } from "lucide-react"
@@ -39,7 +39,7 @@ export function SidebarOrgSwitcher() {
   const dispatch = useDispatch()
   const { isMobile, setOpenMobile } = useSidebar()
   const { data: activeOrg, isPending: isPendingActiveOrg } = authClient.useActiveOrganization()
-  const { data: organizations, isPending: isPendingOrganizations, refetch: refetchOrganizations } = authClient.useListOrganizations()
+  const { data: organizations, isPending: isPendingOrganizations } = authClient.useListOrganizations()
   const { isAdmin } = usePermissions()
 
   const activeHotel = activeOrg ? {
@@ -60,10 +60,6 @@ export function SidebarOrgSwitcher() {
 
   // Derived: switching is done when activeOrg catches up to the target
   const isSwitching = switchingToId !== null && activeOrg?.id !== switchingToId
-
-  useEffect(() => {
-    refetchOrganizations()
-  }, [refetchOrganizations])
 
   const handleHotelChange = async (hotel: Organization) => {
     if (hotel.id === activeHotel?.id) return

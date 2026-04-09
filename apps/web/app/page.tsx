@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import type { Reservation } from '@repo/shared';
 import { useBookingMetrics } from '@/hooks/useBookingMetrics';
 import { useReservations } from '@/hooks/useReservations';
@@ -20,8 +20,6 @@ import {
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { ArrowRight, Calendar, Building2, CalendarDays, Plus } from 'lucide-react';
-import { authClient } from '@/lib/auth-client';
-import { useRouter } from 'next/navigation';
 import { usePermissions } from '@/hooks/usePermissions';
 
 function formatDate(dateStr: string | undefined): string {
@@ -46,23 +44,8 @@ export default function Home() {
     const { data: metrics, isLoading: metricsLoading } = useBookingMetrics();
     const { data: reservationsData, isLoading: reservationsLoading } = useReservations();
     const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
-    const router = useRouter();
 
     const recentReservations = reservationsData?.data?.slice(0, 5) || [];
-
-    useEffect(() => {
-        authClient.organization.getActiveMember().then((res) => {
-            console.log(res);
-            if (res.error?.code === 'NO_ACTIVE_ORGANIZATION') {
-                console.log('NO_ACTIVE_ORGANIZATION');
-                router.push('/select-org');
-            }
-        }).catch((err) => {
-            console.log(err);
-            // router.push('/select-org');
-            // router.refresh();
-        });
-    }, [router]);
     return (
         <div className="flex flex-1 flex-col">
             <div className="@container/main flex flex-1 flex-col gap-2">

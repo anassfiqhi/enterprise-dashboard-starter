@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import { authClient } from '@/lib/auth-client';
 import { managerRole, staffRole } from '@repo/shared';
 import type { OrganizationRole, OrganizationPermissions } from '@repo/shared';
@@ -15,11 +15,15 @@ export function usePermissions() {
   const { data: activeMember, isPending: isActiveMemberPending, error: activeMemberError } = authClient.useActiveMember();
   const { data: activeOrganization, isPending: isActiveOrganizationPending, error: activeOrganizationError } = authClient.useActiveOrganization();
 
-  const isLoading = isSessionPending || isActiveMemberPending || isActiveOrganizationPending;
   const error = sessionError || activeMemberError || activeOrganizationError || null;
 
   const user = session?.user ?? null;
   const isAdmin = user?.role === 'admin';
+
+  // Admin users are not org members — activeMember/activeOrg will always be null/pending
+  // for them. Including those in isLoading causes the sidebar to repeatedly flash skeleton
+  // whenever $activeOrgSignal fires (e.g. any /organization proxy action call).
+  const isLoading = isSessionPending || (!isAdmin && (isActiveMemberPending || isActiveOrganizationPending));
 
   // Get permissions based on active member role
   const permissions = useMemo((): OrganizationPermissions | null => {
@@ -41,47 +45,33 @@ export function usePermissions() {
    * @param resource - The resource (e.g., 'guests', 'reservations')
    * @param action - The action (e.g., 'read', 'create', 'update', 'delete')
    */
-  const can = (resource: keyof OrganizationPermissions, action: string): boolean => {
-    // Super Admin bypasses all permission checks
+  const can = useCallback((resource: keyof OrganizationPermissions, action: string): boolean => {
     if (isAdmin) return true;
-
     if (!permissions) return false;
     const resourcePermissions = permissions[resource];
     if (!resourcePermissions) return false;
     return resourcePermissions.includes(action);
-  };
+  }, [isAdmin, permissions]);
 
-  /**
-   * Check if user has all specified permissions
-   */
-  const canAll = (checks: Array<{ resource: keyof OrganizationPermissions; action: string }>): boolean => {
+  const canAll = useCallback((checks: Array<{ resource: keyof OrganizationPermissions; action: string }>): boolean => {
     if (isAdmin) return true;
     return checks.every(({ resource, action }) => can(resource, action));
-  };
+  }, [isAdmin, can]);
 
-  /**
-   * Check if user has any of the specified permissions
-   */
-  const canAny = (checks: Array<{ resource: keyof OrganizationPermissions; action: string }>): boolean => {
+  const canAny = useCallback((checks: Array<{ resource: keyof OrganizationPermissions; action: string }>): boolean => {
     if (isAdmin) return true;
     return checks.some(({ resource, action }) => can(resource, action));
-  };
+  }, [isAdmin, can]);
 
-  /**
-   * Check if user has a specific role in the active organization
-   */
-  const hasRole = (requiredRole: OrganizationRole): boolean => {
+  const hasRole = useCallback((requiredRole: OrganizationRole): boolean => {
     if (isAdmin) return true;
     return activeMember?.role === requiredRole;
-  };
+  }, [isAdmin, activeMember]);
 
-  /**
-   * Check if user has any of the specified roles
-   */
-  const hasAnyRole = (...roles: OrganizationRole[]): boolean => {
+  const hasAnyRole = useCallback((...roles: OrganizationRole[]): boolean => {
     if (isAdmin) return true;
     return activeMember?.role !== undefined && roles.includes(activeMember.role as OrganizationRole);
-  };
+  }, [isAdmin, activeMember]);
 
   return {
     isLoading,
