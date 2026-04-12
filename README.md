@@ -1,215 +1,254 @@
 # Enterprise Dashboard Starter
 
-A production-ready monorepo for data-heavy enterprise dashboards, featuring **Next.js**, **Hono**, **TanStack Query**, **Redux Toolkit**, and **Better Auth**.
+A production-ready monorepo for data-heavy enterprise dashboards, built with **Next.js 16**, **Hono**, **Redux Toolkit + Redux Saga**, **Better Auth**, and **shadcn/ui**.
 
-## 🏗 Architecture
+## Architecture
 
 This project follows a strict separation of concerns for scalability and maintainability:
 
--   **Apps**:
-    -   `apps/web`: **Next.js (App Router)** frontend. Owns the UI, client-side routing, and presentation.
-    -   `apps/api`: **Hono (Node.js)** backend API. Owns the database connection, authentication, and core business logic.
--   **Packages**:
-    -   `packages/shared`: Shared Zod schemas, TypeScript types, and constants used by both frontend and backend.
+- **Apps**:
+  - `apps/web`: **Next.js 16 (App Router)** frontend. Owns the UI, client-side routing, and presentation logic.
+  - `apps/api`: **Hono (Node.js)** backend API. Owns the database connection, authentication, and core business logic.
+- **Packages**:
+  - `packages/shared`: Shared Zod schemas, TypeScript types, and constants used by both frontend and backend.
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
--   Node.js (v18+)
--   pnpm (v9+)
--   PostgreSQL (Local or hosted)
+
+- Node.js v18+
+- pnpm v9+
+- PostgreSQL (local or hosted)
 
 ### Installation
 
-1.  **Clone the repository**:
-    ```bash
-    git clone <repo-url>
-    cd enterprise-dashboard-starter
-    ```
+1. **Clone the repository**:
+   ```bash
+   git clone <repo-url>
+   cd enterprise-dashboard-starter
+   ```
 
-2.  **Install dependencies**:
-    ```bash
-    pnpm install
-    ```
+2. **Install dependencies**:
+   ```bash
+   pnpm install
+   ```
 
-3.  **Environment Setup**:
+3. **Environment setup**:
 
-    **Backend (`apps/api`):**
-    ```bash
-    cd apps/api
-    cp .env.example .env
-    ```
+   **Backend (`apps/api`):**
+   ```bash
+   cd apps/api
+   cp .env.example .env
+   ```
 
-    Update the following variables in `apps/api/.env`:
-    - `DATABASE_URL`: Your PostgreSQL connection string
-    - `BETTER_AUTH_SECRET`: Random secret key (generate with `openssl rand -base64 32`)
-    - `BETTER_AUTH_URL`: Your backend URL (default: `http://localhost:3001`)
-    - `PORT`: API server port (default: `3001`)
-    - `CORS_ORIGIN`: Frontend URL (default: `http://localhost:3000`)
+   | Variable | Description | Default |
+   |---|---|---|
+   | `DATABASE_URL` | PostgreSQL connection string | — |
+   | `BETTER_AUTH_SECRET` | Random secret (`openssl rand -base64 32`) | — |
+   | `BETTER_AUTH_URL` | Backend URL | `http://localhost:3001` |
+   | `PORT` | API server port | `3001` |
+   | `CORS_ORIGIN` | Frontend URL | `http://localhost:3000` |
 
-    **Frontend (`apps/web`):**
-    ```bash
-    cd apps/web
-    cp .env.example .env
-    ```
+   **Frontend (`apps/web`):**
+   ```bash
+   cd apps/web
+   cp .env.example .env
+   ```
 
-    Update the following variables in `apps/web/.env`:
-    - `NEXT_PUBLIC_API_URL`: Backend API URL (default: `http://localhost:3001/api`)
-    - `NEXT_PUBLIC_AUTH_URL`: Backend auth URL (default: `http://localhost:3001`)
-    - `NEXT_PUBLIC_SSE_URL`: Backend SSE URL (default: `http://localhost:3001`)
+   | Variable | Description | Default |
+   |---|---|---|
+   | `NEXT_PUBLIC_API_URL` | Backend API URL | `http://localhost:3001/api` |
+   | `NEXT_PUBLIC_AUTH_URL` | Backend auth URL | `http://localhost:3001` |
+   | `NEXT_PUBLIC_SSE_URL` | Backend SSE URL | `http://localhost:3001` |
 
-4.  **Database Setup**:
+4. **Database setup**:
+   ```bash
+   cd apps/api
+   pnpm db:push
+   ```
 
-    Push the Drizzle schema to your database:
-    ```bash
-    cd apps/api
-    pnpm db:push
-    ```
+5. **Seed database**:
+   ```bash
+   cd apps/api
+   pnpm seed
+   ```
 
-5.  **Seed Database**:
+   Default credentials: `admin@example.com` / `admin123`
 
-    Create a default admin user and sample orders data:
-    ```bash
-    cd apps/api
-    pnpm seed
-    ```
+6. **Run development servers**:
+   ```bash
+   pnpm dev
+   ```
 
-    Default credentials:
-    - Email: `admin@example.com`
-    - Password: `admin123`
+   Or individually:
+   ```bash
+   # Terminal 1
+   cd apps/api && pnpm dev
 
-    This will create an admin user and seed 50 sample orders.
+   # Terminal 2
+   cd apps/web && pnpm dev
+   ```
 
-6.  **Run Development Server**:
+   | Service | URL |
+   |---|---|
+   | Frontend | http://localhost:3000 |
+   | API | http://localhost:3001/api |
+   | SSE stream | http://localhost:3001/api/v1/stream/events |
 
-    From the root directory:
-    ```bash
-    pnpm dev
-    ```
-
-    Or run apps individually:
-    ```bash
-    # Terminal 1 - Backend API
-    cd apps/api && pnpm dev
-
-    # Terminal 2 - Frontend
-    cd apps/web && pnpm dev
-    ```
-
-    Access the application:
-    -   Frontend: [http://localhost:3000](http://localhost:3000)
-    -   API: [http://localhost:3001/api](http://localhost:3001/api)
-    -   SSE Events: [http://localhost:3001/api/v1/stream/events](http://localhost:3001/api/v1/stream/events)
-
-### Building
-To build all applications for production:
-```bash
-pnpm build
-```
-
-## 🛠 Technology Stack
+## Technology Stack
 
 ### Frontend (`apps/web`)
--   **Framework**: Next.js 15 (App Router)
--   **Styling**: Tailwind CSS + shadcn/ui
--   **Server State**: TanStack Query v5 (Caching, synchronization)
--   **UI State**: Redux Toolkit (Orchestration, complex UI state)
--   **Data Display**: TanStack Table + TanStack Virtual (High-performance tables)
+
+| Concern | Library |
+|---|---|
+| Framework | Next.js 16 (App Router) + React 19 |
+| Styling | Tailwind CSS v4 + shadcn/ui |
+| Server state | Redux Toolkit + Redux Saga |
+| Data display | TanStack Table + TanStack Virtual |
+| Charts | Recharts |
+| Auth client | Better Auth |
+| HTTP | Axios |
+| Forms / validation | Zod |
 
 ### Backend (`apps/api`)
--   **Runtime**: Node.js
--   **Framework**: Hono (Fast, lightweight web framework)
--   **Auth**: Better Auth (OIDC/OAuth2, Sessions)
--   **ORM**: Drizzle ORM (Type-safe SQL queries)
--   **Validation**: Zod (Shared with frontend)
--   **Database**: PostgreSQL (via `pg` driver)
--   **Realtime**: Server-Sent Events (SSE)
 
-## 📂 Project Structure
+| Concern | Library |
+|---|---|
+| Framework | Hono |
+| Auth | Better Auth |
+| ORM | Drizzle ORM |
+| Database | PostgreSQL (via `pg`) |
+| Validation | Zod |
+| Realtime | Server-Sent Events (SSE) |
+
+## Features
+
+- **Authentication & authorization**: Email/password login, HTTP-only session cookies, role-based permissions (RBAC)
+- **Multi-tenant organizations**: Create orgs, invite members, manage roles and permissions
+- **Bookings dashboard**: Metrics cards, availability calendar, analytics charts, reservations table
+- **Guests management**: Guest profiles with booking history
+- **Hotels management**: Hotel listings and availability
+- **Promo codes**: Create and manage promotional codes
+- **Real-time updates**: SSE-powered live data patching
+- **Route protection**: Next.js middleware redirects unauthenticated users
+- **Error handling**: Error boundaries and graceful empty/error states
+- **Type safety**: End-to-end TypeScript with Zod schemas shared between frontend and backend
+
+## Project Structure
 
 ```
 ├── apps
-│   ├── api          # Hono backend API
-│   └── web          # Next.js frontend
+│   ├── api                  # Hono backend
+│   │   ├── src/
+│   │   └── scripts/         # Seed and migration scripts
+│   └── web                  # Next.js frontend
+│       ├── app/             # App Router routes
+│       │   ├── bookings/    # Bookings, availability, analytics
+│       │   ├── guests/      # Guest management
+│       │   ├── hotels/      # Hotel management
+│       │   ├── promo-codes/ # Promo code management
+│       │   ├── settings/    # Org settings, members, invitations
+│       │   └── system/      # Admin panel
+│       ├── components/      # UI components + Storybook stories
+│       ├── hooks/           # Custom React hooks
+│       └── lib/             # Redux store, sagas, reducers, API client
 ├── packages
-│   └── shared       # Shared types and schemas
-├── docs             # Architecture documentation
-└── README.md        # This file
+│   └── shared               # Shared Zod schemas and TypeScript types
+├── .github/workflows/       # GitHub Actions (CI + Chromatic)
+└── .husky/                  # Git hooks (commitlint, lint-staged)
 ```
 
-## 🔐 Authentication
-Authentication is handled by **Better Auth** mounted in the API. The frontend communicates directly with the API using HTTP-only cookies for session management.
+## Available Scripts
 
-## 📡 Realtime Updates
-The API exposes an SSE endpoint (`/v1/stream/events`) for pushing real-time updates to the client. The frontend consumes these events to patch the TanStack Query cache efficiently.
+### Root
 
-## ✨ Features
-
-- **Authentication & Authorization**: Secure login with Better Auth, role-based permissions (RBAC)
-- **Route Protection**: Next.js middleware automatically redirects unauthenticated users
-- **Dashboard**: Real-time metrics calculated from live order data
-- **Orders Management**: Paginated, filterable, sortable orders table with virtualization
-- **Real-time Updates**: Server-Sent Events (SSE) for live order updates
-- **Error Handling**: Comprehensive error boundaries and graceful error states
-- **Type Safety**: End-to-end type safety with TypeScript and Zod validation
-- **Responsive UI**: Modern UI with Tailwind CSS and shadcn/ui components
-- **Performance**: Optimized with TanStack Query caching and React Virtual
-
-## 🔧 Available Scripts
-
-### Root Directory
-- `pnpm dev` - Start all apps in development mode
-- `pnpm build` - Build all apps for production
-- `pnpm lint` - Lint all packages
+| Script | Description |
+|---|---|
+| `pnpm dev` | Start all apps in development mode |
+| `pnpm build` | Build all apps for production |
+| `pnpm lint` | Lint all packages |
+| `pnpm test` | Run all test suites |
+| `pnpm test:e2e` | Run Playwright end-to-end tests |
 
 ### Backend (`apps/api`)
-- `pnpm dev` - Start API server in development mode
-- `pnpm build` - Build API for production
-- `pnpm start` - Start production API server
-- `pnpm db:push` - Push schema to database
-- `pnpm db:studio` - Open Drizzle Studio (database GUI)
-- `pnpm db:reset` - Drop all tables (destructive!)
-- `pnpm seed` - Seed database with admin user + sample orders
-- `pnpm seed:interactive` - Interactive seeding (for custom users)
+
+| Script | Description |
+|---|---|
+| `pnpm dev` | Start API with hot reload |
+| `pnpm build` | Compile to `dist/` |
+| `pnpm start` | Start production server |
+| `pnpm db:push` | Push Drizzle schema to database |
+| `pnpm db:migrate` | Run migrations |
+| `pnpm db:studio` | Open Drizzle Studio |
+| `pnpm db:reset` | Drop all tables (destructive) |
+| `pnpm seed` | Seed admin user and sample data |
+| `pnpm seed:interactive` | Interactive seeding |
 
 ### Frontend (`apps/web`)
-- `pnpm dev` - Start Next.js in development mode
-- `pnpm build` - Build Next.js for production
-- `pnpm start` - Start production Next.js server
-- `pnpm lint` - Lint frontend code
 
-## 🐛 Troubleshooting
+| Script | Description |
+|---|---|
+| `pnpm dev` | Start Next.js dev server |
+| `pnpm build` | Build for production |
+| `pnpm start` | Start production server |
+| `pnpm lint` | Run ESLint (zero warnings) |
+| `pnpm format` | Run Prettier |
+| `pnpm test` | Run Jest unit tests |
+| `pnpm test:coverage` | Run tests with coverage report |
+| `pnpm storybook` | Start Storybook on port 6006 |
+| `pnpm build-storybook` | Build static Storybook |
 
-### Database Connection Issues
-- Verify PostgreSQL is running: `psql -U postgres`
+## Testing
+
+Unit tests use **Jest** with **Testing Library**. Mocks and fixtures live in `apps/web/__mocks__/`.
+
+```bash
+# Run all unit tests
+cd apps/web && pnpm test
+
+# Watch mode
+pnpm test:watch
+
+# Coverage
+pnpm test:coverage
+```
+
+End-to-end tests use **Playwright** and run from the repo root:
+
+```bash
+pnpm test:e2e
+```
+
+Component stories are published to **Chromatic** on every push via the `.github/workflows/chromatic.yml` workflow.
+
+## Code Quality
+
+- **ESLint** with zero-warnings policy enforced in CI
+- **Prettier** with Tailwind CSS plugin for consistent formatting
+- **Husky** pre-commit hook runs `lint-staged` (format + lint on changed files)
+- **commitlint** enforces Conventional Commits on every commit message
+
+## Troubleshooting
+
+**Database connection errors**
+- Confirm PostgreSQL is running: `psql -U postgres`
 - Check `DATABASE_URL` format: `postgresql://user:password@host:port/database`
-- Ensure database exists: `createdb your_database_name`
 
-### CORS Errors
-- Verify `CORS_ORIGIN` in `apps/api/.env` matches your frontend URL
-- Check that both frontend and backend are running on expected ports
+**CORS errors**
+- Verify `CORS_ORIGIN` in `apps/api/.env` matches the frontend URL exactly
 
-### Authentication Issues
-- Clear browser cookies and try logging in again
-- Verify `BETTER_AUTH_SECRET` is set in `apps/api/.env`
-- Check that database migrations have been run
+**Authentication issues**
+- Clear browser cookies and log in again
+- Confirm `BETTER_AUTH_SECRET` is set in `apps/api/.env`
+- Confirm database schema is up to date: `pnpm db:push`
 
-### Build Errors
-- Clear all node_modules: `rm -rf node_modules apps/*/node_modules packages/*/node_modules`
-- Reinstall dependencies: `pnpm install`
-- Clear Next.js cache: `rm -rf apps/web/.next`
+**Build errors**
+```bash
+rm -rf node_modules apps/*/node_modules packages/*/node_modules
+pnpm install
+rm -rf apps/web/.next
+```
 
-## 📚 Documentation
-
-For detailed architecture and implementation guides, see:
-- [SPEC.md](./SPEC.md) - Complete technical specification
-- [FIXES_APPLIED.md](./FIXES_APPLIED.md) - Changelog of improvements and fixes
-- [docs/](./docs/) - Additional architecture documentation
-
-## 🤝 Contributing
-
-This is a template repository. Feel free to fork and customize for your needs.
-
-## 📄 License
+## License
 
 MIT
