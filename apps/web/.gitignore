@@ -11,3 +11,5 @@
 
 
 .mcp.json
+*storybook.log
+storybook-static
