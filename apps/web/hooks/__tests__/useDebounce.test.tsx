@@ -1,14 +1,13 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useDebounce } from '../useDebounce';
 
 describe('useDebounce', () => {
   beforeEach(() => {
-    vi.useFakeTimers();
+    jest.useFakeTimers();
   });
 
   afterEach(() => {
-    vi.useRealTimers();
+    jest.useRealTimers();
   });
 
   it('returns the initial value immediately', () => {
@@ -17,10 +16,9 @@ describe('useDebounce', () => {
   });
 
   it('debounces value updates', () => {
-    const { result, rerender } = renderHook(
-      ({ value, delay }) => useDebounce(value, delay),
-      { initialProps: { value: 'initial', delay: 500 } }
-    );
+    const { result, rerender } = renderHook(({ value, delay }) => useDebounce(value, delay), {
+      initialProps: { value: 'initial', delay: 500 },
+    });
 
     expect(result.current).toBe('initial');
 
@@ -32,53 +30,51 @@ describe('useDebounce', () => {
 
     // Advance timers but not enough
     act(() => {
-      vi.advanceTimersByTime(300);
+      jest.advanceTimersByTime(300);
     });
     expect(result.current).toBe('initial');
 
     // Advance remaining time
     act(() => {
-      vi.advanceTimersByTime(200);
+      jest.advanceTimersByTime(200);
     });
     expect(result.current).toBe('updated');
   });
 
   it('respects custom delay parameter', () => {
-    const { result, rerender } = renderHook(
-      ({ value, delay }) => useDebounce(value, delay),
-      { initialProps: { value: 'initial', delay: 1000 } }
-    );
+    const { result, rerender } = renderHook(({ value, delay }) => useDebounce(value, delay), {
+      initialProps: { value: 'initial', delay: 1000 },
+    });
 
     rerender({ value: 'updated', delay: 1000 });
 
     // Should not update after 500ms (default delay)
     act(() => {
-      vi.advanceTimersByTime(500);
+      jest.advanceTimersByTime(500);
     });
     expect(result.current).toBe('initial');
 
     // Should update after 1000ms
     act(() => {
-      vi.advanceTimersByTime(500);
+      jest.advanceTimersByTime(500);
     });
     expect(result.current).toBe('updated');
   });
 
   it('resets timer on rapid updates', () => {
-    const { result, rerender } = renderHook(
-      ({ value }) => useDebounce(value, 500),
-      { initialProps: { value: 'first' } }
-    );
+    const { result, rerender } = renderHook(({ value }) => useDebounce(value, 500), {
+      initialProps: { value: 'first' },
+    });
 
     rerender({ value: 'second' });
     act(() => {
-      vi.advanceTimersByTime(300);
+      jest.advanceTimersByTime(300);
     });
 
     // Update again before timer completes
     rerender({ value: 'third' });
     act(() => {
-      vi.advanceTimersByTime(300);
+      jest.advanceTimersByTime(300);
     });
 
     // Should still show first value (both timers were reset)
@@ -86,37 +82,35 @@ describe('useDebounce', () => {
 
     // Complete the final timer
     act(() => {
-      vi.advanceTimersByTime(200);
+      jest.advanceTimersByTime(200);
     });
     expect(result.current).toBe('third');
   });
 
   it('uses default delay of 500ms', () => {
-    const { result, rerender } = renderHook(
-      ({ value }) => useDebounce(value),
-      { initialProps: { value: 'initial' } }
-    );
+    const { result, rerender } = renderHook(({ value }) => useDebounce(value), {
+      initialProps: { value: 'initial' },
+    });
 
     rerender({ value: 'updated' });
 
     act(() => {
-      vi.advanceTimersByTime(499);
+      jest.advanceTimersByTime(499);
     });
     expect(result.current).toBe('initial');
 
     act(() => {
-      vi.advanceTimersByTime(1);
+      jest.advanceTimersByTime(1);
     });
     expect(result.current).toBe('updated');
   });
 
   it('cleans up timeout on unmount', () => {
-    const clearTimeoutSpy = vi.spyOn(global, 'clearTimeout');
+    const clearTimeoutSpy = jest.spyOn(global, 'clearTimeout');
 
-    const { unmount, rerender } = renderHook(
-      ({ value }) => useDebounce(value, 500),
-      { initialProps: { value: 'initial' } }
-    );
+    const { unmount, rerender } = renderHook(({ value }) => useDebounce(value, 500), {
+      initialProps: { value: 'initial' },
+    });
 
     rerender({ value: 'updated' });
     unmount();
