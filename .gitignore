@@ -39,3 +39,4 @@ database.sqlite
 # Temporary
 tmp/
 temp/
+plans/
