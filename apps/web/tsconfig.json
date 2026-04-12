@@ -19,8 +19,12 @@
       }
     ],
     "paths": {
-      "@/*": ["./*"]
-    }
+      "@/*": ["./*"],
+      "@storybook/react": [
+        "../../node_modules/.pnpm/@storybook+nextjs@8.6.18_esbuild@0.25.12_next@16.1.1_@babel+core@7.28.6_@playwright+tes_21ea6ff35a4ae3224f43864116527981/node_modules/@storybook/react"
+      ]
+    },
+    "types": ["jest"]
   },
   "include": [
     "next-env.d.ts",
@@ -30,5 +34,5 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules", "test/**/*", "**/*.test.ts", "**/*.test.tsx", "**/__tests__/**"]
+  "exclude": ["node_modules", "stories"]
 }

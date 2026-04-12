@@ -1,26 +1,44 @@
 {
-    "name": "enterprise-dashboard-starter",
-    "private": true,
-    "scripts": {
-        "build": "pnpm --filter \"./apps/*\" --filter \"./packages/*\" run build",
-        "dev": "pnpm --filter \"./apps/*\" run dev",
-        "lint": "pnpm --filter \"./apps/*\" run lint",
-        "test": "pnpm -r run test",
-        "test:watch": "vitest --workspace vitest.workspace.ts",
-        "test:coverage": "pnpm -r run test:coverage",
-        "test:ui": "vitest --ui",
-        "test:e2e": "playwright test",
-        "test:e2e:ui": "playwright test --ui"
-    },
-    "devDependencies": {
-        "@playwright/test": "^1.57.0",
-        "@vitest/coverage-v8": "^4.0.17",
-        "@vitest/ui": "^4.0.17",
-        "typescript": "^5.0.0",
-        "vitest": "^4.0.17"
-    },
-    "dependencies": {
-        "@radix-ui/react-progress": "^1.1.8",
-        "@radix-ui/react-switch": "^1.2.6"
-    }
+  "name": "enterprise-dashboard-starter",
+  "private": true,
+  "scripts": {
+    "build": "pnpm --filter \"./apps/*\" --filter \"./packages/*\" run build",
+    "dev": "pnpm --filter \"./apps/*\" run dev",
+    "lint": "pnpm --filter \"./apps/*\" run lint",
+    "test": "pnpm -r run test",
+    "test:watch": "vitest --workspace vitest.workspace.ts",
+    "test:coverage": "pnpm -r run test:coverage",
+    "test:ui": "vitest --ui",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^20.5.0",
+    "@commitlint/config-conventional": "^20.5.0",
+    "@commitlint/types": "^20.5.0",
+    "@playwright/test": "^1.57.0",
+    "@vitest/coverage-v8": "^4.0.17",
+    "@vitest/ui": "^4.0.17",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
+    "typescript": "^5.0.0",
+    "vitest": "^4.0.17"
+  },
+  "dependencies": {
+    "@radix-ui/react-progress": "^1.1.8",
+    "@radix-ui/react-switch": "^1.2.6"
+  },
+  "lint-staged": {
+    "apps/web/**/*.{ts,tsx}": [
+      "pnpm --filter web exec prettier --write",
+      "pnpm --filter web exec eslint --fix --max-warnings=0"
+    ],
+    "apps/web/**/*.{css,json,md}": [
+      "pnpm --filter web exec prettier --write"
+    ],
+    "*.{ts,tsx,js}": [
+      "pnpm --filter web exec prettier --write"
+    ]
+  }
 }
