@@ -1,4 +1,3 @@
-import { describe, it, expect } from 'vitest';
 import reducer, {
   setPage,
   setPageSize,
@@ -7,7 +6,7 @@ import reducer, {
   setSort,
   resetFilters,
   type OrdersFiltersState,
-} from '../ordersFiltersSlice';
+} from '../../filters/ordersSlice';
 
 describe('ordersFiltersSlice', () => {
   const initialState: OrdersFiltersState = {
