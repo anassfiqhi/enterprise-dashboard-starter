@@ -39,4 +39,9 @@ database.sqlite
 # Temporary
 tmp/
 temp/
+
+# Plans (for reference only)
 plans/
+
+# Claude
+.claude/
