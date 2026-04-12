@@ -1,9 +1,8 @@
-"use client"
+'use client';
 
-import Link from "next/link"
-import { ChevronRightIcon, PlusCircleIcon, type LucideIcon } from "lucide-react"
-import * as Collapsible from "@radix-ui/react-collapsible"
-
+import Link from 'next/link';
+import { ChevronRightIcon, type LucideIcon } from 'lucide-react';
+import * as Collapsible from '@radix-ui/react-collapsible';
 
 import {
   SidebarGroup,
@@ -14,31 +13,31 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
-} from "@/components/ui/sidebar"
+} from '@/components/ui/sidebar';
 
 interface NavItem {
-  title: string
-  url: string
-  icon?: LucideIcon
-  isActive?: boolean
+  title: string;
+  url: string;
+  icon?: LucideIcon;
+  isActive?: boolean;
   items?: {
-    title: string
-    url: string
-    isActive?: boolean
-  }[]
+    title: string;
+    url: string;
+    isActive?: boolean;
+  }[];
 }
 
 export function NavSecondary({
   items,
   ...props
 }: {
-  items: NavItem[]
+  items: NavItem[];
 } & React.ComponentPropsWithoutRef<typeof SidebarGroup>) {
   return (
     <SidebarGroup {...props}>
       <SidebarGroupContent className="flex flex-col gap-2">
         <SidebarMenu>
-          {items.map((item) => (
+          {items.map((item) =>
             item.items && item.items.length > 0 ? (
               <Collapsible.Root
                 key={item.title}
@@ -79,9 +78,9 @@ export function NavSecondary({
                 </SidebarMenuButton>
               </SidebarMenuItem>
             )
-          ))}
+          )}
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>
-  )
+  );
 }

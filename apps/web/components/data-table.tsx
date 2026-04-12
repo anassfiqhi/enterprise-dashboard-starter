@@ -1,6 +1,6 @@
-"use client"
+'use client';
 
-import * as React from "react"
+import * as React from 'react';
 import {
   DndContext,
   KeyboardSensor,
@@ -11,15 +11,15 @@ import {
   useSensors,
   type DragEndEvent,
   type UniqueIdentifier,
-} from "@dnd-kit/core"
-import { restrictToVerticalAxis } from "@dnd-kit/modifiers"
+} from '@dnd-kit/core';
+import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import {
   SortableContext,
   arrayMove,
   useSortable,
   verticalListSortingStrategy,
-} from "@dnd-kit/sortable"
-import { CSS } from "@dnd-kit/utilities"
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -34,7 +34,7 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
-} from "@tanstack/react-table"
+} from '@tanstack/react-table';
 import {
   CheckCircle2Icon,
   ChevronDownIcon,
@@ -50,20 +50,20 @@ import {
   TrendingUpIcon,
   TruckIcon,
   XCircleIcon,
-} from "lucide-react"
-import { Area, AreaChart, CartesianGrid, XAxis } from "recharts"
-import type { Order } from "@repo/shared"
+} from 'lucide-react';
+import { Area, AreaChart, CartesianGrid, XAxis } from 'recharts';
+import type { Order } from '@repo/shared';
 
-import { useIsMobile } from "@/hooks/use-mobile"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { useIsMobile } from '@/hooks/use-mobile';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   ChartConfig,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-} from "@/components/ui/chart"
-import { Checkbox } from "@/components/ui/checkbox"
+} from '@/components/ui/chart';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -71,17 +71,17 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+} from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Separator } from "@/components/ui/separator"
+} from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
 import {
   Sheet,
   SheetClose,
@@ -91,7 +91,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "@/components/ui/sheet"
+} from '@/components/ui/sheet';
 import {
   Table,
   TableBody,
@@ -99,37 +99,32 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs"
+} from '@/components/ui/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 // Chart data for order detail sheet
 const orderChartData = [
-  { month: "January", revenue: 186, orders: 80 },
-  { month: "February", revenue: 305, orders: 200 },
-  { month: "March", revenue: 237, orders: 120 },
-  { month: "April", revenue: 73, orders: 190 },
-  { month: "May", revenue: 209, orders: 130 },
-  { month: "June", revenue: 214, orders: 140 },
-]
+  { month: 'January', revenue: 186, orders: 80 },
+  { month: 'February', revenue: 305, orders: 200 },
+  { month: 'March', revenue: 237, orders: 120 },
+  { month: 'April', revenue: 73, orders: 190 },
+  { month: 'May', revenue: 209, orders: 130 },
+  { month: 'June', revenue: 214, orders: 140 },
+];
 
 const orderChartConfig = {
   revenue: {
-    label: "Revenue",
-    color: "var(--primary)",
+    label: 'Revenue',
+    color: 'var(--primary)',
   },
   orders: {
-    label: "Orders",
-    color: "var(--primary)",
+    label: 'Orders',
+    color: 'var(--primary)',
   },
-} satisfies ChartConfig
+} satisfies ChartConfig;
 
 function DragHandle({ id }: { id: string }) {
-  const { attributes, listeners } = useSortable({ id })
+  const { attributes, listeners } = useSortable({ id });
 
   return (
     <Button
@@ -137,62 +132,60 @@ function DragHandle({ id }: { id: string }) {
       {...listeners}
       variant="ghost"
       size="icon"
-      className="size-7 text-muted-foreground hover:bg-transparent"
+      className="text-muted-foreground size-7 hover:bg-transparent"
     >
-      <GripVerticalIcon className="size-3 text-muted-foreground" />
+      <GripVerticalIcon className="text-muted-foreground size-3" />
       <span className="sr-only">Drag to reorder</span>
     </Button>
-  )
+  );
 }
 
-function getStatusIcon(status: Order["status"]) {
+function getStatusIcon(status: Order['status']) {
   switch (status) {
-    case "delivered":
-      return <CheckCircle2Icon className="text-green-500 dark:text-green-400" />
-    case "shipped":
-      return <TruckIcon className="text-blue-500 dark:text-blue-400" />
-    case "processing":
-      return <LoaderIcon className="text-yellow-500 dark:text-yellow-400" />
-    case "cancelled":
-      return <XCircleIcon className="text-red-500 dark:text-red-400" />
-    case "pending":
+    case 'delivered':
+      return <CheckCircle2Icon className="text-green-500 dark:text-green-400" />;
+    case 'shipped':
+      return <TruckIcon className="text-blue-500 dark:text-blue-400" />;
+    case 'processing':
+      return <LoaderIcon className="text-yellow-500 dark:text-yellow-400" />;
+    case 'cancelled':
+      return <XCircleIcon className="text-red-500 dark:text-red-400" />;
+    case 'pending':
     default:
-      return <PackageIcon className="text-muted-foreground" />
+      return <PackageIcon className="text-muted-foreground" />;
   }
 }
 
-function getStatusBadgeClass(status: Order["status"]) {
+function getStatusBadgeClass(status: Order['status']) {
   switch (status) {
-    case "delivered":
-      return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-    case "shipped":
-      return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300"
-    case "processing":
-      return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
-    case "cancelled":
-      return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
-    case "pending":
+    case 'delivered':
+      return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
+    case 'shipped':
+      return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
+    case 'processing':
+      return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
+    case 'cancelled':
+      return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
+    case 'pending':
     default:
-      return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300"
+      return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
   }
 }
 
 function OrderDetailSheet({ order }: { order: Order }) {
-  const isMobile = useIsMobile()
+  const isMobile = useIsMobile();
 
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant="link" className="w-fit px-0 text-left text-foreground font-mono">
+        <Button variant="link" className="text-foreground w-fit px-0 text-left font-mono">
           {order.id.slice(0, 8)}...
         </Button>
       </SheetTrigger>
       <SheetContent side="right" className="flex flex-col">
         <SheetHeader className="gap-1">
           <SheetTitle>Order Details</SheetTitle>
-          <SheetDescription>
-            Order #{order.id.slice(0, 8)}
-          </SheetDescription>
+          <SheetDescription>Order #{order.id.slice(0, 8)}</SheetDescription>
         </SheetHeader>
         <div className="flex flex-1 flex-col gap-4 overflow-y-auto py-4 text-sm">
           {!isMobile && (
@@ -215,10 +208,7 @@ function OrderDetailSheet({ order }: { order: Order }) {
                     tickFormatter={(value) => value.slice(0, 3)}
                     hide
                   />
-                  <ChartTooltip
-                    cursor={false}
-                    content={<ChartTooltipContent indicator="dot" />}
-                  />
+                  <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
                   <Area
                     dataKey="orders"
                     type="natural"
@@ -239,13 +229,10 @@ function OrderDetailSheet({ order }: { order: Order }) {
               </ChartContainer>
               <Separator />
               <div className="grid gap-2">
-                <div className="flex gap-2 font-medium leading-none">
-                  Trending up by 5.2% this month{" "}
-                  <TrendingUpIcon className="size-4" />
+                <div className="flex gap-2 leading-none font-medium">
+                  Trending up by 5.2% this month <TrendingUpIcon className="size-4" />
                 </div>
-                <div className="text-muted-foreground">
-                  Order activity for the last 6 months
-                </div>
+                <div className="text-muted-foreground">Order activity for the last 6 months</div>
               </div>
               <Separator />
             </>
@@ -281,9 +268,9 @@ function OrderDetailSheet({ order }: { order: Order }) {
                 <Label htmlFor="amount">Amount</Label>
                 <Input
                   id="amount"
-                  defaultValue={new Intl.NumberFormat("en-US", {
-                    style: "currency",
-                    currency: "USD",
+                  defaultValue={new Intl.NumberFormat('en-US', {
+                    style: 'currency',
+                    currency: 'USD',
                   }).format(order.amount)}
                 />
               </div>
@@ -308,23 +295,23 @@ function OrderDetailSheet({ order }: { order: Order }) {
         </SheetFooter>
       </SheetContent>
     </Sheet>
-  )
+  );
 }
 
 const columns: ColumnDef<Order>[] = [
   {
-    id: "drag",
+    id: 'drag',
     header: () => null,
     cell: ({ row }) => <DragHandle id={row.original.id} />,
   },
   {
-    id: "select",
+    id: 'select',
     header: ({ table }) => (
       <div className="flex items-center justify-center">
         <Checkbox
           checked={
             table.getIsAllPageRowsSelected() ||
-            (table.getIsSomePageRowsSelected() && "indeterminate")
+            (table.getIsSomePageRowsSelected() && 'indeterminate')
           }
           onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
           aria-label="Select all"
@@ -344,21 +331,19 @@ const columns: ColumnDef<Order>[] = [
     enableHiding: false,
   },
   {
-    accessorKey: "id",
-    header: "Order ID",
+    accessorKey: 'id',
+    header: 'Order ID',
     cell: ({ row }) => <OrderDetailSheet order={row.original} />,
     enableHiding: false,
   },
   {
-    accessorKey: "customer",
-    header: "Customer",
-    cell: ({ row }) => (
-      <div className="w-40 truncate font-medium">{row.original.customer}</div>
-    ),
+    accessorKey: 'customer',
+    header: 'Customer',
+    cell: ({ row }) => <div className="w-40 truncate font-medium">{row.original.customer}</div>,
   },
   {
-    accessorKey: "status",
-    header: "Status",
+    accessorKey: 'status',
+    header: 'Status',
     cell: ({ row }) => (
       <Badge
         variant="outline"
@@ -370,38 +355,38 @@ const columns: ColumnDef<Order>[] = [
     ),
   },
   {
-    accessorKey: "amount",
+    accessorKey: 'amount',
     header: () => <div className="w-full text-right">Amount</div>,
     cell: ({ row }) => (
       <div className="text-right font-mono tabular-nums">
-        {new Intl.NumberFormat("en-US", {
-          style: "currency",
-          currency: "USD",
+        {new Intl.NumberFormat('en-US', {
+          style: 'currency',
+          currency: 'USD',
         }).format(row.original.amount)}
       </div>
     ),
   },
   {
-    accessorKey: "createdAt",
-    header: "Date",
+    accessorKey: 'createdAt',
+    header: 'Date',
     cell: ({ row }) => (
       <div className="text-muted-foreground">
-        {new Date(row.original.createdAt).toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
+        {new Date(row.original.createdAt).toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
         })}
       </div>
     ),
   },
   {
-    id: "actions",
+    id: 'actions',
     cell: () => (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
-            className="flex size-8 text-muted-foreground data-[state=open]:bg-muted"
+            className="text-muted-foreground data-[state=open]:bg-muted flex size-8"
             size="icon"
           >
             <MoreVerticalIcon />
@@ -417,16 +402,16 @@ const columns: ColumnDef<Order>[] = [
       </DropdownMenu>
     ),
   },
-]
+];
 
 function DraggableRow({ row }: { row: Row<Order> }) {
   const { transform, transition, setNodeRef, isDragging } = useSortable({
     id: row.original.id,
-  })
+  });
 
   return (
     <TableRow
-      data-state={row.getIsSelected() && "selected"}
+      data-state={row.getIsSelected() && 'selected'}
       data-dragging={isDragging}
       ref={setNodeRef}
       className="relative z-0 data-[dragging=true]:z-10 data-[dragging=true]:opacity-80"
@@ -441,44 +426,34 @@ function DraggableRow({ row }: { row: Row<Order> }) {
         </TableCell>
       ))}
     </TableRow>
-  )
+  );
 }
 
-export function DataTable({
-  data: initialData,
-}: {
-  data: Order[]
-}) {
-  const [data, setData] = React.useState(() => initialData)
-  const [rowSelection, setRowSelection] = React.useState({})
-  const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({})
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
-  )
-  const [sorting, setSorting] = React.useState<SortingState>([])
+export function DataTable({ data: initialData }: { data: Order[] }) {
+  const [data, setData] = React.useState(() => initialData);
+  const [rowSelection, setRowSelection] = React.useState({});
+  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
+  const [sorting, setSorting] = React.useState<SortingState>([]);
   const [pagination, setPagination] = React.useState({
     pageIndex: 0,
     pageSize: 10,
-  })
-  const sortableId = React.useId()
+  });
+  const sortableId = React.useId();
   const sensors = useSensors(
     useSensor(MouseSensor, {}),
     useSensor(TouchSensor, {}),
     useSensor(KeyboardSensor, {})
-  )
+  );
 
   // Update data when initialData changes (e.g., from SSE updates)
   React.useEffect(() => {
-    setData(initialData)
-  }, [initialData])
+    setData(initialData);
+  }, [initialData]);
 
-  const dataIds = React.useMemo<UniqueIdentifier[]>(
-    () => data?.map(({ id }) => id) || [],
-    [data]
-  )
+  const dataIds = React.useMemo<UniqueIdentifier[]>(() => data?.map(({ id }) => id) || [], [data]);
 
-
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data,
     columns,
@@ -502,16 +477,16 @@ export function DataTable({
     getSortedRowModel: getSortedRowModel(),
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
-  })
+  });
 
   function handleDragEnd(event: DragEndEvent) {
-    const { active, over } = event
+    const { active, over } = event;
     if (active && over && active.id !== over.id) {
       setData((data) => {
-        const oldIndex = dataIds.indexOf(active.id)
-        const newIndex = dataIds.indexOf(over.id)
-        return arrayMove(data, oldIndex, newIndex)
-      })
+        const oldIndex = dataIds.indexOf(active.id);
+        const newIndex = dataIds.indexOf(over.id);
+        return arrayMove(data, oldIndex, newIndex);
+      });
     }
   }
 
@@ -537,24 +512,18 @@ export function DataTable({
             <DropdownMenuContent align="end" className="w-56">
               {table
                 .getAllColumns()
-                .filter(
-                  (column) =>
-                    typeof column.accessorFn !== "undefined" &&
-                    column.getCanHide()
-                )
+                .filter((column) => typeof column.accessorFn !== 'undefined' && column.getCanHide())
                 .map((column) => {
                   return (
                     <DropdownMenuCheckboxItem
                       key={column.id}
                       className="capitalize"
                       checked={column.getIsVisible()}
-                      onCheckedChange={(value) =>
-                        column.toggleVisibility(!!value)
-                      }
+                      onCheckedChange={(value) => column.toggleVisibility(!!value)}
                     >
                       {column.id}
                     </DropdownMenuCheckboxItem>
-                  )
+                  );
                 })}
             </DropdownMenuContent>
           </DropdownMenu>
@@ -573,7 +542,7 @@ export function DataTable({
             id={sortableId}
           >
             <Table>
-              <TableHeader className="sticky top-0 z-0 bg-muted">
+              <TableHeader className="bg-muted sticky top-0 z-0">
                 {table.getHeaderGroups().map((headerGroup) => (
                   <TableRow key={headerGroup.id}>
                     {headerGroup.headers.map((header) => {
@@ -581,32 +550,23 @@ export function DataTable({
                         <TableHead key={header.id} colSpan={header.colSpan}>
                           {header.isPlaceholder
                             ? null
-                            : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
+                            : flexRender(header.column.columnDef.header, header.getContext())}
                         </TableHead>
-                      )
+                      );
                     })}
                   </TableRow>
                 ))}
               </TableHeader>
               <TableBody className="**:data-[slot=table-cell]:first:w-8">
                 {table.getRowModel().rows?.length ? (
-                  <SortableContext
-                    items={dataIds}
-                    strategy={verticalListSortingStrategy}
-                  >
+                  <SortableContext items={dataIds} strategy={verticalListSortingStrategy}>
                     {table.getRowModel().rows.map((row) => (
                       <DraggableRow key={row.id} row={row} />
                     ))}
                   </SortableContext>
                 ) : (
                   <TableRow>
-                    <TableCell
-                      colSpan={columns.length}
-                      className="h-24 text-center"
-                    >
+                    <TableCell colSpan={columns.length} className="h-24 text-center">
                       No orders found.
                     </TableCell>
                   </TableRow>
@@ -616,8 +576,8 @@ export function DataTable({
           </DndContext>
         </div>
         <div className="flex items-center justify-between px-4">
-          <div className="hidden flex-1 text-sm text-muted-foreground lg:flex">
-            {table.getFilteredSelectedRowModel().rows.length} of{" "}
+          <div className="text-muted-foreground hidden flex-1 text-sm lg:flex">
+            {table.getFilteredSelectedRowModel().rows.length} of{' '}
             {table.getFilteredRowModel().rows.length} order(s) selected.
           </div>
           <div className="flex w-full items-center gap-8 lg:w-fit">
@@ -628,13 +588,11 @@ export function DataTable({
               <Select
                 value={`${table.getState().pagination.pageSize}`}
                 onValueChange={(value) => {
-                  table.setPageSize(Number(value))
+                  table.setPageSize(Number(value));
                 }}
               >
                 <SelectTrigger className="w-20" id="rows-per-page">
-                  <SelectValue
-                    placeholder={table.getState().pagination.pageSize}
-                  />
+                  <SelectValue placeholder={table.getState().pagination.pageSize} />
                 </SelectTrigger>
                 <SelectContent side="top">
                   {[10, 20, 30, 40, 50].map((pageSize) => (
@@ -646,8 +604,7 @@ export function DataTable({
               </Select>
             </div>
             <div className="flex w-fit items-center justify-center text-sm font-medium">
-              Page {table.getState().pagination.pageIndex + 1} of{" "}
-              {table.getPageCount()}
+              Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
             </div>
             <div className="ml-auto flex items-center gap-2 lg:ml-0">
               <Button
@@ -693,21 +650,15 @@ export function DataTable({
           </div>
         </div>
       </TabsContent>
-      <TabsContent
-        value="past-performance"
-        className="flex flex-col px-4 lg:px-6"
-      >
+      <TabsContent value="past-performance" className="flex flex-col px-4 lg:px-6">
         <div className="aspect-video w-full flex-1 rounded-lg border border-dashed"></div>
       </TabsContent>
       <TabsContent value="key-personnel" className="flex flex-col px-4 lg:px-6">
         <div className="aspect-video w-full flex-1 rounded-lg border border-dashed"></div>
       </TabsContent>
-      <TabsContent
-        value="focus-documents"
-        className="flex flex-col px-4 lg:px-6"
-      >
+      <TabsContent value="focus-documents" className="flex flex-col px-4 lg:px-6">
         <div className="aspect-video w-full flex-1 rounded-lg border border-dashed"></div>
       </TabsContent>
     </Tabs>
-  )
+  );
 }

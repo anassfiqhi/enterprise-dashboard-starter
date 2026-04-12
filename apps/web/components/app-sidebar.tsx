@@ -1,7 +1,7 @@
-"use client"
+'use client';
 
-import * as React from "react"
-import { usePathname } from "next/navigation"
+import * as React from 'react';
+import { usePathname } from 'next/navigation';
 import {
   BedDouble,
   CalendarCheck2,
@@ -17,239 +17,231 @@ import {
   Sparkles,
   Tag,
   Users,
-} from "lucide-react"
-import { authClient } from "@/lib/auth-client"
+} from 'lucide-react';
+import { authClient } from '@/lib/auth-client';
 
-import { NavMain, NavMainSkeleton } from "@/components/nav-main"
-import { NavSecondary } from "@/components/nav-secondary"
-import { NavUser, NavUserSkeleton } from "@/components/nav-user"
-import { useCollapsibleMode } from "@/hooks/use-collapsible-mode"
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-} from "@/components/ui/sidebar"
-import { usePermissions } from "@/hooks/usePermissions"
-import { SidebarOrgSwitcher } from "@/components/sidebar-org-switcher"
+import { NavMain, NavMainSkeleton } from '@/components/nav-main';
+import { NavSecondary } from '@/components/nav-secondary';
+import { NavUser, NavUserSkeleton } from '@/components/nav-user';
+import { useCollapsibleMode } from '@/hooks/use-collapsible-mode';
+import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader } from '@/components/ui/sidebar';
+import { usePermissions } from '@/hooks/usePermissions';
+import { SidebarOrgSwitcher } from '@/components/sidebar-org-switcher';
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const pathname = usePathname()
-  const { can, isAdmin, isLoading } = usePermissions()
-  const { data: session } = authClient.useSession()
-  const collapsibleMode = useCollapsibleMode()
+  const pathname = usePathname();
+  const { can, isAdmin, isLoading } = usePermissions();
+  const { data: session } = authClient.useSession();
+  const collapsibleMode = useCollapsibleMode();
 
   // Build navigation items based on permissions
   const navMain = React.useMemo(() => {
     const items: {
-      title: string
-      url: string
-      icon: typeof LayoutDashboardIcon
-      isActive: boolean
-      items?: { title: string; url: string; isActive: boolean }[]
+      title: string;
+      url: string;
+      icon: typeof LayoutDashboardIcon;
+      isActive: boolean;
+      items?: { title: string; url: string; isActive: boolean }[];
     }[] = [
-        {
-          title: "Dashboard",
-          url: "/",
-          icon: LayoutDashboardIcon,
-          isActive: pathname === "/",
-        },
-      ]
+      {
+        title: 'Dashboard',
+        url: '/',
+        icon: LayoutDashboardIcon,
+        isActive: pathname === '/',
+      },
+    ];
 
     // Rooms section - room types and physical rooms
-    if (can("roomTypes", "read")) {
+    if (can('roomTypes', 'read')) {
       items.push({
-        title: "Rooms",
-        url: "/rooms",
+        title: 'Rooms',
+        url: '/rooms',
         icon: BedDouble,
-        isActive: pathname?.startsWith("/rooms") ?? false,
+        isActive: pathname?.startsWith('/rooms') ?? false,
         items: [
           {
-            title: "Room Types",
-            url: "/rooms/types",
-            isActive: pathname === "/rooms/types",
+            title: 'Room Types',
+            url: '/rooms/types',
+            isActive: pathname === '/rooms/types',
           },
           {
-            title: "Physical Rooms",
-            url: "/rooms/list",
-            isActive: pathname === "/rooms/list",
+            title: 'Physical Rooms',
+            url: '/rooms/list',
+            isActive: pathname === '/rooms/list',
           },
         ],
-      })
+      });
     }
 
     // Activities section
-    if (can("activityTypes", "read")) {
+    if (can('activityTypes', 'read')) {
       items.push({
-        title: "Activities",
-        url: "/activities",
+        title: 'Activities',
+        url: '/activities',
         icon: Sparkles,
-        isActive: pathname?.startsWith("/activities") ?? false,
+        isActive: pathname?.startsWith('/activities') ?? false,
         items: [
           {
-            title: "Activity Types",
-            url: "/activities/types",
-            isActive: pathname === "/activities/types",
+            title: 'Activity Types',
+            url: '/activities/types',
+            isActive: pathname === '/activities/types',
           },
           {
-            title: "Scheduled Slots",
-            url: "/activities/slots",
-            isActive: pathname === "/activities/slots",
+            title: 'Scheduled Slots',
+            url: '/activities/slots',
+            isActive: pathname === '/activities/slots',
           },
         ],
-      })
+      });
     }
 
     // Bookings section (Reservations)
-    if (can("reservations", "read")) {
+    if (can('reservations', 'read')) {
       items.push({
-        title: "Bookings",
-        url: "/bookings",
+        title: 'Bookings',
+        url: '/bookings',
         icon: CalendarCheck2,
-        isActive: pathname?.startsWith("/bookings") ?? false,
+        isActive: pathname?.startsWith('/bookings') ?? false,
         items: [
           {
-            title: "Reservations",
-            url: "/bookings",
-            isActive: pathname === "/bookings",
+            title: 'Reservations',
+            url: '/bookings',
+            isActive: pathname === '/bookings',
           },
           {
-            title: "Availability",
-            url: "/bookings/availability",
-            isActive: pathname === "/bookings/availability",
+            title: 'Availability',
+            url: '/bookings/availability',
+            isActive: pathname === '/bookings/availability',
           },
           {
-            title: "Analytics",
-            url: "/bookings/analytics",
-            isActive: pathname === "/bookings/analytics",
+            title: 'Analytics',
+            url: '/bookings/analytics',
+            isActive: pathname === '/bookings/analytics',
           },
         ],
-      })
+      });
     }
 
     // Inventory section
-    if (can("inventory", "read")) {
+    if (can('inventory', 'read')) {
       items.push({
-        title: "Inventory",
-        url: "/inventory",
+        title: 'Inventory',
+        url: '/inventory',
         icon: Package,
-        isActive: pathname?.startsWith("/inventory") ?? false,
-      })
+        isActive: pathname?.startsWith('/inventory') ?? false,
+      });
     }
 
     // Guests section
-    if (can("guests", "read")) {
+    if (can('guests', 'read')) {
       items.push({
-        title: "Guests",
-        url: "/guests",
+        title: 'Guests',
+        url: '/guests',
         icon: Users,
-        isActive: pathname?.startsWith("/guests") ?? false,
-      })
+        isActive: pathname?.startsWith('/guests') ?? false,
+      });
     }
 
     // Pricing section
-    if (can("pricingRules", "read")) {
+    if (can('pricingRules', 'read')) {
       items.push({
-        title: "Pricing",
-        url: "/pricing",
+        title: 'Pricing',
+        url: '/pricing',
         icon: DollarSign,
-        isActive: pathname?.startsWith("/pricing") ?? false,
-      })
+        isActive: pathname?.startsWith('/pricing') ?? false,
+      });
     }
 
     // Promo Codes
-    if (can("promoCodes", "read")) {
+    if (can('promoCodes', 'read')) {
       items.push({
-        title: "Promo Codes",
-        url: "/promo-codes",
+        title: 'Promo Codes',
+        url: '/promo-codes',
         icon: Tag,
-        isActive: pathname?.startsWith("/promo-codes") ?? false,
-      })
+        isActive: pathname?.startsWith('/promo-codes') ?? false,
+      });
     }
 
     // Analytics
-    if (can("analytics", "read")) {
+    if (can('analytics', 'read')) {
       items.push({
-        title: "Analytics",
-        url: "/analytics",
+        title: 'Analytics',
+        url: '/analytics',
         icon: ClipboardList,
-        isActive: pathname?.startsWith("/analytics") ?? false,
-      })
+        isActive: pathname?.startsWith('/analytics') ?? false,
+      });
     }
 
     // Audit Logs
-    if (can("auditLogs", "read")) {
+    if (can('auditLogs', 'read')) {
       items.push({
-        title: "Audit Logs",
-        url: "/audit-logs",
+        title: 'Audit Logs',
+        url: '/audit-logs',
         icon: FileText,
-        isActive: pathname?.startsWith("/audit-logs") ?? false,
-      })
+        isActive: pathname?.startsWith('/audit-logs') ?? false,
+      });
     }
 
     // System (Super Admin only) - manage all hotels
     if (isAdmin) {
       items.push({
-        title: "System",
-        url: "/system",
+        title: 'System',
+        url: '/system',
         icon: Shield,
-        isActive: pathname?.startsWith("/system") ?? false,
+        isActive: pathname?.startsWith('/system') ?? false,
         items: [
           {
-            title: "All Hotels",
-            url: "/system/hotels",
-            isActive: pathname === "/system/hotels",
+            title: 'All Hotels',
+            url: '/system/hotels',
+            isActive: pathname === '/system/hotels',
           },
           {
-            title: "All Users",
-            url: "/system/users",
-            isActive: pathname === "/system/users",
+            title: 'All Users',
+            url: '/system/users',
+            isActive: pathname === '/system/users',
           },
         ],
-      })
+      });
     }
 
-    return items
-  }, [pathname, can, isAdmin])
+    return items;
+  }, [pathname, can, isAdmin]);
 
   const navSecondary = [
     {
-      title: "Settings",
-      url: "/settings/members",
+      title: 'Settings',
+      url: '/settings/members',
       icon: SettingsIcon,
-      isActive: pathname?.startsWith("/settings") ?? false,
+      isActive: pathname?.startsWith('/settings') ?? false,
       items: [
         {
-          title: "Members",
-          url: "/settings/members",
-          isActive: pathname === "/settings/members",
+          title: 'Members',
+          url: '/settings/members',
+          isActive: pathname === '/settings/members',
         },
         {
-          title: "Organization",
-          url: "/settings/organization",
-          isActive: pathname === "/settings/organization",
+          title: 'Organization',
+          url: '/settings/organization',
+          isActive: pathname === '/settings/organization',
         },
       ],
     },
     {
-      title: "Get Help",
-      url: "#",
+      title: 'Get Help',
+      url: '#',
       icon: HelpCircleIcon,
       isActive: false,
     },
     {
-      title: "Search",
-      url: "#",
+      title: 'Search',
+      url: '#',
       icon: SearchIcon,
       isActive: false,
     },
-  ]
+  ];
 
   // User data from session
-  const user = session?.user
+  const user = session?.user;
 
   return (
     <Sidebar collapsible={collapsibleMode} {...props}>
@@ -260,13 +252,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         {isLoading ? <NavMainSkeleton /> : <NavMain items={navMain} />}
         <NavSecondary items={navSecondary} className="mt-auto" />
       </SidebarContent>
-      <SidebarFooter>
-        {user ? (
-          <NavUser user={user} />
-        ) : (
-          <NavUserSkeleton />
-        )}
-      </SidebarFooter>
+      <SidebarFooter>{user ? <NavUser user={user} /> : <NavUserSkeleton />}</SidebarFooter>
     </Sidebar>
-  )
+  );
 }
