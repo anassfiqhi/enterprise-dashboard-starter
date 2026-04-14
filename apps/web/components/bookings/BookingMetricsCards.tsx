@@ -20,14 +20,21 @@ function formatCurrency(amount: number): string {
 }
 
 export function BookingMetricsCards({ metrics, isLoading }: BookingMetricsCardsProps) {
+  const cardDefs = [
+    { title: 'Total Revenue', icon: DollarSign },
+    { title: 'Total Bookings', icon: Calendar },
+    { title: 'Average Occupancy', icon: Percent },
+    { title: 'Average Daily Rate', icon: TrendingUp },
+  ];
+
   if (isLoading) {
     return (
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Card key={i}>
+        {cardDefs.map((card) => (
+          <Card key={card.title}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <Skeleton className="h-4 w-24" />
-              <Skeleton className="h-4 w-4" />
+              <CardTitle className="text-sm font-medium">{card.title}</CardTitle>
+              <card.icon className="text-muted-foreground h-4 w-4" />
             </CardHeader>
             <CardContent>
               <Skeleton className="mb-1 h-8 w-32" />
@@ -38,13 +45,6 @@ export function BookingMetricsCards({ metrics, isLoading }: BookingMetricsCardsP
       </div>
     );
   }
-
-  const cardDefs = [
-    { title: 'Total Revenue', icon: DollarSign },
-    { title: 'Total Bookings', icon: Calendar },
-    { title: 'Average Occupancy', icon: Percent },
-    { title: 'Average Daily Rate', icon: TrendingUp },
-  ];
 
   if (!metrics) {
     return (
